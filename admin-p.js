@@ -649,7 +649,6 @@ function renderAlStreamsForm() {
         });
     });
 }
-
 // ==========================================
 // 5. TERM TEST RESULT MODULE
 // ==========================================
@@ -663,11 +662,17 @@ function initTermTestModule() {
 
     $('termTestForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        // පන්ති තේරීමේදී HTML වල value එක වැරදිලා තිබුණොත් (උදා: G වෙනුවට A සේව් වීම) 
+        // එය මඟහැරීමට තෝරාගත් option එකේ පේන්න තියෙන Text එක ලබා ගනිමු.
+        const classEl = $('ttClass');
+        const classVal = classEl.options ? classEl.options[classEl.selectedIndex].text.trim() : classEl.value.trim();
+
         const docData = {
             year: $('ttYear').value,
             term: $('ttTerm').value,
             grade: $('ttGrade').value,
-            class: $('ttClass').value,
+            class: classVal, // නිවැරදි කරපු අගය මෙතනට ලබා දීම
             stream: (parseInt($('ttGrade').value) >= 12) ? $('ttStream').value : '',
             sheetUrl: $('ttSheetUrl').value.trim(),
             createdAt: new Date().toISOString()
@@ -732,6 +737,7 @@ async function loadTermTestList() {
         console.error(err);
     }
 }
+
 
 // ==========================================
 // 6. PAST PAPERS & DOCUMENTS MODULE
