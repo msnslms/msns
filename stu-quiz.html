@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Quizzes & News | MSNS</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <!-- Style Sheet Links -->
+    <link rel="stylesheet" href="style.css?v=2" />
+    <link rel="stylesheet" href="qz.css?v=2" />
+</head>
+<body>
+
+    <!-- Overlay for Sidebar Drawer -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <!-- Sidebar Drawer (Synced with index.html) -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">MSNS Portal</div>
+            <div class="close-icon" id="closeMenu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </div>
+        </div>
+        <nav class="sidebar-menu">
+            <a href="index.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                Home
+            </a>
+            <a href="index.html#about" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                About Us
+            </a>
+            <a href="Past.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                Past Papers & Documents
+            </a>
+            <a href="news.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path><path d="M18 14h-8"></path><path d="M15 18h-5"></path><path d="M10 6h8v4h-8V6Z"></path></svg>
+                News
+            </a>
+            <a href="qz.html" class="menu-item active-link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+                Quizzes & News
+            </a>
+            <a href="msns-ai.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                MSNS.AI Assistant
+            </a>
+            <a href="u.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                My Profile
+            </a>
+            <a href="ab.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                About Developer
+            </a>
+        </nav>
+    </div>
+
+    <!-- Top Navigation Header -->
+    <header id="top">
+        <div class="header-title">Student Portal</div>
+        <div class="nav-icon" id="menuToggle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="3" y="3" width="5" height="8" rx="2.5" />
+                <rect x="10" y="3" width="11" height="8" rx="4" />
+                <rect x="3" y="13" width="5" height="8" rx="2.5" />
+                <rect x="10" y="13" width="11" height="8" rx="3" />
+            </svg>
+        </div>
+    </header>
+
+    <div class="qz-page-wrap">
+        <div class="state-card" id="loadingState">
+            <i class="fa-solid fa-circle-notch spin"></i>
+            <h3>Loading Student Quizzes...</h3>
+        </div>
+
+        <div class="state-card" id="signedOutState" style="display:none;">
+            <i class="fa-solid fa-lock"></i>
+            <h3>Please Sign In</h3>
+            <p>Log in with your school account to access quizzes.</p>
+            <a href="login.html" class="btn btn-primary">Log In</a>
+        </div>
+
+        <div id="studentDashboard" style="display:none;">
+            <div class="qz-teacher-header">
+                <img id="stuAvatar" src="https://via.placeholder.com/45" style="width:45px;height:45px;border-radius:50%;object-fit:cover;">
+                <div>
+                    <div class="qz-teacher-name" id="stuName">—</div>
+                    <div class="qz-teacher-subject" id="stuClassInfo">—</div>
+                </div>
+            </div>
+
+            <div class="qz-tabs">
+                <button class="qz-tab active" data-tab="quizzes"><i class="fa-solid fa-list-check"></i> Quizzes</button>
+                <button class="qz-tab" data-tab="news"><i class="fa-solid fa-newspaper"></i> Academic News</button>
+            </div>
+
+            <div class="qz-tab-content active" id="tabQuizzes">
+                <div id="quizList" class="qz-card-grid"></div>
+            </div>
+
+            <div class="qz-tab-content" id="tabNews">
+                <div id="newsList" class="qz-news-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Attempt Modal -->
+    <div class="qz-modal-overlay" id="attemptModal">
+        <div class="qz-modal-full">
+            <div class="qz-modal-header">
+                <h2 id="attemptQuizTitle">Attempt Quiz</h2>
+                <button class="qz-modal-close" id="closeAttemptModal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="qz-modal-body" id="attemptBody"></div>
+        </div>
+    </div>
+
+    <!-- News Detail Modal -->
+    <div class="qz-modal-overlay" id="newsDetailModal">
+        <div class="qz-modal-full qz-modal-sm">
+            <div class="qz-modal-header">
+                <h2>Academic News</h2>
+                <button class="qz-modal-close" id="closeNewsDetail"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="qz-modal-body" id="newsDetailContent"></div>
+        </div>
+    </div>
+    <div class="toast" id="toast"></div>
+
+<!-- Footer -->
+    <footer>
+        <p class="cr-text">© 2026 A/Maithripala Senanayake Central College</p>
+        <p class="al-text">MSNS.EDU.LK</p>
+        <p class="credit-text">
+            Editor: K.D.G.S.M. DENIYEGEDARA
+        </p>
+    </footer>   
+<script type="module" src="stu-qz.js?v=2"></script>
+<script src="paw.js?v=2"></script>
+</body>
+</html>
+

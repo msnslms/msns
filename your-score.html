@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your Analysis | MSNS</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <link rel="stylesheet" href="style.css?v=2" />
+      <link rel="stylesheet" href="user.css?v=2" />
+
+</head>
+<body>
+
+    <!-- Overlay for Sidebar Drawer -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <!-- Sidebar Drawer -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">MSNS Portal</div>
+            <div class="close-icon" id="closeMenu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </div>
+        </div>
+        <nav class="sidebar-menu">
+            <a href="index.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                Home
+            </a>
+            <a href="index.html#about" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                About Us
+            </a>
+            <a href="Past.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                Past Papers & Documents
+            </a>
+            <a href="news.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path><path d="M18 14h-8"></path><path d="M15 18h-5"></path><path d="M10 6h8v4h-8V6Z"></path></svg>
+                News
+            </a>
+            <a href="qz.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+                Quizzes & News
+            </a>
+            <a href="analysis.html" class="menu-item active-link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"></path><path d="M12 20V4"></path><path d="M6 20v-6"></path></svg>
+                Your Analysis
+            </a>
+            <a href="msns-ai.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                MSNS.AI Assistant
+            </a>
+            <a href="u.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                My Profile
+            </a>
+            <a href="ab.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                About Developer
+            </a>
+        </nav>
+    </div>
+
+    <!-- Top Navigation Header -->
+    <header id="top">
+        <div class="header-title">Your Analysis</div>
+        <div class="nav-icon" id="menuToggle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="3" y="3" width="5" height="8" rx="2.5" />
+                <rect x="10" y="3" width="11" height="8" rx="4" />
+                <rect x="3" y="13" width="5" height="8" rx="2.5" />
+                <rect x="10" y="13" width="11" height="8" rx="3" />
+            </svg>
+        </div>
+    </header>
+
+    <div class="analysis-wrap">
+        <!-- Loading State -->
+        <div class="state-card" id="loadingState">
+            <i class="fa-solid fa-circle-notch spin"></i>
+            <h3>Loading Your Analytics...</h3>
+        </div>
+
+        <!-- Signed Out State -->
+        <div class="state-card" id="signedOutState" style="display:none;">
+            <i class="fa-solid fa-lock"></i>
+            <h3>Please Sign In</h3>
+            <p>Log in with your school account to view your quiz analysis.</p>
+            <a href="login.html" class="btn btn-primary">Log In</a>
+        </div>
+
+        <!-- Analysis Dashboard -->
+        <div id="analysisDashboard" style="display:none;">
+            <!-- Student Header -->
+            <div class="stu-header">
+                <img id="stuAvatar" src="https://via.placeholder.com/50" alt="Profile">
+                <div>
+                    <div class="name" id="stuName">—</div>
+                    <div class="info" id="stuClassInfo">—</div>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-icon blue"><i class="fa-solid fa-clipboard-list"></i></div>
+                    <div class="stat-value" id="statTotal">0</div>
+                    <div class="stat-label">Quizzes Attempted</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple"><i class="fa-solid fa-chart-line"></i></div>
+                    <div class="stat-value" id="statAvg">0%</div>
+                    <div class="stat-label">Average Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green"><i class="fa-solid fa-trophy"></i></div>
+                    <div class="stat-value" id="statBest">0%</div>
+                    <div class="stat-label">Best Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange"><i class="fa-solid fa-bullseye"></i></div>
+                    <div class="stat-value" id="statAccuracy">0%</div>
+                    <div class="stat-label">Overall Accuracy</div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3><i class="fa-solid fa-chart-area"></i> Score Trend</h3>
+                    <div class="chart-wrapper"><canvas id="trendChart"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <h3><i class="fa-solid fa-chart-pie"></i> Overall Accuracy</h3>
+                    <div class="chart-wrapper"><canvas id="accuracyChart"></canvas></div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3><i class="fa-solid fa-chart-bar"></i> Score per Quiz</h3>
+                    <div class="chart-wrapper tall"><canvas id="barChart"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <h3><i class="fa-solid fa-check-double"></i> Correct vs Incorrect</h3>
+                    <div class="chart-wrapper tall"><canvas id="compareChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Attempts Table -->
+            <div class="table-card" style="margin-top: 4px;">
+                <h3><i class="fa-solid fa-table-list"></i> Quiz Attempt History</h3>
+                <div id="tableContainer">
+                    <div class="empty-analysis">
+                        <i class="fa-solid fa-inbox"></i>
+                        <h3>No Data Available</h3>
+                        <p>You haven't attempted any quizzes yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- Footer -->
+    <footer>
+        <p class="cr-text">© 2026 A/Maithripala Senanayake Central College</p>
+        <p class="al-text">MSNS.EDU.LK</p>
+        <p class="credit-text">
+            Editor: K.D.G.S.M. DENIYEGEDARA
+        </p>
+    </footer>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDgg7n1LwcrRiV2kjgSM5E3XX27twweMg8",
+            authDomain: "msns-79.firebaseapp.com",
+            projectId: "msns-79",
+            storageBucket: "msns-79.firebasestorage.app",
+            messagingSenderId: "108137376740",
+            appId: "1:108137376740:web:78ed2f442c035a072f75f1",
+            measurementId: "G-3GTFJKTS7D"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const $ = id => document.getElementById(id);
+
+        let currentUser = null;
+        let currentProfile = null;
+        let trendChartInst = null;
+        let accuracyChartInst = null;
+        let barChartInst = null;
+        let compareChartInst = null;
+
+        // Sidebar
+        const sidebar = $('sidebar');
+        const menuOverlay = $('menuOverlay');
+        $('menuToggle')?.addEventListener('click', () => {
+            sidebar?.classList.add('active', 'open');
+            menuOverlay?.classList.add('active', 'open');
+        });
+        const hideMenu = () => {
+            sidebar?.classList.remove('active', 'open');
+            menuOverlay?.classList.remove('active', 'open');
+        };
+        $('closeMenu')?.addEventListener('click', hideMenu);
+        menuOverlay?.addEventListener('click', hideMenu);
+
+        // Chart defaults
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.borderColor = '#334155';
+        Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+
+        onAuthStateChanged(auth, async (user) => {
+            currentUser = user;
+            if (!user) {
+                $('loadingState').style.display = 'none';
+                $('signedOutState').style.display = 'block';
+                return;
+            }
+            try {
+                const snap = await getDoc(doc(db, 'users', user.uid));
+                if (snap.exists()) {
+                    currentProfile = snap.data();
+                    $('stuName').textContent = currentProfile.displayName || 'Student';
+                    $('stuClassInfo').textContent = `Grade ${currentProfile.baseGrade || currentProfile.grade || ''} - Class ${currentProfile.studentClass || ''} (${currentProfile.stream || 'General'})`;
+                    if (currentProfile.photoURL) $('stuAvatar').src = currentProfile.photoURL;
+
+                    $('loadingState').style.display = 'none';
+                    $('analysisDashboard').style.display = 'block';
+
+                    loadAnalytics();
+                } else {
+                    $('loadingState').innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="font-size:3rem;color:#f59e0b;"></i><h3>Profile Record Not Found</h3>';
+                }
+            } catch (e) {
+                console.error(e);
+                $('loadingState').innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="font-size:3rem;color:#ef4444;"></i><h3>Error Loading Profile</h3>';
+            }
+        });
+
+        function loadAnalytics() {
+            onSnapshot(collection(db, 'quizzes'), snap => {
+                const myAttempts = [];
+                snap.forEach(d => {
+                    const data = d.data();
+                    const resp = data.responses?.[currentUser.uid];
+                    if (resp) {
+                        myAttempts.push({
+                            quizId: d.id,
+                            quizTitle: data.title || 'Untitled Quiz',
+                            teacherName: data.teacherName || 'Teacher',
+                            subject: data.subject || 'General',
+                            grade: data.grade || '',
+                            ...resp
+                        });
+                    }
+                });
+
+                // Sort by submittedAt ascending for trend
+                myAttempts.sort((a, b) => {
+                    const da = a.submittedAt ? new Date(a.submittedAt) : new Date(0);
+                    const db_ = b.submittedAt ? new Date(b.submittedAt) : new Date(0);
+                    return da - db_;
+                });
+
+                renderStats(myAttempts);
+                renderCharts(myAttempts);
+                renderTable(myAttempts);
+            });
+        }
+
+        function renderStats(attempts) {
+            const total = attempts.length;
+            if (total === 0) {
+                $('statTotal').textContent = '0';
+                $('statAvg').textContent = '0%';
+                $('statBest').textContent = '0%';
+                $('statAccuracy').textContent = '0%';
+                return;
+            }
+
+            let totalScore = 0;
+            let bestScore = 0;
+            let totalCorrect = 0;
+            let totalQuestions = 0;
+
+            attempts.forEach(a => {
+                const sc = a.score || 0;
+                totalScore += sc;
+                if (sc > bestScore) bestScore = sc;
+                totalCorrect += a.correctCount || 0;
+                totalQuestions += a.total || 0;
+            });
+
+            const avg = Math.round(totalScore / total);
+            const accuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+
+            animateValue('statTotal', 0, total, 800);
+            animateValue('statAvg', 0, avg, 800, '%');
+            animateValue('statBest', 0, bestScore, 800, '%');
+            animateValue('statAccuracy', 0, accuracy, 800, '%');
+        }
+
+        function animateValue(id, start, end, duration, suffix = '') {
+            const obj = $(id);
+            const range = end - start;
+            const minTimer = 50;
+            let stepTime = Math.abs(Math.floor(duration / range));
+            stepTime = Math.max(stepTime, minTimer);
+            let startTime = new Date().getTime();
+            let endTime = startTime + duration;
+            let timer;
+
+            function run() {
+                let now = new Date().getTime();
+                let remaining = Math.max((endTime - now) / duration, 0);
+                let value = Math.round(end - (remaining * range));
+                obj.textContent = value + suffix;
+                if (value == end) clearInterval(timer);
+            }
+            timer = setInterval(run, stepTime);
+            run();
+        }
+
+        function renderCharts(attempts) {
+            if (attempts.length === 0) {
+                // Clear charts if no data
+                ['trendChart','accuracyChart','barChart','compareChart'].forEach(id => {
+                    const ctx = $(id)?.getContext('2d');
+                    if (ctx) {
+                        const inst = Chart.getChart(id);
+                        if (inst) inst.destroy();
+                    }
+                });
+                return;
+            }
+
+            const labels = attempts.map((a, i) => a.quizTitle.length > 12 ? a.quizTitle.substring(0,12)+'...' : a.quizTitle);
+            const scores = attempts.map(a => a.score || 0);
+            const corrects = attempts.map(a => a.correctCount || 0);
+            const incorrects = attempts.map(a => (a.total || 0) - (a.correctCount || 0));
+
+            // Total correct vs incorrect for doughnut
+            const totalCorrect = corrects.reduce((a,b)=>a+b,0);
+            const totalIncorrect = incorrects.reduce((a,b)=>a+b,0);
+
+            // 1. Trend Chart (Line)
+            const trendCtx = $('trendChart').getContext('2d');
+            if (trendChartInst) trendChartInst.destroy();
+            trendChartInst = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Score (%)',
+                        data: scores,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59,130,246,0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#3b82f6',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#f1f5f9',
+                            bodyColor: '#94a3b8',
+                            borderColor: '#334155',
+                            borderWidth: 1,
+                            padding: 12,
+                            callbacks: {
+                                label: ctx => `Score: ${ctx.raw}%`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { color: 'rgba(51,65,85,0.3)' },
+                            ticks: { callback: v => v + '%' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // 2. Accuracy Doughnut
+            const accCtx = $('accuracyChart').getContext('2d');
+            if (accuracyChartInst) accuracyChartInst.destroy();
+            accuracyChartInst = new Chart(accCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Correct', 'Incorrect'],
+                    datasets: [{
+                        data: [totalCorrect, totalIncorrect],
+                        backgroundColor: ['#10b981', '#ef4444'],
+                        borderColor: '#1e293b',
+                        borderWidth: 4,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#f1f5f9',
+                            bodyColor: '#94a3b8',
+                            borderColor: '#334155',
+                            borderWidth: 1,
+                            padding: 12
+                        }
+                    }
+                }
+            });
+
+            // 3. Bar Chart (Score per Quiz)
+            const barCtx = $('barChart').getContext('2d');
+            if (barChartInst) barChartInst.destroy();
+            barChartInst = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Score (%)',
+                        data: scores,
+                        backgroundColor: scores.map(s => {
+                            if (s >= 75) return 'rgba(16,185,129,0.8)';
+                            if (s >= 50) return 'rgba(245,158,11,0.8)';
+                            return 'rgba(239,68,68,0.8)';
+                        }),
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#f1f5f9',
+                            bodyColor: '#94a3b8',
+                            borderColor: '#334155',
+                            borderWidth: 1,
+                            padding: 12
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { color: 'rgba(51,65,85,0.3)' },
+                            ticks: { callback: v => v + '%' }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // 4. Correct vs Incorrect per Quiz (Stacked Bar)
+            const compCtx = $('compareChart').getContext('2d');
+            if (compareChartInst) compareChartInst.destroy();
+            compareChartInst = new Chart(compCtx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Correct',
+                            data: corrects,
+                            backgroundColor: 'rgba(16,185,129,0.85)',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Incorrect',
+                            data: incorrects,
+                            backgroundColor: 'rgba(239,68,68,0.85)',
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#f1f5f9',
+                            bodyColor: '#94a3b8',
+                            borderColor: '#334155',
+                            borderWidth: 1,
+                            padding: 12
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(51,65,85,0.3)' }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderTable(attempts) {
+            const container = $('tableContainer');
+            if (attempts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-analysis">
+                        <i class="fa-solid fa-inbox"></i>
+                        <h3>No Quiz Attempts Yet</h3>
+                        <p>Attempt quizzes from the Quizzes page to see your analysis here.</p>
+                    </div>`;
+                return;
+            }
+
+            // Sort by date descending for table
+            const sorted = [...attempts].sort((a, b) => {
+                const da = a.submittedAt ? new Date(a.submittedAt) : new Date(0);
+                const db_ = b.submittedAt ? new Date(b.submittedAt) : new Date(0);
+                return db_ - da;
+            });
+
+            const rows = sorted.map(a => {
+                const sc = a.score || 0;
+                let badgeClass = 'score-low';
+                if (sc >= 75) badgeClass = 'score-high';
+                else if (sc >= 50) badgeClass = 'score-mid';
+
+                const dateStr = a.submittedAt
+                    ? new Date(a.submittedAt).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+                    : 'N/A';
+
+                return `
+                    <tr>
+                        <td style="font-weight:700;">${a.quizTitle}</td>
+                        <td>${a.teacherName}</td>
+                        <td><span class="score-badge ${badgeClass}">${sc}%</span></td>
+                        <td>${a.correctCount || 0}/${a.total || 0}</td>
+                        <td style="color:var(--text-secondary);white-space:nowrap;">${dateStr}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Quiz</th>
+                            <th>Teacher</th>
+                            <th>Score</th>
+                            <th>Result</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+    </script>
+    <script src="paw.js?v=2"></script>
+</body>
+</html>

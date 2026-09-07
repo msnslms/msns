@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard | Quizzes & News</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="qz.css?v=2">
+</head>
+<body>
+
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">MSNS</div>
+            <div class="close-icon" id="closeMenu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </div>
+        </div>
+        <nav class="sidebar-menu">
+            <a href="index.html" class="menu-item"><i class="fa-solid fa-house"></i> Home</a>
+            <a href="news.html" class="menu-item"><i class="fa-solid fa-newspaper"></i> News</a>
+            <a href="u.html" class="menu-item"><i class="fa-solid fa-user"></i> My Profile</a>
+        </nav>
+    </div>
+
+    <header id="top">
+        <div class="header-title">MSNS Portal</div>
+        <div class="nav-icon" id="menuToggle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="3" y="3" width="5" height="8" rx="2.5" />
+                <rect x="10" y="3" width="11" height="8" rx="4" />
+                <rect x="3" y="13" width="5" height="8" rx="2.5" />
+                <rect x="10" y="13" width="11" height="8" rx="3" />
+            </svg>
+        </div>
+    </header>
+
+    <div class="qz-page-wrap">
+
+        <div class="state-card" id="loadingState">
+            <i class="fa-solid fa-circle-notch spin"></i>
+            <h3>Loading dashboard...</h3>
+        </div>
+
+        <div class="state-card" id="signedOutState" style="display:none;">
+            <i class="fa-solid fa-lock"></i>
+            <h3>Sign in to manage quizzes</h3>
+            <p style="color: var(--text-muted); margin-bottom:20px;">Use your school teacher account.</p>
+            <a href="login.html" class="btn btn-primary"><i class="fa-solid fa-right-to-bracket"></i> Log In</a>
+        </div>
+
+        <div id="teacherDashboard" style="display:none;">
+
+            <div class="qz-teacher-header">
+                <div class="qz-teacher-avatar" id="teacherAvatar">T</div>
+                <div>
+                    <div class="qz-teacher-name" id="teacherName">—</div>
+                    <div class="qz-teacher-subject" id="teacherSubject">—</div>
+                </div>
+                <button class="btn btn-ghost qz-logout-btn" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+            </div>
+
+            <div class="qz-tabs">
+                <button class="qz-tab active" data-tab="quizzes"><i class="fa-solid fa-list-check"></i> Quizzes</button>
+                <button class="qz-tab" data-tab="news"><i class="fa-solid fa-newspaper"></i> Academic News</button>
+            </div>
+
+            <div class="qz-tab-content active" id="tabQuizzes">
+                <div class="qz-toolbar">
+                    <button class="btn btn-primary" id="btnAddQuiz"><i class="fa-solid fa-plus"></i> Add Quiz</button>
+                </div>
+                <div id="quizList" class="qz-card-grid">
+                    <div class="qz-empty-state">
+                        <i class="fa-regular fa-file-lines"></i>
+                        <p>No quizzes created yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="qz-tab-content" id="tabNews">
+                <div class="qz-toolbar">
+                    <button class="btn btn-primary" id="btnAddNews"><i class="fa-solid fa-plus"></i> Add News</button>
+                </div>
+                <div id="newsList" class="qz-news-grid">
+                    <div class="qz-empty-state">
+                        <i class="fa-regular fa-newspaper"></i>
+                        <p>No news posted yet.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="qz-modal-overlay" id="quizModal">
+        <div class="qz-modal-full">
+            <div class="qz-modal-header">
+                <h2 id="quizModalTitle"><i class="fa-solid fa-pen-to-square"></i> Create New Quiz</h2>
+                <button class="qz-modal-close" id="closeQuizModal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="qz-modal-body">
+
+                <div class="qz-section qz-details-row">
+                    <div class="qz-field">
+                        <label class="qz-label">Quiz Title</label>
+                        <input type="text" id="quizTitle" class="custom-input" placeholder="e.g. Science Unit Test 1" value="Quiz">
+                    </div>
+                    <div class="qz-field">
+                        <label class="qz-label">Duration (Days Active)</label>
+                        <select id="quizDuration" class="custom-select">
+                            <option value="7">1 Week</option>
+                            <option value="14">2 Weeks</option>
+                            <option value="21">3 Weeks</option>
+                            <option value="30" selected>1 Month</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="qz-section qz-details-row">
+                    <div class="qz-field">
+                        <label class="qz-label">Grade</label>
+                        <select id="quizGrade" class="custom-select">
+                            <option value="6">Grade 6</option>
+                            <option value="7">Grade 7</option>
+                            <option value="8">Grade 8</option>
+                            <option value="9">Grade 9</option>
+                            <option value="10">Grade 10</option>
+                            <option value="11">Grade 11</option>
+                            <option value="12">Grade 12</option>
+                            <option value="13">Grade 13</option>
+                        </select>
+                    </div>
+                    <div class="qz-field">
+                        <label class="qz-label">Class</label>
+                        <select id="quizClass" class="custom-select">
+                         <option value="All">All Classes</option>
+                         <option value="Class A">Class A</option>
+                        <option value="Class B">Class B</option>
+                        <option value="Class C">Class C</option>
+                        <option value="Class D">Class D</option>
+                        <option value="Class E">Class E</option>
+                        <option value="Class F">Class F</option>
+                        <option value="Class G">Class G</option>
+                   </select>
+                    </div>
+                    <div class="qz-field" id="streamFieldWrap" style="display:none;">
+                        <label class="qz-label">A/L Stream</label>
+                        <select id="quizStream" class="custom-select">
+                        <option value="">All Streams</option>
+                        <option value="Tech">Technology</option>
+                        <option value="Bio">Biology</option>
+                        <option value="Maths">Maths</option>
+                        <option value="Commerce">Commerce</option>
+                        <option value="Art">Art</option>
+                       </select>
+
+                    </div>
+                </div>
+
+                <div class="qz-section qz-mcq-controls">
+                    <div class="qz-field" style="flex:1;">
+                        <label class="qz-label">Number of Questions (Max 50)</label>
+                        <input type="number" id="questionCount" class="custom-input" min="1" max="50" value="5">
+                    </div>
+                    <div class="qz-field" style="flex:1;">
+                        <label class="qz-label">Answers per Question (2 - 5)</label>
+                        <select id="answerCount" class="custom-select">
+                            <option value="2">2 Options</option>
+                            <option value="3">3 Options</option>
+                            <option value="4" selected>4 Options</option>
+                            <option value="5">5 Options</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-ghost" id="btnBuildQuestions" style="align-self:flex-end;">
+                        <i class="fa-solid fa-rotate"></i> Generate Fields
+                    </button>
+                </div>
+
+                <div id="questionsContainer" class="qz-questions-container"></div>
+
+                <div class="qz-modal-footer">
+                    <button class="btn btn-ghost" id="closeQuizModal2">Close</button>
+                    <button class="btn btn-primary" id="submitQuizBtn" disabled>
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Save Quiz
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="qz-modal-overlay" id="newsModal">
+        <div class="qz-modal-full qz-modal-sm">
+            <div class="qz-modal-header">
+                <h2><i class="fa-regular fa-newspaper"></i> Add Academic News</h2>
+                <button class="qz-modal-close" id="closeNewsModal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="qz-modal-body">
+                <div class="qz-section">
+                    <label class="qz-label">News Image (ImgBB Upload)</label>
+                    <input type="file" id="newsFileInput" accept="image/*" class="custom-input">
+                    <div id="newsPreview" style="display:none;margin-top:12px;">
+                        <img id="newsPreviewImg" src="" alt="preview" style="max-width:100%;max-height:180px;border-radius:10px;">
+                    </div>
+                </div>
+
+                <div class="qz-section">
+                    <div class="qz-field">
+                        <label class="qz-label">Title</label>
+                        <input type="text" id="newsTitle" class="custom-input" placeholder="News title">
+                    </div>
+                    <div class="qz-field">
+                        <label class="qz-label">Description</label>
+                        <textarea id="newsDesc" class="custom-input" rows="4" placeholder="Write news content..."></textarea>
+                    </div>
+                    <div class="qz-field">
+                        <label class="qz-label">Posted By (Position)</label>
+                        <input type="text" id="newsPosition" class="custom-input" placeholder="e.g. Teacher, Section Head">
+                    </div>
+                </div>
+
+                <div class="qz-section qz-details-row">
+                    <div class="qz-field">
+                        <label class="qz-label">Target Grade</label>
+                        <select id="newsGrade" class="custom-select">
+                            <option value="All">All Grades</option>
+                            <option value="6">Grade 6</option>
+                            <option value="7">Grade 7</option>
+                            <option value="8">Grade 8</option>
+                            <option value="9">Grade 9</option>
+                            <option value="10">Grade 10</option>
+                            <option value="11">Grade 11</option>
+                            <option value="12">Grade 12</option>
+                            <option value="13">Grade 13</option>
+                        </select>
+                    </div>
+                    <div class="qz-field">
+                        <label class="qz-label">Target Class</label>
+                        <select id="newsClass" class="custom-select">
+                      <option value="All">All Classes</option>
+                      <option value="Class A">Class A</option>
+                      <option value="Class B">Class B</option>
+                      <option value="Class C">Class C</option>
+                      <option value="Class D">Class D</option>
+                      <option value="Class E">Class E</option>
+                      <option value="Class F">Class F</option>
+                      <option value="Class G">Class G</option>
+                      </select>
+
+                    </div>
+                    <div class="qz-field" id="newsStreamFieldWrap" style="display:none;">
+                        <label class="qz-label">A/L Stream</label>
+                        <select id="newsStream" class="custom-select">
+                            <option value="">All Streams</option>
+                            <option value="Technology">Technology</option>
+                            <option value="Biology">Biology</option>
+                            <option value="Maths">Maths</option>
+                            <option value="Commerce">Commerce</option>
+                            <option value="Art">Art</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="qz-modal-footer">
+                    <button class="btn btn-ghost" id="closeNewsModal2">Close</button>
+                    <button class="btn btn-primary" id="submitNewsBtn"><i class="fa-solid fa-cloud-arrow-up"></i> Post News</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="qz-modal-overlay" id="analysisModal">
+        <div class="qz-modal-full">
+            <div class="qz-modal-header">
+                <h2><i class="fa-solid fa-chart-line"></i> Quiz Analysis & Student Marks</h2>
+                <button class="qz-modal-close" id="closeAnalysisModal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="qz-modal-body" id="analysisContent">
+            </div>
+        </div>
+    </div>
+
+    <div class="qz-modal-overlay" id="viewsModal">
+        <div class="qz-modal-full qz-modal-sm">
+            <div class="qz-modal-header">
+                <h2><i class="fa-solid fa-eye"></i> News Readers List</h2>
+                <button class="qz-modal-close" id="closeViewsModal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="qz-modal-body" id="viewsContent">
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+<!-- Footer -->
+    <footer>
+        <p class="cr-text">© 2026 A/Maithripala Senanayake Central College</p>
+        <p class="al-text">MSNS.EDU.LK</p>
+        <p class="credit-text">
+            Editor: K.D.G.S.M. DENIYEGEDARA
+        </p>
+    </footer>
+    <script type="module" src="th-qz.js?v=2"></script>
+    <script src="paw.js?v=2"></script>
+</body>
+</html>

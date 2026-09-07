@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile | MSNS PORTAL</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Site Custom CSS Link -->
+    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="user.css?v=3">
+    
+</head>
+<body>
+
+    <!-- Overlay for Sidebar Drawer -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <!-- Sidebar Drawer -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">MSNS</div>
+            <div class="close-icon" id="closeMenu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </div>
+        </div>
+
+        <nav class="sidebar-menu">
+            <a href="index.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                Home
+            </a>
+            <a href="index.html#about" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                About Us
+            </a>
+            <a href="index.html#governing" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Governing Body
+            </a>
+            <a href="index.html#contact" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                Contact
+            </a>
+            <a href="Past.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                Past Papers & Documents
+            </a>
+            <a href="history.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                History
+            </a>
+            <a href="news.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path><path d="M18 14h-8"></path><path d="M15 18h-5"></path><path d="M10 6h8v4h-8V6Z"></path></svg>
+                News
+            </a>
+            <a href="msns-ai.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                MSNS.AI Assistant
+            </a>
+            <a href="u.html" class="menu-item active-link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                My Profile
+            </a>
+            <a href="ab.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                About developer
+            </a>
+        </nav>
+    </div>
+
+    <!-- Top Navigation -->
+    <header id="top">
+        <div class="header-title">MSNS</div>
+        <div class="nav-icon" id="menuToggle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="3" y="3" width="5" height="8" rx="2.5" />
+                <rect x="10" y="3" width="11" height="8" rx="4" />
+                <rect x="3" y="13" width="5" height="8" rx="2.5" />
+                <rect x="10" y="13" width="11" height="8" rx="3" />
+            </svg>
+        </div>
+    </header>
+
+    <div class="content-wrapper">
+
+        <!-- Loading State -->
+        <div class="state-card" id="loadingState">
+            <i class="fa-solid fa-circle-notch spin"></i>
+            <h3>Checking session...</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Please wait a moment.</p>
+        </div>
+
+        <!-- Signed Out State -->
+        <div class="state-card" id="signedOutState" style="display:none;">
+            <i class="fa-solid fa-lock"></i>
+            <h3>Sign in to MSNS Portal</h3>
+            <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.9rem;">Use your school account to continue.</p>
+            <a href="login.html" class="btn btn-primary" style="width: 100%; max-width: 280px;">
+                <i class="fa-solid fa-right-to-bracket"></i> Log In / Register
+            </a>
+        </div>
+
+        <!-- Signed In Profile Interface -->
+        <div id="signedInState" style="display:none;">
+
+            <!-- Auto-Promotion Notification Banner -->
+            <div class="promo-banner" id="promoBanner" style="display:none;">
+                <i class="fa-solid fa-graduation-cap fa-lg"></i>
+                <span id="promoBannerText">You've been automatically promoted to the next grade for the new academic year!</span>
+            </div>
+
+            <!-- Sleek Quiz-Style Header Profile Card -->
+            <div class="qz-profile-card">
+                <div class="qz-profile-top">
+                    <div class="qz-profile-avatar" id="idAvatar">U</div>
+                    <div class="qz-profile-info">
+                        <div class="role-badge" id="roleBadge">STUDENT</div>
+                        <div class="qz-profile-name" id="idName">—</div>
+                        <div class="qz-profile-email" id="idEmail">—</div>
+                    </div>
+                </div>
+                
+                <!-- Student Details Grid -->
+                <div class="id-grid" id="studentDetailsGrid">
+                    <div>
+                        <div class="id-field-label">Current Grade</div>
+                        <div class="id-field-value" id="idGrade">Not Set</div>
+                    </div>
+                    <div>
+                        <div class="id-field-label">Class</div>
+                        <div class="id-field-value" id="idClass">Not Set</div>
+                    </div>
+                    <div id="streamRow" style="grid-column: 1 / -1; display:none;">
+                        <div class="id-field-label">A/L Stream</div>
+                        <div class="id-field-value" id="idStream">—</div>
+                    </div>
+                </div>
+
+                <!-- Teacher Details Grid -->
+                <div class="id-grid" id="teacherDetailsGrid" style="display:none;">
+                    <div style="grid-column: 1 / -1;">
+                        <div class="id-field-label">Teaching Subject</div>
+                        <div class="id-field-value" id="idSubject">Not Set</div>
+                    </div>
+                </div>
+
+                <!-- Barcode Component -->
+                <div class="id-barcode" id="barcodeRow">
+                    <div class="barcode-bars" id="barcodeBars"></div>
+                    <div class="barcode-num" id="idIndexNum">INDEX: — — — —</div>
+                </div>
+
+                <!-- Actions Integrated Inside Header -->
+                <div class="actions-row" style="margin-top: 4px;">
+                    <button class="btn btn-primary" id="btnOpenEdit"><i class="fa-solid fa-pen"></i> Edit Profile</button>
+                    <button class="btn btn-ghost" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+                </div>
+            </div>
+
+            <!-- Student Academic Dashboard Links -->
+            <section id="studentActions" style="display: none;">
+                <div class="section-title"><i class="fa-solid fa-book-bookmark"></i> Academic Dashboard</div>
+                <div class="contact-list">
+                    <a href="stu-quiz.html" class="contact-item">
+                        <i class="fa-solid fa-list-check"></i>
+                        <span>Quizzes & Academic News</span>
+                        <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: var(--text-muted);"></i>
+                    </a>
+                    <a href="term.html" class="contact-item">
+                        <i class="fa-solid fa-square-poll-vertical"></i>
+                        <span>Term Test Results</span>
+                        <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: var(--text-muted);"></i>
+                    </a>
+                    <a href="your-score.html" class="contact-item">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>Your Score & Analytics</span>
+                        <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: var(--text-muted);"></i>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Teacher Dashboard Links -->
+            <section id="teacherActions" style="display: none;">
+                <div class="section-title"><i class="fa-solid fa-shield-halved"></i> Teacher Management</div>
+                <div class="contact-list">
+                    <a href="teach-quiz.html" class="contact-item">
+                        <i class="fa-solid fa-plus-minus"></i>
+                        <span>Manage Quizzes & News</span>
+                        <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: var(--text-muted);"></i>
+                    </a>
+                    <a href="e.html" class="contact-item">
+                        <i class="fa-solid fa-file-pen"></i>
+                        <span>Manage Exam Results (O/L & A/L)</span>
+                        <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: var(--text-muted);"></i>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Account Danger Zone -->
+            <div class="actions-row" style="margin-top: 35px;">
+                <button class="btn btn-danger" id="btnDeleteAccount" style="width: 100%;"><i class="fa-solid fa-trash-can"></i> Delete Account</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="editModal" class="modal-backdrop">
+        <div class="modal-card">
+            <h3>Edit Profile</h3>
+            <p class="modal-sub">Update your details below and click save.</p>
+            
+            <div class="field">
+                <label>Full Name</label>
+                <input type="text" id="inputName" class="custom-input" placeholder="Enter full name">
+            </div>
+
+            <!-- Role Selection -->
+            <div class="field">
+                <label>Account Role (ගිණුම් වර්ගය)</label>
+                <select id="inputRole" class="custom-select">
+                    <option value="student">Student (ශිෂ්‍ය)</option>
+                    <option value="teacher">Teacher (ගුරු)</option>
+                    <option value="old_student">Old Student (ආදි ශිෂ්‍ය)</option>
+                </select>
+            </div>
+
+            <!-- Student Form Fields -->
+            <div id="studentFormFields">
+                <div class="field">
+                    <label>Index Number</label>
+                    <input type="text" id="inputIndex" class="custom-input" placeholder="e.g. 2026-1042">
+                    <small id="indexLockNotice" style="color: #f87171; display:none; font-size:0.75rem; margin-top:4px;">
+                        ⚠️ Index අංකය එක් වරක් ඇතුළත් කළ පසු නැවත වෙනස් කළ නොහැක.
+                    </small>
+                </div>
+
+                <div class="field field-2col">
+                    <div>
+                        <label>Grade</label>
+                        <select id="inputGrade" class="custom-select">
+                            <option value="">Select Grade</option>
+                            <option value="6">Grade 6</option>
+                            <option value="7">Grade 7</option>
+                            <option value="8">Grade 8</option>
+                            <option value="9">Grade 9</option>
+                            <option value="10">Grade 10</option>
+                            <option value="11">Grade 11</option>
+                            <option value="12">Grade 12</option>
+                            <option value="13">Grade 13</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Class</label>
+                        <select id="inputClass" class="custom-select">
+                            <option value="">Select Class</option>
+                            <option value="Class A">Class A</option>
+                            <option value="Class B">Class B</option>
+                            <option value="Class C">Class C</option>
+                            <option value="Class D">Class D</option>
+                            <option value="Class E">Class E</option>
+                            <option value="Class F">Class F</option>
+                            <option value="Class G">Class G</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="field" id="streamFieldWrap" style="display: none;">
+                    <label>A/L Stream</label>
+                    <select id="inputStream" class="custom-select">
+                        <option value="">Select Stream</option>
+                        <option value="Tech">A/L Technology</option>
+                        <option value="Bio">A/L Biological Science</option>
+                        <option value="Maths">A/L Physical Science (Maths)</option>
+                        <option value="Art">A/L Arts</option>
+                        <option value="Commerce">A/L Commerce</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Teacher Form Fields -->
+            <div id="teacherFormFields" style="display: none;">
+                <div class="field">
+                    <label>Teaching Subject</label>
+                    <input type="text" id="inputSubject" class="custom-input" placeholder="e.g. Science, ICT, Mathematics">
+                </div>
+            </div>
+
+            <div class="actions-row" style="margin-top: 20px;">
+                <button class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+                <button class="btn btn-primary" id="btnSaveProfile"><i class="fa-solid fa-check"></i> Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal-backdrop">
+        <div class="modal-card" style="text-align: center;">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size: 2.2rem; color: var(--danger-color); margin-bottom: 10px;"></i>
+            <h3>Delete Your Account?</h3>
+            <p class="modal-sub">This action cannot be undone. Type <strong>DELETE</strong> below to confirm. (පාසලේ නික්ම යන තුරු මෙයින් Account Delete කිරීමෙන් වලකින්න.)</p>
+            
+            <input type="text" id="deleteConfirmInput" class="custom-input" placeholder="Type DELETE" style="text-align: center; font-weight: 700; letter-spacing: 1px;">
+
+            <div class="actions-row" style="margin-top: 20px;">
+                <button class="btn btn-ghost" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn btn-danger" id="btnConfirmDelete" disabled>Delete Account</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Toast Component -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Footer Section -->
+    <footer>
+        <p class="cr-text">© 2026 A/Maithripala Senanayake C.C</p>
+        <p class="al-text">MSNS.EDU.LK</p>
+        <p class="credit-text">Designer: K.D.G.S.M. Deniyegedara &nbsp;</p>
+    </footer>
+    <script type="module" src="u.js?v=2"></script>
+    <script src="paw.js?v=2"></script>
+    <script src="save-c.js?v=2"></script>
+</body>
+</html>
+

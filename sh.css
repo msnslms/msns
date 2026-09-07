@@ -1,0 +1,15 @@
+/* Search Icon Style */
+.search-icon-btn {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    color: #ffffff;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.search-icon-btn:hover {
+    color: #38bdf8;
+    transform: scale(1.08);
+}
