@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MSNS AI - PDF Export</title>
+    
+    <!-- Google Fonts: Abhaya Libre + Noto Sans Sinhala -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Abhaya+Libre:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- KaTeX CSS for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- PDF Specific Stylesheet -->
+    <link rel="stylesheet" href="pdf.css">
+</head>
+<body>
+    <!-- Top Bar -->
+    <div class="pdf-topbar" id="pdfTopbar">
+        <a href="msns-ai.html" class="back-btn" title="Back to MSNS AI">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Back to MSNS AI</span>
+        </a>
+        <span class="pdf-topbar-title">
+            <i class="fa-solid fa-file-pdf"></i> Document Preview
+        </span>
+        <button class="save-pdf-btn" id="savePdfBtn" title="Save as PDF">
+            <i class="fa-solid fa-download"></i> Save PDF
+        </button>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="pdf-toolbar" id="pdfToolbar">
+        <!-- Font Size -->
+        <div class="toolbar-group">
+            <label class="toolbar-label"><i class="fa-solid fa-text-height"></i> Font Size</label>
+            <div class="font-size-control">
+                <button class="tool-btn" id="fontSizeMinus" title="Decrease font size">A−</button>
+                <span class="font-size-display" id="fontSizeDisplay">12pt</span>
+                <button class="tool-btn" id="fontSizePlus" title="Increase font size">A+</button>
+            </div>
+        </div>
+
+        <!-- Alignment -->
+        <div class="toolbar-group">
+            <label class="toolbar-label"><i class="fa-solid fa-align-left"></i> Alignment</label>
+            <div class="align-buttons">
+                <button class="tool-btn align-btn active" data-align="left" title="Left Align"><i class="fa-solid fa-align-left"></i></button>
+                <button class="tool-btn align-btn" data-align="center" title="Center Align"><i class="fa-solid fa-align-center"></i></button>
+                <button class="tool-btn align-btn" data-align="right" title="Right Align"><i class="fa-solid fa-align-right"></i></button>
+                <button class="tool-btn align-btn" data-align="justify" title="Justify"><i class="fa-solid fa-align-justify"></i></button>
+            </div>
+        </div>
+
+        <!-- Text Color -->
+        <div class="toolbar-group">
+            <label class="toolbar-label"><i class="fa-solid fa-palette"></i> Text Color</label>
+            <input type="color" class="color-picker" id="textColorPicker" value="#000000" title="Pick text color">
+        </div>
+
+        <!-- Line Spacing -->
+        <div class="toolbar-group">
+            <label class="toolbar-label"><i class="fa-solid fa-arrows-alt-v"></i> Line Spacing</label>
+            <select class="line-spacing-select" id="lineSpacing" title="Line spacing">
+                <option value="1.5">1.5</option>
+                <option value="1.8" selected>1.8</option>
+                <option value="2.0">2.0</option>
+                <option value="2.5">2.5</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Preview Area -->
+    <div class="pdf-preview-area" id="pdfPreviewArea">
+        <div class="pages-wrapper" id="pagesWrapper">
+            <div id="pagesContainer">
+                <!-- A4 pages rendered here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="pdf-empty-state" id="pdfEmptyState" style="display:none;">
+        <i class="fa-solid fa-file-circle-exclamation"></i>
+        <h2>No Document Found</h2>
+        <p>Please go back to MSNS AI and generate a PDF from a bot response.</p>
+        <a href="msns-ai.html" class="back-link">← Back to MSNS AI</a>
+    </div>
+
+    <!-- KaTeX JS for math rendering -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    
+    <!-- PDF Logic -->
+    <script src="pdf.js"></script>
+    <script src="paw.js?v=2"></script>
+</body>
+</html>

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Applications - MSNS.EDU.LK</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="t-book.css">
+
+    <style>
+        .app-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border: 1px solid #eaeaea;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .app-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        .app-card-body {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .app-img {
+            width: 65px;
+            height: 65px;
+            border-radius: 12px;
+            object-fit: cover;
+            background-color: #f5f5f5;
+            flex-shrink: 0;
+            border: 1px solid #eee;
+        }
+
+        .app-info {
+            flex: 1;
+        }
+
+        .app-title {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .app-desc {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .app-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .app-actions .action-btn {
+            flex: 1;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">MSNS</div>
+            <div class="close-icon" id="closeMenu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </div>
+        </div>
+
+        <nav class="sidebar-menu">
+            <a href="index.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                Home
+            </a>
+            <a href="index.html#about" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                About Us
+            </a>
+            <a href="index.html#governing" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Governing Body
+            </a>
+            <a href="index.html#contact" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                Contact
+            </a>
+            <a href="Past.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                Past Papers & Documents
+            </a>
+            <a href="history.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                History
+            </a>
+            <a href="news.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path><path d="M18 14h-8"></path><path d="M15 18h-5"></path><path d="M10 6h8v4h-8V6Z"></path></svg>
+                News
+            </a>
+            <a href="msns-ai.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                MSNS.AI Assistant
+            </a>
+            <a href="ab.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                About developer
+            </a>
+        </nav>
+    </div>
+
+    <header id="top">
+        <div class="header-title">MSNS</div>
+        <div class="nav-icon" id="menuToggle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="3" y="3" width="5" height="8" rx="2.5" />
+                <rect x="10" y="3" width="11" height="8" rx="4" />
+                <rect x="3" y="13" width="5" height="8" rx="2.5" />
+                <rect x="10" y="13" width="11" height="8" rx="3" />
+            </svg>
+        </div>
+    </header>
+
+    <div class="content-wrapper">
+        
+        <section class="news-banner">
+            <h5>SCHOOL <span>APPLICATIONS</span></h5>
+            <p>Download & preview official school application forms</p>
+        </section>
+
+        <div id="applicationsList" class="subject-list">
+            <div class="no-docs-card">Loading applications...</div>
+        </div>
+
+    </div>
+
+    <div class="pdf-preview-overlay" id="previewOverlay">
+        <div class="pdf-preview-box">
+            <button class="close-pdf-circle" id="previewClose">&times;</button>
+            <iframe id="previewIframe" src="about:blank" allow="autoplay"></iframe>
+        </div>
+    </div>
+
+    <button id="backToTop" title="Go to top">↑</button>
+
+    <footer>
+        <p class="cr-text">© 2026 A/Maithripala Senanayake Central College</p>
+        <p class="al-text">MSNS.EDU.LK</p>
+        <p class="credit-text">
+            Editor: K.D.G.S.M. DENIYEGEDARA
+        </p>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDgg7n1LwcrRiV2kjgSM5E3XX27twweMg8",
+            authDomain: "msns-79.firebaseapp.com",
+            projectId: "msns-79",
+            storageBucket: "msns-79.firebasestorage.app",
+            messagingSenderId: "108137376740",
+            appId: "1:108137376740:web:78ed2f442c035a072f75f1",
+            measurementId: "G-3GTFJKTS7D"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // UI DOM Elements
+        const applicationsListEl = document.getElementById('applicationsList');
+        const previewOverlay = document.getElementById('previewOverlay');
+        const previewIframe = document.getElementById('previewIframe');
+        const previewClose = document.getElementById('previewClose');
+        const backToTopBtn = document.getElementById('backToTop');
+
+        /* Mobile Navigation Drawer */
+        const menuToggle = document.getElementById('menuToggle');
+        const closeMenu = document.getElementById('closeMenu');
+        const sidebar = document.getElementById('sidebar');
+        const menuOverlay = document.getElementById('menuOverlay');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.add('active');
+            menuOverlay.classList.add('active');
+        });
+
+        const hideMenu = () => {
+            sidebar.classList.remove('active');
+            menuOverlay.classList.remove('active');
+        };
+
+        closeMenu.addEventListener('click', hideMenu);
+        menuOverlay.addEventListener('click', hideMenu);
+
+        /* Scroll to Top */
+        window.addEventListener('scroll', function() {
+            if (document.body.scrollTop > 250 || document.documentElement.scrollTop > 250) {
+                backToTopBtn.style.display = "flex";
+            } else {
+                backToTopBtn.style.display = "none";
+            }
+        });
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        /* Direct Google Drive File ID Extractor */
+        function extractDriveId(url) {
+            if (!url) return null;
+            const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
+            return match ? match[1] : null;
+        }
+
+        /* HTML Escaper */
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        /* Fetch Applications from Firestore Collection 'application' */
+        async function fetchApplications() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "application"));
+                
+                if (querySnapshot.empty) {
+                    applicationsListEl.innerHTML = `
+                        <div class="no-docs-card">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                            <div>No applications found at the moment.</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const title = data.titel || data.title || 'School Application';
+                    const description = data.description || '';
+                    const link = data.link || '#';
+                    const imgUrl = data.img || '';
+
+                    const fileId = extractDriveId(link);
+
+                    const downloadUrl = fileId 
+                        ? `https://drive.usercontent.google.com/download?id=${fileId}&export=download` 
+                        : link;
+
+                    const previewUrl = fileId 
+                        ? `https://drive.google.com/file/d/${fileId}/preview` 
+                        : link;
+
+                    // Build Image Element if URL exists
+                    const imgTag = imgUrl 
+                        ? `<img src="${escapeHtml(imgUrl)}" alt="Application Icon" class="app-img" onerror="this.style.display='none'">` 
+                        : '';
+
+                    html += `
+                        <div class="app-card">
+                            <div class="app-card-body">
+                                ${imgTag}
+                                <div class="app-info">
+                                    <div class="app-title">${escapeHtml(title)}</div>
+                                    ${description ? `<div class="app-desc">${escapeHtml(description)}</div>` : ''}
+                                </div>
+                            </div>
+                            <div class="app-actions">
+                                <button class="action-btn btn-preview" onclick="openPdfPreview('${previewUrl}')">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    Preview
+                                </button>
+                                <a href="${downloadUrl}" class="action-btn btn-download" download target="_blank">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    Download
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                applicationsListEl.innerHTML = html;
+
+            } catch (error) {
+                console.error("Error fetching applications: ", error);
+                applicationsListEl.innerHTML = `
+                    <div class="no-docs-card">
+                        <div>Failed to load applications. Please try again later.</div>
+                    </div>
+                `;
+            }
+        }
+
+        /* PDF Modal Preview Control */
+        window.openPdfPreview = function(url) {
+            if (!url || url === '#') {
+                alert('Preview URL is not available.');
+                return;
+            }
+            previewIframe.src = url;
+            previewOverlay.classList.add('active');
+        };
+
+        function closePreview() {
+            previewOverlay.classList.remove('active');
+            previewIframe.src = 'about:blank';
+        }
+
+        previewClose.addEventListener('click', closePreview);
+        previewOverlay.addEventListener('click', (e) => {
+            if (e.target === previewOverlay) closePreview();
+        });
+
+        // Initial Load
+        fetchApplications();
+    </script>
+    <script src="paw.js?v=2"></script>
+</body>
+</html>

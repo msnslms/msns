@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="description" content="MSNS.AI Digital Assistant - A/Maithripala Senanayake Central College">
+    <meta name="author" content="K.D.G.S.M. Deniyegedara">
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+    <title>MSNS.AI Assistant | MSNS.LK</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Sinhala:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="ai.css">
+
+    <style id="layout-fix">
+        :root {
+            --app-vh: 100vh;
+        }
+        html, body {
+            height: var(--app-vh) !important;
+            min-height: var(--app-vh) !important;
+            max-height: var(--app-vh) !important;
+            overflow: hidden !important; 
+            margin: 0; padding: 0;
+            width: 100vw;
+            position: fixed;
+        }
+        .ai-app-container {
+            height: 100% !important;
+            width: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            position: relative;
+            overflow: hidden !important;
+        }
+        .chat-viewport {
+            flex: 1 1 auto !important;
+            overflow-y: auto !important;
+            min-height: 0 !important;
+            display: flex;
+            flex-direction: column;
+            padding-top: 60px;
+        }
+        .bottom-controls {
+            flex: 0 0 auto !important;
+            padding-bottom: max(15px, env(safe-area-inset-bottom)) !important;
+            width: 100%;
+            box-sizing: border-box;
+            background: inherit;
+        }
+    </style>
+</head>
+
+<body>
+        <a href="index.html" id="homeBtn" style="position: absolute; top: 15px; right: 20px; z-index: 9999; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(10px); transition: 0.3s; text-decoration: none;" title="Go to Home">
+    <i class="fa-solid fa-house" style="font-size: 18px;"></i>
+</a>
+        <div class="user-pill-wrap" style="position: absolute; top: 15px; left: 15px; z-index: 60;">
+            <div class="user-profile" id="userProfileBtn">
+                <div class="avatar" id="userAvatar">U</div>
+                <div class="user-info">
+                    <span class="user-name" id="userName">Loading...</span>
+                    <span class="user-sub" id="userEmail">...</span>
+                </div>
+                <i class="fa-solid fa-chevron-down chevron"></i>
+            </div>
+
+            <div class="user-dropdown" id="userDropdown">
+                <div class="dropdown-header">
+                    <p class="dp-name" id="dpUserName">User Name</p>
+                    <p class="dp-email" id="dpUserEmail">user@gmail.com</p>
+                </div>
+                <div class="dropdown-section-title">
+                    <span><i class="fa-solid fa-clock-rotate-left"></i> Chat History</span>
+                    <button class="new-chat-btn" id="newChatBtn" title="Start New Chat">
+                        <i class="fa-solid fa-plus"></i> New
+                    </button>
+                </div>
+                <div class="chat-history-list" id="chatHistoryList">
+                    </div>
+                <div class="dropdown-footer">
+                    <button id="logoutBtn" class="logout-btn">
+                        <i class="fa-solid fa-right-from-bracket"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-viewport">
+            <div class="hero-greeting" id="heroGreeting">
+                <h1 class="hero-title"><span class="msns-text">MSNS</span> <span class="ai-text">AI</span></h1>
+                <p class="hero-subtitle">What help do you need from me today?</p>
+            </div>
+
+            <div class="ai-chat-messages" id="chatMessages"></div>
+        </div>
+
+        <div class="bottom-controls">
+            <div id="aiMaintenanceNotice" class="maintenance-banner" style="display: none;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>කනගාටුයි, යම් කිසි අලුත්වැඩියාවක් නිසා දැනට භාවිතා කළ නොහැක.</span>
+            </div>
+
+            <div class="quick-chips">
+                <div class="chip" onclick="sendQuickQuery('විද්‍යාලයේ ඉතිහාසය කියන්න')">📜 පාසල් ඉතිහාසය</div>
+                <div class="chip" onclick="sendQuickQuery('Past papers ඩවුන්ලෝඩ් කරන්නේ කොහොමද?')">📚 Past Papers</div>
+                <div class="chip" onclick="sendQuickQuery('විද්‍යාලයේ දුරකථන අංකය,ඊමේල් එක කුමක්ද?')">📞 සම්බන්ධ කරගන්න</div>
+                <div class="chip" onclick="sendQuickQuery('A/L Streams මොනවාද තියෙන්නේ?')">🎓 A/L විෂය ධාරා</div>
+            </div>
+
+            <div class="input-box">
+                <input type="text" id="userInput" placeholder="Type your question..." autocomplete="off">
+                <button class="send-btn" id="sendBtn">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="imageModal" class="image-modal">
+        <span class="modal-close" id="modalClose">&times;</span>
+        <div class="modal-content-wrap">
+            <img class="modal-img" id="modalImage" src="" alt="Preview">
+            <a id="modalDownloadBtn" class="modal-download-btn" href="" download target="_blank">
+                <i class="fa-solid fa-download"></i> Download Image
+            </a>
+        </div>
+    </div>
+    <script src="save-c.js?v=2"></script>
+    <script src="paw.js?v=2"></script>
+    <script type="module" src="ai.js?v=2"></script>
+</body>
+</html>
+
+

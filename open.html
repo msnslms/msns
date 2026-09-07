@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="Ihn5xmushUjUaDypm_IDAc3Z-YQIDOa61yOyv1rl52w" />
+    <title>Welcome | A/Maithripala Senanayaka Central College</title>
+    <link rel="icon" type="image/png" href="school bage.png">
+    <link rel="stylesheet" href="fix.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #070b12; /* index.html එකේ background එකමයි */
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2.5rem 1.5rem;
+            overflow: hidden;
+        }
+
+        /* Ambient Background Glow */
+        .glow-bg {
+            position: absolute;
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(0, 198, 255, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Main Welcome Container */
+        .welcome-card {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            max-width: 480px;
+            margin: auto;
+        }
+
+        /* 1. Badge Pop/Fade Animation */
+        .badge-container {
+            margin-bottom: 1.8rem;
+        }
+
+        .school-badge {
+            width: 100px; /* Clean & Compact Size */
+            height: 100px;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 18px rgba(255, 255, 255, 0.12));
+            opacity: 0;
+            transform: scale(0.7);
+            animation: badgeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.2s;
+        }
+
+        /* 2. Welcome To Fade Animation */
+        .sub-tag {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: #94a3b8;
+            font-weight: 500;
+            margin-bottom: 0.6rem;
+            opacity: 0;
+            transform: translateY(8px);
+            animation: fadeIn 0.8s ease forwards 0.9s;
+        }
+
+        /* 3. Typewriter School Name */
+        .school-name {
+            font-size: 1.05rem; /* Sleek & Small Size */
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: 1.2px;
+            line-height: 1.6;
+            min-height: 3.2rem; /* Avoid layout shift while typing */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+       /* Footer */
+        footer {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #475569;
+            letter-spacing: 0.8px;
+            opacity: 0;
+            animation: fadeIn 0.8s ease forwards 1.2s;
+        }
+
+        footer span {
+            color: #64748b;
+        }
+
+        /* Animations */
+        @keyframes badgeIn {
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glow-bg"></div>
+
+    <div class="welcome-card">
+        <!-- School Badge -->
+        <div class="badge-container">
+            <img src="school bage.png" alt="School Badge" class="school-badge">
+        </div>
+
+        <!-- Fade Animation Subtitle -->
+        <div class="sub-tag">Welcome to</div>
+
+        <!-- Typewriter Animated Title -->
+        <h1 class="school-name">
+            <span id="typed-text"></span><span class="cursor" id="cursor"></span>
+        </h1>
+    </div>
+
+    <!-- Clean Footer -->
+    <footer>
+        <p>© 2026 MSNS.LK &nbsp;&nbsp; <br><span>Designed by K.D.G.S.M. Deniyegedara</span></p>
+    </footer>
+
+    <script>
+        const textToType = "A/MAITHRIPALA SENANAYAKA CENTRAL COLLEGE";
+        const typedTextElement = document.getElementById("typed-text");
+        const cursorElement = document.getElementById("cursor");
+
+        let index = 0;
+        const typingSpeed = 45; // Speed per character (ms)
+        const startDelay = 1600; // Delay before typing starts (after badge & welcome fade in)
+        const redirectDelay = 1200; // Wait time after typing finishes before redirecting
+
+        function typeWriter() {
+            if (index < textToType.length) {
+                // Break lines cleanly for mobile view readability
+                if (textToType.substring(index).startsWith("CENTRAL")) {
+                    typedTextElement.innerHTML += "<br>";
+                }
+                typedTextElement.innerHTML += textToType.charAt(index);
+                index++;
+                setTimeout(typeWriter, typingSpeed);
+            } else {
+                // Typing complete: set session & auto redirect
+                setTimeout(() => {
+                    sessionStorage.setItem('welcomeShown', 'true');
+                    window.location.href = 'index.html?visited=true';
+                }, redirectDelay);
+            }
+        }
+
+        // Start typing after initial animations finish
+        setTimeout(typeWriter, startDelay);
+    </script>
+    <script src="paw.js?v=2"></script>
+</body>
+</html>

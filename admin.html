@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MSNS.ADMIN - Control Panel</title>
+    <!-- Admin PWA Manifest --> 
+    <link rel="manifest" href="admin-manifest.json">
+    <meta name="theme-color" content="#16213e">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="admin-p.css?v=2">
+</head>
+<body>
+
+    <div class="menu-overlay" id="menuOverlay"></div>
+    
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-title">MSNS.ADMIN</span>
+            <div class="close-icon" id="closeSidebar"><i class="fa-solid fa-xmark"></i></div>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <a href="index.html" class="menu-item">
+                <i class="fa-solid fa-house"></i>
+                <span>Go to home page</span>
+            </a>
+            <a href="#" class="menu-item nav-link active-link" data-section="usersSection" id="navUsers">
+                <i class="fa-solid fa-users"></i>
+                <span>Users</span>
+            </a>
+            <a href="#" class="menu-item nav-link" data-section="newsSection" id="navNews">
+                <i class="fa-solid fa-newspaper"></i>
+                <span>Update news</span>
+            </a>
+            <a href="#" class="menu-item nav-link" data-section="examSection" id="navExams">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <span>O/L and A/L Results</span>
+            </a>
+            <a href="#" class="menu-item nav-link" data-section="termTestSection" id="navTermTest">
+                <i class="fa-solid fa-file-lines"></i>
+                <span>Term test result</span>
+            </a>
+            <a href="#" class="menu-item nav-link" data-section="documentsSection" id="navDocuments">
+                <i class="fa-solid fa-book-bookmark"></i>
+                <span>Past paper and Document page update</span>
+            </a>
+            <a href="#" class="menu-item nav-link" data-section="geminiSection" id="navGemini">
+                <i class="fa-solid fa-robot"></i>
+                <span>Gemini API</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <button class="btn btn-danger btn-block" id="btnLogout">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <header>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="nav-icon" id="openSidebar">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            <div class="header-title">MSNS.ADMIN</div>
+        </div>
+        <div class="admin-badge" id="adminRoleBadge">Owner</div>
+    </header>
+
+    <div class="login-modal-overlay active" id="loginModal">
+        <div class="modal-card login-card">
+            <div class="login-header">
+                <h2>MSNS.ADMIN</h2>
+                <p>Enter administrative credentials to continue</p>
+            </div>
+            <form id="loginForm">
+                <div class="field">
+                    <label>Username</label>
+                    <input type="text" id="loginUsername" class="custom-input" placeholder="e.g. owner, media-unit" required />
+                </div>
+                <div class="field">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" class="custom-input" placeholder="••••••••" required />
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Login to Panel</button>
+            </form>
+        </div>
+    </div>
+
+    <main class="content-wrapper">
+
+        <section id="usersSection" class="admin-section active">
+            <div class="section-header">
+                <h2>User Management</h2>
+                <p>Manage student and teacher accounts, role permissions and status.</p>
+            </div>
+
+            <div class="tab-pills">
+                <button class="tab-pill active" id="tabStudents">Students</button>
+                <button class="tab-pill" id="tabTeachers">Teachers</button>
+            </div>
+
+            <div class="search-bar-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="userSearchInput" class="custom-input" placeholder="Search by name, email or index number..." />
+            </div>
+
+            <div id="usersContainer" class="users-grid">
+                </div>
+        </section>
+
+        <section id="newsSection" class="admin-section">
+            <div class="section-header">
+                <h2>Update News</h2>
+                <p>Publish announcements and articles to the main portal.</p>
+            </div>
+
+            <div class="form-card">
+                <form id="newsForm">
+                    <input type="hidden" id="newsId" />
+                    
+                    <div class="field">
+                        <label>News Title</label>
+                        <input type="text" id="newsTitle" class="custom-input" required />
+                    </div>
+
+                    <div class="field-2col">
+                        <div class="field">
+                            <label>Category</label>
+                            <input type="text" id="newsCategory" class="custom-input" placeholder="e.g. Academic, Sports" required />
+                        </div>
+                        <div class="field">
+                            <label>Date</label>
+                            <input type="date" id="newsDate" class="custom-input" required />
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label>Image Upload (ImgBB API Auto Upload)</label>
+                        <input type="file" id="newsImageFile" class="custom-input" accept="image/*" />
+                        <input type="hidden" id="newsImageUrl" />
+                        <div id="imagePreviewBox" class="img-preview-box"></div>
+                    </div>
+
+                    <div class="field">
+                        <label>Snippet / Description</label>
+                        <textarea id="newsSnippet" class="custom-input" rows="4" required></textarea>
+                    </div>
+
+                    <div class="field-3col">
+                        <div class="field">
+                            <label>Is Featured?</label>
+                            <select id="newsIsFeatured" class="custom-select">
+                                <option value="no">No</option>
+                                <option value="yes">Yes</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Show In Home?</label>
+                            <select id="newsShowInHome" class="custom-select">
+                                <option value="yes">Yes</option>
+                                <option value="no">No</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Read More Link</label>
+                            <input type="text" id="newsReadMoreLink" class="custom-input" placeholder="index.html or https://..." />
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="btnSaveNews">
+                        <i class="fa-solid fa-floppy-disk"></i> Save News
+                    </button>
+                </form>
+            </div>
+
+            <h3 class="sub-title">Published News List</h3>
+            <div id="newsListContainer" class="news-list-grid"></div>
+        </section>
+
+        <section id="examSection" class="admin-section">
+            <div class="section-header">
+                <h2>O/L and A/L Examination Results</h2>
+                <p>Update statistics and high achievers list for national examinations.</p>
+            </div>
+
+            <div class="tab-pills">
+                <button class="tab-pill active" id="tabOlExam">O/L Examination</button>
+                <button class="tab-pill" id="tabAlExam">A/L Examination</button>
+            </div>
+
+            <div id="olFormWrapper" class="form-card">
+                <h3>Ordinary Level (O/L) Results Entry</h3>
+                <div class="field-2col" style="margin-top: 15px;">
+                    <div class="field">
+                        <label>Exam Year</label>
+                        <input type="number" id="olYear" class="custom-input" placeholder="2025" />
+                    </div>
+                    <div class="field">
+                        <label>Full Document (Google Drive Link)</label>
+                        <input type="text" id="olDriveLink" class="custom-input" placeholder="https://drive.google.com/..." />
+                    </div>
+                </div>
+
+                <div class="field-3col">
+                    <div class="field">
+                        <label>Total Sat (සහභාගී වූ ගණන)</label>
+                        <input type="number" id="olTotal" class="custom-input" />
+                    </div>
+                    <div class="field">
+                        <label>Passed Count (පාස් ගණන)</label>
+                        <input type="number" id="olPass" class="custom-input" />
+                    </div>
+                    <div class="field">
+                        <label>Failed Count (ෆේල් ගණන)</label>
+                        <input type="number" id="olFail" class="custom-input" />
+                    </div>
+                </div>
+                <div class="calc-box">Auto Pass Percentage: <span id="olPassRate">0%</span></div>
+
+                <h4 style="margin: 20px 0 10px; color:#60a5fa;">Top Achievers (9A, 8A, 7A, 6A etc.)</h4>
+                <div id="olAchieversContainer"></div>
+                <button type="button" class="btn btn-ghost" id="btnAddOlAchiever" style="margin-top:10px;">
+                    <i class="fa-solid fa-plus"></i> Add Student Result
+                </button>
+
+                <div style="margin-top: 25px;">
+                    <button type="button" class="btn btn-primary" id="btnSaveOl">Save O/L Results</button>
+                </div>
+            </div>
+
+            <div id="alFormWrapper" class="form-card" style="display: none;">
+                <h3>Advanced Level (A/L) Results Entry</h3>
+                <div class="field-2col" style="margin-top: 15px;">
+                    <div class="field">
+                        <label>Exam Year</label>
+                        <input type="number" id="alYear" class="custom-input" placeholder="2025" />
+                    </div>
+                    <div class="field">
+                        <label>Full Document (Google Drive Link)</label>
+                        <input type="text" id="alDriveLink" class="custom-input" placeholder="https://drive.google.com/..." />
+                    </div>
+                </div>
+
+                <div id="alStreamsContainer"></div>
+
+                <div style="margin-top: 25px;">
+                    <button type="button" class="btn btn-primary" id="btnSaveAl">Save A/L Results</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="termTestSection" class="admin-section">
+            <div class="section-header">
+                <h2>Term Test Results</h2>
+                <p>Link Google Sheets containing term test result marksheets.</p>
+            </div>
+
+            <div class="form-card">
+                <form id="termTestForm">
+                    <div class="field-2col">
+                        <div class="field">
+                            <label>Year</label>
+                            <input type="number" id="ttYear" class="custom-input" placeholder="2026" required />
+                        </div>
+                        <div class="field">
+                            <label>Term</label>
+                            <select id="ttTerm" class="custom-select" required>
+                                <option value="1st term">1st term</option>
+                                <option value="2nd term">2nd term</option>
+                                <option value="3rd term">3rd term</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field-2col">
+                        <div class="field">
+                            <label>Grade</label>
+                            <select id="ttGrade" class="custom-select" required>
+                                <option value="6">Grade 6</option>
+                                <option value="7">Grade 7</option>
+                                <option value="8">Grade 8</option>
+                                <option value="9">Grade 9</option>
+                                <option value="10">Grade 10</option>
+                                <option value="11">Grade 11</option>
+                                <option value="12">Grade 12</option>
+                                <option value="13">Grade 13</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Class</label>
+                            <select id="ttClass" class="custom-select" required>
+                                <option value="A">Class A</option>
+                                <option value="B">Class B</option>
+                                <option value="C">Class C</option>
+                                <option value="D">Class D</option>
+                                <option value="E">Class E</option>
+                                <option value="F">Class F</option>
+                                <option value="G">Class G</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field" id="streamFieldBox" style="display: none;">
+                        <label>Stream (For Grade 12 & 13)</label>
+                        <select id="ttStream" class="custom-select">
+                            <option value="A/L Technology">A/L Technology</option>
+                            <option value="A/L Biological Science">A/L Biological Science</option>
+                            <option value="A/L Physical Science (Maths)">A/L Physical Science (Maths)</option>
+                            <option value="A/L Arts">A/L Arts</option>
+                            <option value="A/L Commerce">A/L Commerce</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label>Google Sheet Link</label>
+                        <input type="url" id="ttSheetUrl" class="custom-input" placeholder="https://docs.google.com/spreadsheets/d/..." required />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-plus"></i> Add Term Test Sheet
+                    </button>
+                </form>
+            </div>
+
+            <h3 class="sub-title">Added Term Test Sheets</h3>
+            <div id="termTestList" class="sheets-list"></div>
+        </section>
+
+        <section id="documentsSection" class="admin-section">
+            <div class="section-header">
+                <h2>Past Papers & Academic Documents Update</h2>
+                <p>Direct links to Google Sheets managing resource pages.</p>
+            </div>
+
+            <div class="sheets-btn-grid">
+                <a href="https://docs.google.com/spreadsheets/d/1WZ13wzcv_Ca7u3ohBZnLgEUrs7h7wgQBo83-A-n4Ne0/edit?usp=drivesdk" target="_blank" class="doc-link-card">
+                    <i class="fa-solid fa-book"></i>
+                    <div class="doc-info">
+                        <h4>Edit Text Books</h4>
+                        <span>Google Spreadsheet</span>
+                    </div>
+                </a>
+
+                <a href="https://docs.google.com/spreadsheets/d/1eOlkqUHWBo_PT9rc9IdwPaQtBWcBQ_pK2Z3g7XTqRXM/edit?usp=drivesdk" target="_blank" class="doc-link-card">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                    <div class="doc-info">
+                        <h4>Edit Teacher's Guide</h4>
+                        <span>Google Spreadsheet</span>
+                    </div>
+                </a>
+
+                <a href="https://docs.google.com/spreadsheets/d/1FuK5JY1SP33OOrACsoFxC5WyZYqbyj_Q4-K4C54TEv4/edit?usp=drivesdk" target="_blank" class="doc-link-card">
+                    <i class="fa-solid fa-note-sticky"></i>
+                    <div class="doc-info">
+                        <h4>Edit Short Notes</h4>
+                        <span>Google Spreadsheet</span>
+                    </div>
+                </a>
+
+                <a href="https://docs.google.com/spreadsheets/d/19zyl4ZulZc8iTbodIEosWaJlZgFLn3SVqIomV_9tP5o/edit?usp=drivesdk" target="_blank" class="doc-link-card">
+                    <i class="fa-solid fa-file-signature"></i>
+                    <div class="doc-info">
+                        <h4>Edit Application</h4>
+                        <span>Google Spreadsheet</span>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <section id="geminiSection" class="admin-section">
+            <div class="section-header">
+                <h2>Gemini API Keys Management</h2>
+                <p>Store and manage API keys for system AI features.</p>
+            </div>
+
+            <div class="form-card">
+                <form id="geminiKeyForm">
+                    <div class="field">
+                        <label>Gemini API Key</label>
+                        <input type="text" id="geminiKeyInput" class="custom-input" placeholder="AIzaSy..." required />
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-key"></i> Add Key
+                    </button>
+                </form>
+            </div>
+
+            <h3 class="sub-title">Saved API Keys</h3>
+            <div id="geminiKeysContainer" class="keys-list"></div>
+        </section>
+
+    </main>
+
+    <div id="toastBox" class="toast-box"></div>
+
+    <script type="module" src="admin-p.js?v=2"></script>
+</body>
+</html>

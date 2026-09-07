@@ -1,0 +1,32 @@
+{
+  "users": {
+    "UID_TEACHER_12345": {
+      "uid": "UID_TEACHER_12345",
+      "email": "teacher@msns.lk",
+      "displayName": "Ajith Wijesiri",
+      "role": "teacher",
+      "permissions": {
+        "canPostNews": true,
+        "canUploadQuizzes": true,
+        "canUploadPastPapers": true
+      },
+      "createdAt": "2026-08-15T10:00:00Z"
+    },
+    "UID_STUDENT_67890": {
+      "uid": "UID_STUDENT_67890",
+      "email": "student@msns.lk",
+      "displayName": "Kasun Perera",
+      "role": "student",
+      "permissions": {
+        "canPostNews": false,
+        "canUploadQuizzes": false,
+        "canUploadPastPapers": false
+      },
+      "createdAt": "2026-08-15T10:05:00Z"
+    }
+  },
+  "roles_config": {
+    "teacher_redirect": "Past.html",
+    "student_redirect": "news.html"
+  }
+}

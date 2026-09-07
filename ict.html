@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School ICT Unit - MSNS.EDU.LK</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=2">
+    <style>
+        /* Hero Video Section Custom Styling */
+        .hero-banner {
+            position: relative;
+            width: 100%;
+            height: 340px;
+            overflow: hidden;
+            border-radius: 0 0 28px 28px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+        }
+
+        .hero-video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            filter: brightness(0.6) contrast(1.1);
+        }
+
+        .hero-caption {
+            position: relative;
+            z-index: 2;
+            background: rgba(18, 26, 43, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 14px 28px;
+            border-radius: 50px;
+            color: #f8fafc;
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            text-transform: uppercase;
+        }
+
+        /* ICT Page Specific Custom Styles */
+        .ict-card {
+            background: rgba(18, 26, 43, 0.5);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 32px 24px;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .ict-badge {
+            max-width: 280px;
+            width: 75%;
+            height: auto;
+            margin-bottom: 28px;
+            filter: drop-shadow(0 0 25px rgba(56, 189, 248, 0.35));
+            transition: transform 0.4s ease, filter 0.4s ease;
+        }
+
+        .ict-badge:hover {
+            transform: scale(1.04);
+            filter: drop-shadow(0 0 35px rgba(56, 189, 248, 0.5));
+        }
+
+        .ict-heading {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #38bdf8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .ict-text {
+            font-size: 0.95rem;
+            line-height: 1.85;
+            color: #cbd5e1;
+            text-align: justify;
+        }
+
+        .ict-text strong, 
+        .ict-text b {
+            color: #38bdf8;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Overlay -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">MSNS</div>
+            <div class="close-icon" id="closeMenu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </div>
+        </div>
+
+        <nav class="sidebar-menu">
+            <a href="index.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                Home
+            </a>
+            <a href="index.html#about" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                About Us
+            </a>
+            <a href="index.html#governing" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Governing Body
+            </a>
+            <a href="index.html#contact" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                Contact
+            </a>
+            <a href="Past.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                Past Papers & Application
+            </a>
+            <a href="history.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                History
+            </a>
+            <a href="news.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path><path d="M18 14h-8"></path><path d="M15 18h-5"></path><path d="M10 6h8v4h-8V6Z"></path></svg>
+                News
+            </a>
+          <a href="msns-ai.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                MSNS.AI Assistant
+          </a>
+            <a href="ab.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                About developer
+            </a>
+        </nav>
+    </div>
+
+    <!-- Header -->
+    <header id="top">
+        <div class="header-title">MSNS</div>
+        <div class="nav-icon" id="menuToggle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="3" y="3" width="5" height="8" rx="2.5" />
+                <rect x="10" y="3" width="11" height="8" rx="4" />
+                <rect x="3" y="13" width="5" height="8" rx="2.5" />
+                <rect x="10" y="13" width="11" height="8" rx="3" />
+            </svg>
+        </div>
+    </header>
+
+    <!-- Top Hero Video Banner -->
+    <div class="hero-banner">
+        <video autoplay muted loop id="bg-video" class="hero-video">
+            <source src="ict.mp4" type="video/mp4" />
+        </video>
+        <div class="hero-caption">School ICT Unit — MSNS.EDU.LK</div>
+    </div>
+
+    <!-- Main Content Wrapper -->
+    <div class="content-wrapper">
+
+        <!-- About ICT Unit Section -->
+        <section>
+            <div class="section-title">
+                <span>School ICT Unit</span>
+            </div>
+
+            <div class="ict-card">
+                <img src="ict.png" alt="ICT Unit Badge" class="ict-badge">
+                <h3 class="ict-heading">About the ICT Unit</h3>
+
+                <div class="ict-text">
+                    <p>
+                        <b>Metsen Swara</b> is the <strong>premier morning broadcast program</strong> organized and produced by the <b>School ICT Unit</b>. This program serves as a vibrant start to the school day, fostering an environment of <strong>information, inspiration, and creativity</strong>.
+                    </p>
+                    <br>
+                    <p>
+                        The program is brought to life by the <b>talented young voices</b> of our school. Students who possess <strong>exceptional skills</strong> in announcing, broadcasting, and public speaking are given the platform to showcase their abilities, ensuring a <b>high standard of delivery</b> and engagement. Our unit works tirelessly to bridge the gap between information and the student body, building a <strong>confident generation</strong> ready to face the world of communication.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </div>
+    <section id="contact" style="width: 100%;">  
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; width: 100%; max-width: 700px; margin: 20px auto 0; box-sizing: border-box;">
+    
+    <div style="display: flex; align-items: center; gap: 16px; padding: 20px; background-color: #121824; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.08); width: 100%; box-sizing: border-box;">
+      <div style="width: 52px; height: 52px; min-width: 52px; display: flex; align-items: center; justify-content: center; background-color: #1a2333; border-radius: 14px; color: #38bdf8;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 26px; height: 26px;">
+          <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+        </svg>
+      </div>
+      <div>
+        <h3 style="margin: 0; font-size: 17px; font-weight: 600; color: #ffffff;">Facebook Page</h3>
+        <p style="margin: 4px 0 0 0; font-size: 13px; color: #94a3b8;">
+          <a href="https://www.facebook.com/profile.php?id=100064282290188&mibextid=rS40aB7S9Ucbxw6v" style="color: inherit; text-decoration: none;">Visit Facebook page</a>
+        </p>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 16px; padding: 20px; background-color: #121824; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.08); width: 100%; box-sizing: border-box;">
+      <div style="width: 52px; height: 52px; min-width: 52px; display: flex; align-items: center; justify-content: center; background-color: #1a2333; border-radius: 14px; color: #38bdf8;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 26px; height: 26px;">
+          <path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"></path>
+          <path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"></path>
+        </svg>
+      </div>
+      <div>
+        <h3 style="margin: 0; font-size: 17px; font-weight: 600; color: #ffffff;">Whatsapp Channel</h3>
+        <p style="margin: 4px 0 0 0; font-size: 13px; color: #94a3b8;">
+          <a href="https://whatsapp.com/channel/0029Vb7kcZg7oQharw9Ow13V" style="color: inherit; text-decoration: none;">Visit Whatsapp channel</a>
+        </p>
+      </div>
+    </div>
+
+  </div>
+</section>
+    <!-- Footer -->
+    <footer>
+        <p class="cr-text">© 2026 A/Maithripala Senanayake Central College</p>
+        <p class="al-text">MSNS.EDU.LK</p>
+        <p class="credit-text">
+            Editor: K.D.G.S.M. DENIYEGEDARA
+        </p>
+    </footer>
+
+    <!-- JavaScript Navigation Logic -->
+    <script>
+        const menuToggle = document.getElementById('menuToggle');
+        const closeMenu = document.getElementById('closeMenu');
+        const sidebar = document.getElementById('sidebar');
+        const menuOverlay = document.getElementById('menuOverlay');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.add('active');
+            menuOverlay.classList.add('active');
+        });
+
+        const hideMenuHub = () => {
+            sidebar.classList.remove('active');
+            menuOverlay.classList.remove('active');
+        };
+
+        closeMenu.addEventListener('click', hideMenuHub);
+        menuOverlay.addEventListener('click', hideMenuHub);
+    </script>
+    <script src="paw.js?v=2"></script>
+</body>
+</html>

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="fix.css">
+    <title>G.C.E. O/L Results - A/Maithripala Senanayaka Central College</title>
+</head>
+<body>
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">MSNS</div>
+            <div class="close-icon" id="closeMenu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </div>
+        </div>
+
+        <nav class="sidebar-menu">
+            <a href="index.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                Home
+            </a>
+            <a href="index.html#about" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                About Us
+            </a>
+            <a href="ol.html" class="menu-item active-link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                O/L Exam Results
+            </a>
+            <a href="Past.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                Past Papers & Documents
+            </a>
+            <a href="history.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                History
+            </a>
+            <a href="news.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path><path d="M18 14h-8"></path><path d="M15 18h-5"></path><path d="M10 6h8v4h-8V6Z"></path></svg>
+                News
+            </a>
+        </nav>
+    </div>
+
+    <header id="top">
+        <div class="header-title">MSNS</div>
+        <div class="nav-icon" id="menuToggle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="3" y="3" width="5" height="8" rx="2.5" />
+                <rect x="10" y="3" width="11" height="8" rx="4" />
+                <rect x="3" y="13" width="5" height="8" rx="2.5" />
+                <rect x="10" y="13" width="11" height="8" rx="3" />
+            </svg>
+        </div>
+    </header>
+
+    <!-- Page Header Banner -->
+    <section class="news-banner">
+        <h5>O/L EXAM<span> RESULTS</span></h5>
+        <p id="examYearText">2025(2026)</p>
+    </section>
+
+    <div class="content-wrapper">
+        
+        <!-- Summary Stats Overview Row -->
+        <section id="exam-stats-summary">
+            <div class="stats-overview-grid">
+                <div class="stat-card">
+                    <div class="stat-title">Total Attendees</div>
+                    <div class="stat-value" id="statTotal">0</div>
+                </div>
+                <div class="stat-card stat-pass">
+                    <div class="stat-title">Passed Exams</div>
+                    <div class="stat-value" id="statPassed">0</div>
+                </div>
+                <div class="stat-card stat-fail">
+                    <div class="stat-title">Failed Exams</div>
+                    <div class="stat-value" id="statFailed">0</div>
+                </div>
+                <div class="stat-card stat-rate">
+                    <div class="stat-title">Pass Rate</div>
+                    <div class="stat-value" id="statPassRate">0%</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pass Percentage Animated Donut Chart Section -->
+        <section id="overall-performance">
+            <div class="section-title"><span>Overall Pass Rate</span></div>
+            <div class="glass-card chart-card">
+                <div class="donut-chart-wrapper">
+                    <svg class="animated-donut" viewBox="0 0 36 36">
+                        <!-- Fail Segment Ring -->
+                        <path class="circle-bg-fail" fill="none"
+                            d="M18 2.0845
+                               a 15.9155 15.9155 0 0 1 0 31.831
+                               a 15.9155 15.9155 0 0 1 0 -31.831"
+                        />
+                        <!-- Pass Segment Ring -->
+                        <path class="circle-fill-pass" id="passCircle" fill="none"
+                            stroke-dasharray="0, 100"
+                            d="M18 2.0845
+                               a 15.9155 15.9155 0 0 1 0 31.831
+                               a 15.9155 15.9155 0 0 1 0 -31.831"
+                        />
+                    </svg>
+                    <div class="donut-percentage">
+                        <span id="counterValue">0</span>%
+                        <small>Passed</small>
+                    </div>
+                </div>
+
+                <!-- Legend Indicators -->
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <span class="legend-dot pass-dot"></span>
+                        <span class="legend-label">Pass Rate: <strong id="legendPassRate">0%</strong></span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot fail-dot"></span>
+                        <span class="legend-label">Fail Rate: <strong id="legendFailRate">0%</strong></span>
+                    </div>
+                </div>
+
+                <div class="chart-details">
+                    <h3 id="chartTitle">විභාග සාමාර්ථ ප්‍රතිශතය 0%</h3>
+                    <p>A/මෛත්‍රීපාල සේනානායක මධ්‍ය මහා විද්‍යාලයේ සාමාන්‍ය පෙළ විභාග සමත් ප්‍රතිශතය සහ විශිෂ්ට සාමාර්ථ සාරාංශය.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Top Achievers Quick Summary -->
+        <section>
+            <div class="grid-container">
+                <div class="info-card highlight-card">
+                    <div class="card-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+                    </div>
+                    <div class="card-text">
+                        <h3>9A Achievers</h3>
+                        <p class="stat-number" id="quick9ACount">00 Students</p>
+                    </div>
+                </div>
+                <div class="info-card highlight-card">
+                    <div class="card-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    </div>
+                    <div class="card-text">
+                        <h3>8A Achievers</h3>
+                        <p class="stat-number" id="quick8ACount">00 Students</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dynamic Achievers Sections (Loaded from Google Sheet) -->
+        <div id="dynamicAchieversWrapper"></div>
+
+    </div>
+
+    <!-- PDF Download Button Section -->
+    <div class="pdf-download-wrapper">
+        <a href="#" id="pdfBtn" class="pdf-download-btn" target="_blank">
+            <svg class="pdf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="12" y1="18" x2="12" y2="12"></line>
+                <polyline points="9 15 12 18 15 15"></polyline>
+            </svg>
+            <span>2025(2026) O/L Results PDF</span>
+        </a>
+    </div>
+
+    <button id="backToTop" title="Go to top">↑</button>
+
+    <footer>
+        <p class="cr-text">© 2026 A/Maithripala Senanayake Central College</p>
+        <p class="al-text">MSNS.EDU.LK</p>
+        <p class="credit-text">Designer: K.D.G.S.M. Deniyegedara &nbsp;</p>
+    </footer>
+
+    <script src="min.js"></script>
+
+    <!-- O/L Dynamic Results & Graph Sync Loader Script -->
+    <script>
+        // PDF URL Formatting Helper Function (Google Drive Auto Converter)
+        function formatPdfUrl(url) {
+            if (!url) return '#';
+            let cleanUrl = String(url).trim();
+            if (cleanUrl.includes('drive.google.com')) {
+                let id = '';
+                if (cleanUrl.includes('/d/')) {
+                    id = cleanUrl.split('/d/')[1].split('/')[0].split('?')[0];
+                } else if (cleanUrl.includes('id=')) {
+                    id = cleanUrl.split('id=')[1].split('&')[0];
+                }
+                if (id) {
+                    return `https://drive.google.com/file/d/${id}/preview`;
+                }
+            }
+            return cleanUrl;
+        }
+
+        async function loadOLResultsData() {
+            const SHEET_ID = '15LFm1voMhABzehIGzlrvGgmatgcNE1OKt1ydiyqWpVU';
+            const timeStamp = new Date().getTime();
+            
+            // Direct CSV Export URLs
+            const STATS_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Stats&_=${timeStamp}`;
+            const STUDENTS_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Students&_=${timeStamp}`;
+
+            // Helper: Parse CSV lines safely with quotes handling
+            function parseCSVLine(text) {
+                const result = [];
+                let cur = '';
+                let inQuotes = false;
+                for (let i = 0; i < text.length; i++) {
+                    const c = text[i];
+                    if (c === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (c === ',' && !inQuotes) {
+                        result.push(cur.trim().replace(/^"|"$/g, ''));
+                        cur = '';
+                    } else {
+                        cur += c;
+                    }
+                }
+                result.push(cur.trim().replace(/^"|"$/g, ''));
+                return result;
+            }
+
+            // Helper: Number Counter Animation
+            function animateCounter(elementId, targetValue, suffix = '') {
+                const el = document.getElementById(elementId);
+                if (!el) return;
+                
+                const target = parseInt(targetValue, 10) || 0;
+                if (target === 0) {
+                    el.textContent = '0' + suffix;
+                    return;
+                }
+
+                let start = 0;
+                const duration = 1200;
+                const steps = 40;
+                const stepTime = Math.max(Math.floor(duration / steps), 15);
+                const increment = target / steps;
+
+                const timer = setInterval(() => {
+                    start += increment;
+                    if (start >= target) {
+                        el.textContent = target + suffix;
+                        clearInterval(timer);
+                    } else {
+                        el.textContent = Math.floor(start) + suffix;
+                    }
+                }, stepTime);
+            }
+
+            try {
+                // ==========================================
+                // A. Fetch Stats Data (CSV)
+                // ==========================================
+                const statsRes = await fetch(STATS_CSV_URL, { cache: 'no-store' });
+                if (!statsRes.ok) throw new Error('Stats sheet fetch failed. Check Sheet Share Permissions.');
+                
+                const statsCsvText = await statsRes.text();
+                const statsMap = {};
+                const statsLines = statsCsvText.split(/\r?\n/);
+                
+                statsLines.forEach(line => {
+                    if (!line.trim()) return;
+                    const cols = parseCSVLine(line);
+                    if (cols.length >= 2) {
+                        const key = cols[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+                        const val = cols[1];
+                        if (key) statsMap[key] = val;
+                    }
+                });
+
+                const totalAttendees = parseInt(statsMap['totalattendees'] || 0, 10);
+                const passedExams = parseInt(statsMap['passedexams'] || 0, 10);
+                const failedExams = parseInt(statsMap['failedexams'] || (totalAttendees - passedExams), 10);
+
+                let passRate = 0;
+                if (statsMap['passrate'] !== undefined && statsMap['passrate'] !== '') {
+                    passRate = parseInt(statsMap['passrate'].replace('%', ''), 10) || 0;
+                } else if (totalAttendees > 0) {
+                    passRate = Math.round((passedExams / totalAttendees) * 100);
+                }
+                const failRate = Math.max(0, 100 - passRate);
+
+                // 1. Dynamic Year Update
+                if (statsMap['year']) {
+                    const yearElem = document.getElementById('examYearText');
+                    if (yearElem) yearElem.textContent = statsMap['year'];
+
+                    const pdfBtnSpan = document.querySelector('#pdfBtn span');
+                    if (pdfBtnSpan) pdfBtnSpan.textContent = `${statsMap['year']} O/L Results PDF`;
+                }
+
+                // 2. Overview Cards Numbers Animation
+                animateCounter('statTotal', totalAttendees);
+                animateCounter('statPassed', passedExams);
+                animateCounter('statFailed', Math.max(0, failedExams));
+                animateCounter('statPassRate', passRate, '%');
+
+                // 3. Donut Chart Center Value Animation
+                animateCounter('counterValue', passRate);
+
+                // 4. Chart Legends & Title Updates
+                animateCounter('legendPassRate', passRate, '%');
+                animateCounter('legendFailRate', failRate, '%');
+
+                const chartTitle = document.getElementById('chartTitle');
+                if (chartTitle) {
+                    chartTitle.textContent = `විභාග සාමාර්ථ ප්‍රතිශතය ${passRate}%`;
+                }
+
+                // 5. SVG Donut Chart Stroke Fill Animation
+                const passCircle = document.getElementById('passCircle');
+                if (passCircle) {
+                    passCircle.setAttribute('stroke-dasharray', `0, 100`);
+                    if (passRate > 0) {
+                        let currentDash = 0;
+                        const strokeTimer = setInterval(() => {
+                            currentDash += 1;
+                            passCircle.setAttribute('stroke-dasharray', `${currentDash}, 100`);
+                            if (currentDash >= passRate) {
+                                clearInterval(strokeTimer);
+                            }
+                        }, 15);
+                    }
+                }
+
+                // 6. PDF Button URL Update
+                if (statsMap['pdfurl']) {
+                    const pdfBtn = document.getElementById('pdfBtn');
+                    if (pdfBtn) {
+                        pdfBtn.href = formatPdfUrl(statsMap['pdfurl']);
+                    }
+                }
+
+                // ==========================================
+                // B. Fetch Students Data (CSV)
+                // ==========================================
+                const studentRes = await fetch(STUDENTS_CSV_URL, { cache: 'no-store' });
+                if (!studentRes.ok) throw new Error('Students sheet fetch failed.');
+                const studentCsvText = await studentRes.text();
+
+                const studentLines = studentCsvText.split(/\r?\n/);
+                const categoriesMap = {};
+
+                studentLines.forEach((line, index) => {
+                    if (index === 0 || !line.trim()) return;
+                    const cols = parseCSVLine(line);
+                    if (cols.length < 2) return;
+
+                    const name = cols[0] || '';
+                    const indexNo = (cols[1] || '').replace(/,/g, '');
+                    const category = (cols[2] || '').toUpperCase().replace(/\s+/g, '');
+                    const subResult = cols[3] || '';
+
+                    if (!category || category.includes('CATEGORY') || category.includes('COL')) return;
+
+                    if (!categoriesMap[category]) {
+                        categoriesMap[category] = [];
+                    }
+                    categoriesMap[category].push({ name, indexNo, subResult });
+                });
+
+                // Top Quick Summary Counts Update
+                const quick9A = document.getElementById('quick9ACount');
+                if (quick9A) {
+                    const count9A = categoriesMap['9A'] ? categoriesMap['9A'].length : 0;
+                    quick9A.textContent = `${String(count9A).padStart(2, '0')} Students`;
+                }
+
+                const quick8A = document.getElementById('quick8ACount');
+                if (quick8A) {
+                    const count8A = categoriesMap['8A'] ? categoriesMap['8A'].length : 0;
+                    quick8A.textContent = `${String(count8A).padStart(2, '0')} Students`;
+                }
+
+                // Category Styling Configurations
+                const themeConfig = {
+                    '9A': { card: 'gold-card', badge: 'gold-badge' },
+                    '8A': { card: 'blue-card', badge: 'blue-badge' },
+                    '7A': { card: 'emerald-card', badge: 'emerald-badge' },
+                    '6A': { card: 'purple-card', badge: 'purple-badge' }
+                };
+
+                const sortedCategories = Object.keys(categoriesMap).sort((a, b) => {
+                    const numA = parseInt(a, 10) || 0;
+                    const numB = parseInt(b, 10) || 0;
+                    return numB - numA;
+                });
+
+                // Render Dynamic Achievers Containers
+                const wrapper = document.getElementById('dynamicAchieversWrapper');
+                if (wrapper) {
+                    let fullHTML = '';
+
+                    sortedCategories.forEach(catName => {
+                        const studentsList = categoriesMap[catName];
+                        if (!studentsList || studentsList.length === 0) return;
+
+                        const countFormatted = String(studentsList.length).padStart(2, '0');
+                        const theme = themeConfig[catName] || { card: 'blue-card', badge: 'blue-badge' };
+                        const badgeText = catName.includes('A') ? catName.replace('A', ' A') : catName;
+
+                        let cardsHTML = '';
+                        studentsList.forEach(st => {
+                            const subText = st.subResult ? `<span class="sub-result">${st.subResult}</span>` : '';
+                            cardsHTML += `
+                                <div class="achiever-card ${theme.card}">
+                                    <div class="achiever-badge ${theme.badge}">${badgeText}</div>
+                                    <div class="achiever-info">
+                                        <h4>${st.name}</h4>
+                                        <p>Index No: ${st.indexNo} ${subText}</p>
+                                    </div>
+                                </div>
+                            `;
+                        });
+
+                        fullHTML += `
+                            <section id="${catName.toLowerCase()}-students">
+                                <div class="section-title">
+                                    <span>Students who obtained ${catName} passes (${countFormatted})</span>
+                                </div>
+                                <div class="achievers-grid">
+                                    ${cardsHTML}
+                                </div>
+                            </section>
+                        `;
+                    });
+
+                    wrapper.innerHTML = fullHTML;
+                }
+
+            } catch (error) {
+                console.error('Error loading O/L results:', error);
+            }
+        }
+
+        // AUTO EXECUTE WHEN DOM IS LOADED
+        document.addEventListener('DOMContentLoaded', loadOLResultsData);
+    </script>
+    <script src="paw.js?v=2"></script>
+</body>
+</html>

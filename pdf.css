@@ -1,0 +1,747 @@
+/* ============================================
+   MSNS AI - PDF Export Styles
+   ============================================ */
+
+/* FMAbhaya Local Font */
+@font-face {
+    font-family: 'FMAbhaya';
+    src: local('FMAbhaya'), local('FM Abhaya'), local('FM-Abhaya');
+    font-weight: normal;
+    font-style: normal;
+}
+
+:root {
+    --pdf-bg: #0f172a;
+    --pdf-topbar-bg: #1e293b;
+    --pdf-toolbar-bg: #1e293b;
+    --pdf-border: #334155;
+    --pdf-text: #e2e8f0;
+    --pdf-accent: #38bdf8;
+    --pdf-accent-light: #7dd3fc;
+    --pdf-gold: #fbbf24;
+    --pdf-green: #4ade80;
+    --a4-width: 794px;
+    --a4-height: 1123px;
+    --a4-margin: 64px;
+    --a4-content-width: calc(var(--a4-width) - (var(--a4-margin) * 2));
+    --a4-content-height: calc(var(--a4-height) - (var(--a4-margin) * 2));
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--pdf-bg);
+    color: var(--pdf-text);
+    font-family: 'Plus Jakarta Sans', 'Noto Sans Sinhala', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+}
+
+/* ========== Top Bar ========== */
+.pdf-topbar {
+    background: var(--pdf-topbar-bg);
+    border-bottom: 1px solid var(--pdf-border);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--pdf-accent);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.back-btn:hover {
+    background: rgba(56, 189, 248, 0.18);
+    border-color: rgba(56, 189, 248, 0.45);
+}
+
+.pdf-topbar-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pdf-topbar-title i {
+    color: #ef4444;
+}
+
+.save-pdf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+    font-family: inherit;
+}
+
+.save-pdf-btn:hover {
+    background: linear-gradient(135deg, #60a5fa, #3b82f6);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.35);
+}
+
+/* ========== Toolbar ========== */
+.pdf-toolbar {
+    background: var(--pdf-toolbar-bg);
+    border-bottom: 1px solid var(--pdf-border);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 53px;
+    z-index: 99;
+    flex-shrink: 0;
+}
+
+.toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toolbar-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.font-size-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tool-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #e2e8f0;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 28px;
+    justify-content: center;
+}
+
+.tool-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.tool-btn.active {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: rgba(56, 189, 248, 0.5);
+    color: #38bdf8;
+}
+
+.font-size-display {
+    font-size: 13px;
+    font-weight: 600;
+    color: #f1f5f9;
+    min-width: 40px;
+    text-align: center;
+}
+
+.align-buttons {
+    display: flex;
+    gap: 4px;
+}
+
+.color-picker {
+    width: 36px;
+    height: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    cursor: pointer;
+    background: transparent;
+    padding: 2px;
+}
+
+.line-spacing-select {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #e2e8f0;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.line-spacing-select option {
+    background: #1e293b;
+    color: #e2e8f0;
+}
+
+/* ========== Preview Area ========== */
+.pdf-preview-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: radial-gradient(ellipse at center, #1e293b 0%, #0f172a 70%);
+}
+
+.pages-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.2s ease;
+}
+
+#pagesContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+}
+
+/* ========== A4 Page ========== */
+.a4-page {
+    width: var(--a4-width);
+    min-height: var(--a4-height);
+    background: #ffffff;
+    color: #000000;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.4), 0 1px 8px rgba(0, 0, 0, 0.3);
+    padding: var(--a4-margin);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.a4-page .page-content {
+    flex: 1;
+    font-family: 'FMAbhaya', 'Abhaya Libre', 'Noto Sans Sinhala', serif;
+    font-size: 16px;
+    line-height: 1.8;
+    text-align: left;
+    color: #000000;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.a4-page .page-content a {
+    color: #0056b3;
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+.a4-page .page-content b,
+.a4-page .page-content strong {
+    font-weight: 700;
+    color: #000000;
+}
+
+.a4-page .page-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    margin: 8px 0;
+}
+
+.a4-page .page-content ul,
+.a4-page .page-content ol {
+    padding-left: 25px;
+    margin: 8px 0;
+}
+
+.a4-page .page-content li {
+    margin-bottom: 4px;
+}
+
+.a4-page .page-content h1,
+.a4-page .page-content h2,
+.a4-page .page-content h3,
+.a4-page .page-content h4 {
+    font-weight: 700;
+    margin: 14px 0 8px 0;
+    color: #000000;
+}
+
+.a4-page .page-content h1 { font-size: 1.6em; }
+.a4-page .page-content h2 { font-size: 1.4em; }
+.a4-page .page-content h3 { font-size: 1.2em; }
+.a4-page .page-content h4 { font-size: 1.1em; }
+
+.a4-page .page-content blockquote {
+    border-left: 3px solid #ddd;
+    padding-left: 15px;
+    margin: 10px 0;
+    color: #555;
+}
+
+.a4-page .page-content code {
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.9em;
+    font-family: monospace;
+}
+
+.a4-page .page-content pre {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 12px;
+    overflow-x: auto;
+    margin: 10px 0;
+}
+
+.a4-page .page-content pre code {
+    background: none;
+    padding: 0;
+}
+
+/* Page Number */
+.page-number {
+    font-family: 'Plus Jakarta Sans', 'Noto Sans Sinhala', sans-serif;
+    font-size: 10px;
+    color: #94a3b8;
+    text-align: center;
+    padding-top: 15px;
+    margin-top: auto;
+    border-top: 1px solid #e2e8f0;
+    letter-spacing: 0.5px;
+}
+
+/* KaTeX in PDF */
+.a4-page .page-content .katex {
+    font-size: 1.1em;
+}
+
+/* ========== Empty State ========== */
+.pdf-empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    padding: 40px;
+    text-align: center;
+}
+
+.pdf-empty-state i {
+    font-size: 60px;
+    color: #fbbf24;
+}
+
+.pdf-empty-state h2 {
+    color: #f1f5f9;
+    font-size: 22px;
+}
+
+.pdf-empty-state p {
+    color: #94a3b8;
+    font-size: 14px;
+    max-width: 400px;
+}
+
+.back-link {
+    color: var(--pdf-accent);
+    text-decoration: none;
+    font-weight: 600;
+    margin-top: 10px;
+    padding: 8px 16px;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.back-link:hover {
+    background: rgba(56, 189, 248, 0.1);
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 900px) {
+    .pdf-toolbar {
+        gap: 15px;
+        padding: 10px 15px;
+    }
+    
+    .a4-page {
+        width: min(var(--a4-width), calc(100vw - 40px));
+        min-height: auto;
+        padding: 40px 30px;
+    }
+}
+
+@media (max-width: 600px) {
+    .pdf-topbar {
+        padding: 10px 12px;
+        gap: 8px;
+    }
+    
+    .back-btn {
+        font-size: 12px;
+        padding: 5px 8px;
+    }
+    
+    .back-btn span {
+        display: none;
+    }
+    
+    .pdf-topbar-title {
+        font-size: 13px;
+    }
+    
+    .save-pdf-btn {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+    
+    .pdf-toolbar {
+        padding: 8px 12px;
+        gap: 10px;
+        top: 45px;
+    }
+    
+    .toolbar-group {
+        gap: 5px;
+    }
+    
+    .toolbar-label {
+        font-size: 10px;
+    }
+    
+    .pdf-preview-area {
+        padding: 15px 10px;
+    }
+    
+    .a4-page {
+        width: calc(100vw - 30px);
+        padding: 30px 20px;
+        min-height: auto;
+    }
+    
+    .a4-page .page-content {
+        font-size: 14px;
+        line-height: 1.6;
+    }
+}
+
+/* ========== Print Styles ========== */
+@media print {
+    body {
+        background: #ffffff !important;
+        min-height: auto;
+    }
+    
+    .pdf-topbar,
+    .pdf-toolbar {
+        display: none !important;
+    }
+    
+    .pdf-preview-area {
+        padding: 0 !important;
+        background: #ffffff !important;
+        overflow: visible !important;
+    }
+    
+    .pages-wrapper {
+        transform: none !important;
+        width: 100% !important;
+    }
+    
+    #pagesContainer {
+        gap: 0 !important;
+        width: 100% !important;
+    }
+    
+    .a4-page {
+        width: 210mm !important;
+        min-height: 297mm !important;
+        height: auto !important;
+        padding: 15mm !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        page-break-after: always;
+        background: #ffffff !important;
+    }
+    
+    .a4-page:last-child {
+        page-break-after: auto;
+    }
+    
+    .a4-page .page-content {
+        font-size: 12pt !important;
+        line-height: 1.7 !important;
+        color: #000000 !important;
+    }
+    
+    .page-number {
+        position: absolute;
+        bottom: 10mm;
+        left: 0;
+        right: 0;
+        font-size: 9pt !important;
+        color: #666 !important;
+        border-top: none !important;
+        padding-top: 0 !important;
+    }
+    
+    @page {
+        size: A4;
+        margin: 0;
+    }
+    
+    .pdf-empty-state {
+        display: none !important;
+    }
+}
+
+/* ============================================
+   PAGE SIZE DROPDOWN - ADDITIONAL STYLES
+   ============================================ */
+
+/* Page Size Group */
+.page-size-group {
+    position: relative;
+}
+
+.page-size-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.page-size-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #e2e8f0;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.page-size-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.page-size-btn .page-size-chevron {
+    font-size: 10px;
+    transition: transform 0.2s ease;
+    margin-left: 2px;
+}
+
+.page-size-btn.open .page-size-chevron {
+    transform: rotate(180deg);
+}
+
+.page-size-btn i:first-child {
+    color: var(--pdf-accent, #38bdf8);
+}
+
+/* Dropdown Menu */
+.page-size-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    min-width: 240px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 2px 10px rgba(0, 0, 0, 0.3);
+    padding: 16px;
+    z-index: 200;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+.page-size-menu.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.page-size-section {
+    margin-bottom: 14px;
+}
+
+.page-size-section:last-child {
+    margin-bottom: 0;
+}
+
+.page-size-section-title {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #94a3b8;
+    margin-bottom: 8px;
+}
+
+/* Size Options */
+.page-size-options {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+}
+
+.size-option {
+    padding: 8px 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #cbd5e1;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    text-align: center;
+}
+
+.size-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #f1f5f9;
+}
+
+.size-option.active {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: rgba(56, 189, 248, 0.5);
+    color: #38bdf8;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
+}
+
+/* Orientation Options */
+.orientation-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.orientation-option {
+    padding: 9px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #cbd5e1;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.orientation-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #f1f5f9;
+}
+
+.orientation-option.active {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: rgba(56, 189, 248, 0.5);
+    color: #38bdf8;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
+}
+
+.orientation-option i {
+    font-size: 11px;
+}
+
+/* Save PDF Button Loading State */
+.save-pdf-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.save-pdf-btn .fa-spinner {
+    animation: fa-spin 1s linear infinite;
+}
+
+/* Responsive for Page Size Dropdown */
+@media (max-width: 600px) {
+    .page-size-menu {
+        min-width: 200px;
+        left: auto;
+        right: 0;
+        padding: 12px;
+    }
+    
+    .page-size-options {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+    }
+    
+    .size-option {
+        padding: 6px 4px;
+        font-size: 11px;
+    }
+    
+    .orientation-option {
+        padding: 7px 6px;
+        font-size: 11px;
+    }
+       }

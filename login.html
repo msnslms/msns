@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Register | MSNS PORTAL</title>
+    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="login.css?v=2">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header id="top">
+        <div class="header-title">MSNS</div>
+        <a href="index.html" class="back-home-btn">← Back to Home</a>
+    </header>
+
+    <div class="login-container">
+        <div class="login-card">
+            
+            <div class="login-header">
+                <img src="school bage.png" alt="School Badge" class="login-badge">
+                <h2>MSNS Portal Access</h2>
+                <p>Welcome to Maithripala Senanayake CC Portal</p>
+            </div>
+
+            <!-- Login / Register Switch Tabs -->
+            <div class="auth-mode-switch">
+                <button type="button" class="mode-btn active" id="tabLogin" onclick="switchAuthMode('login')">Log In</button>
+                <button type="button" class="mode-btn" id="tabRegister" onclick="switchAuthMode('register')">Register</button>
+            </div>
+
+            <!-- Role Selector -->
+            <div class="role-selector">
+                <button type="button" class="role-btn active" id="btnStudent" onclick="selectRole('student')">
+                    <i class="fa-solid fa-user-graduate"></i> Student
+                </button>
+                <button type="button" class="role-btn" id="btnTeacher" onclick="selectRole('teacher')">
+                    <i class="fa-solid fa-chalkboard-user"></i> Teacher
+                </button>
+                <button type="button" class="role-btn" id="btnOldStudent" onclick="selectRole('old_student')">
+                    <i class="fa-solid fa-user-clock"></i> Old Student
+                </button>
+            </div>
+
+            <div id="authAlert" class="auth-alert hidden"></div>
+
+            <form id="authForm" onsubmit="handleAuthSubmit(event)">
+                
+                <!-- Extra Fields for Registration -->
+                <div id="regExtraFields" style="display: none;">
+                    <div class="input-group">
+                        <label>Full Name</label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-user input-icon"></i>
+                            <input type="text" id="regFullName" placeholder="e.g. Sandaru Malisha">
+                        </div>
+                    </div>
+
+                    <div class="input-group" id="indexNoGroup">
+                        <label>School Index Number</label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-id-card input-icon"></i>
+                            <input type="text" id="regIndexNo" placeholder="e.g. 2026-1042">
+                        </div>
+                        <small class="help-text">එක් Index අංකයක් භාවිත කළ හැක්කේ එක් අයෙකුට පමණි.</small>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="email">Email Address</label>
+                    <div class="input-wrap">
+                        <i class="fa-solid fa-envelope input-icon"></i>
+                        <input type="email" id="email" placeholder="example@gmail.com" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrap">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="password" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <!-- Dynamic CAPTCHA / Security Code Verification -->
+                <div class="input-group captcha-box">
+                    <label>Security Verification Code</label>
+                    <div class="captcha-row">
+                        <div class="captcha-code" id="captchaCodeDisplay">-----</div>
+                        <button type="button" class="btn-refresh-captcha" onclick="generateCaptcha()"><i class="fa-solid fa-arrows-rotate"></i></button>
+                    </div>
+                    <div class="input-wrap" style="margin-top: 8px;">
+                        <i class="fa-solid fa-shield-halved input-icon"></i>
+                        <input type="text" id="captchaInput" placeholder="Type text above" required autocomplete="off">
+                        <span id="captchaStatus" class="captcha-status"></span>
+                    </div>
+                </div>
+
+                <button type="submit" class="login-submit-btn" id="submitBtn">
+                    <span id="submitBtnText">Log In</span>
+                </button>
+            </form>
+
+            <div class="divider"><span>OR</span></div>
+
+            <button type="button" class="google-btn" onclick="handleGoogleAuth()">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="G">
+                Continue with Google
+            </button>
+        </div>
+    </div>
+
+    <script type="module" src="login.js?v=2"></script>
+    <script src="paw.js?v=2"></script>
+</body>
+</html>

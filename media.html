@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Media Unit - MSNS.EDU.LK</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="fix.css">
+    <style>
+        /* Hero Video Section Custom Styling */
+        .hero-banner {
+            position: relative;
+            width: 100%;
+            height: 340px;
+            overflow: hidden;
+            border-radius: 0 0 28px 28px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+        }
+
+        .hero-video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            filter: brightness(0.6) contrast(1.1);
+        }
+
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: rgba(18, 26, 43, 0.5);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 32px 24px;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+        }
+
+        /* About Media Section */
+        .media-badge-wrap {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .media-badge {
+            max-width: 300px;
+            width: 80%;
+            height: auto;
+            filter: drop-shadow(0 0 25px rgba(56, 189, 248, 0.35));
+            transition: transform 0.4s ease;
+        }
+
+        .media-badge:hover {
+            transform: scale(1.04);
+        }
+
+        .media-text {
+            font-size: 0.95rem;
+            line-height: 1.85;
+            color: #cbd5e1;
+            text-align: justify;
+        }
+
+        .media-text strong, 
+        .media-text b {
+            color: #38bdf8;
+            font-weight: 700;
+        }
+
+        /* YouTube Embed Section */
+        .video-card-title {
+            color: #38bdf8;
+            font-size: 1.2rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .iframe-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            height: 0;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        /* News Collage Grid */
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .news-card {
+            background: rgba(18, 26, 43, 0.5);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .news-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 15px 35px rgba(56, 189, 248, 0.2);
+        }
+
+        .news-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .news-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .news-title {
+            color: #ffffff;
+            font-size: 1.05rem;
+            font-weight: 800;
+            line-height: 1.4;
+        }
+
+        .news-desc {
+            color: #cbd5e1;
+            font-size: 0.88rem;
+            line-height: 1.7;
+            text-align: justify;
+        }
+
+        /* About Her Section */
+        .about-her-card {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 28px;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .about-her-card {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .about-her-img {
+            width: 100%;
+            border-radius: 20px;
+            object-fit: cover;
+            border: 2px solid rgba(56, 189, 248, 0.3);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .about-her-heading {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #38bdf8;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Overlay -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">MSNS</div>
+            <div class="close-icon" id="closeMenu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </div>
+        </div>
+
+        <nav class="sidebar-menu">
+            <a href="index.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                Home
+            </a>
+            <a href="index.html#about" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                About Us
+            </a>
+            <a href="index.html#governing" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Governing Body
+            </a>
+            <a href="index.html#contact" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                Contact
+            </a>
+            <a href="Past.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                Past Papers & Application
+            </a>
+            <a href="history.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                History
+            </a>
+            <a href="news.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path><path d="M18 14h-8"></path><path d="M15 18h-5"></path><path d="M10 6h8v4h-8V6Z"></path></svg>
+                News
+            </a>
+          <a href="msns-ai.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                MSNS.AI Assistant
+          </a>
+            <a href="ab.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                About developer
+            </a>
+        </nav>
+    </div>
+
+    <!-- Header -->
+    <header id="top">
+        <div class="header-title">MSNS</div>
+        <div class="nav-icon" id="menuToggle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="3" y="3" width="5" height="8" rx="2.5" />
+                <rect x="10" y="3" width="11" height="8" rx="4" />
+                <rect x="3" y="13" width="5" height="8" rx="2.5" />
+                <rect x="10" y="13" width="11" height="8" rx="3" />
+            </svg>
+        </div>
+    </header>
+
+    <!-- Top Hero Video Banner -->
+    <div class="hero-banner">
+        <video autoplay muted loop id="bg-video" class="hero-video">
+            <source src="media.mp4" type="video/mp4" />
+        </video>
+        <div class="hero-caption">School Media Unit — MSNS.LK</div>
+    </div>
+
+    <!-- Main Content Wrapper -->
+    <div class="content-wrapper">
+
+        <!-- About Media Unit Section -->
+        <section>
+            <div class="section-title">
+                <span>About the Media Unit</span>
+            </div>
+
+            <div class="glass-card">
+                <div class="media-badge-wrap">
+                    <img src="media.png" alt="Media Unit Badge" class="media-badge">
+                </div>
+                <div class="media-text">
+                    <p>
+                        <b>Methsen Swara</b> is the <strong>premier morning broadcast program</strong> organized and produced by the <b>School Media Unit</b>. This program serves as a vibrant start to the school day, fostering an environment of <strong>information, inspiration, and creativity</strong>.
+                    </p>
+                    <br>
+                    <p>
+                        The program is brought to life by the <b>talented young voices</b> of our school. Students who possess <strong>exceptional skills</strong> in announcing, broadcasting, and public speaking are given the platform to showcase their abilities, ensuring a <b>high standard of delivery</b> and engagement. Our unit works tirelessly to bridge the gap between information and the student body, building a <strong>confident generation</strong> ready to face the world of communication.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- The Work We Did Section -->
+        <section>
+            <div class="section-title">
+                <span>The Work We Did</span>
+            </div>
+
+            <div class="glass-card">
+                <h4 class="video-card-title">Media day 2026</h4>
+                <div class="iframe-container">
+                    <iframe src="https://www.youtube.com/embed/2RhvAmzpd58?si=AD32zOEt-xgKxVEP" allowfullscreen></iframe>
+                </div>
+            </div>
+        </section>
+
+        <!-- News & Updates Section -->
+        <section id="news">
+            <div class="section-title"><span>Latest News & Updates</span></div>
+
+            <div class="news-slider-container">
+                <!-- Google Sheet එකෙන් dynamic cards load වෙන track එක -->
+                <div class="news-track" id="homeNewsTrack">
+                    <p style="text-align: center; color: #888; width: 100%; padding: 20px;">Loading Latest Updates...</p>
+                </div>
+            </div>
+
+            <div class="more-news-wrapper">
+                <a href="news.html" class="more-news-btn">More News and Announcements →</a>
+            </div>
+        </section>
+
+        <!-- About Her Section -->
+        <section>
+            <div class="section-title">
+                <span>Teacher in Charge</span>
+            </div>
+
+            <div class="glass-card about-her-card">
+                <img src="1000003154.jpg.jpeg" alt="Mrs. Tharanga Kumuduni Hettiarachchi" class="about-her-img">
+                <div>
+                    <h3 class="about-her-heading">About Her</h3>
+                    <div class="media-text">
+                        <p></p>
+                        <br>
+                        <p>
+                            Since 2021, Mrs. Tharanga Kumuduni Hettiarachchi has been a driving force behind the Media Studies department of our college, rendering a service that is both visionary and transformative. Her unwavering commitment has been the cornerstone in establishing the "Methsen Swara" Media Unit, which stands today as a beacon of excellence and creativity.
+                        </p>
+                        <br>
+                        <p>
+                            Under her expert guidance, the Media Unit has evolved into a powerhouse for nurturing young talent. By identifying and honing theiverse skills of students, "Methsen Swara" produces a generation of confident, versatile, and skilled communicators ready to serve the nation. Whether in broadcasting, technical production, or creative journalism, these students are being groomed to lead the future of the media landscape.
+                        </p>
+                        <br>
+                        <p>
+                            This remarkable journey is a testament to Mrs. Hettiarachchi's passion for education and her dedication to empowering the next generation of media professionals.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p class="cr-text">© 2026 A/Maithripala Senanayake Central College</p>
+        <p class="al-text">MSNS.EDU.LK</p>
+        <p class="credit-text">
+            Editor: K.D.G.S.M. DENIYEGEDARA
+        </p>
+    </footer>
+
+    <!-- JavaScript Navigation Logic -->
+    <script>
+        const menuToggle = document.getElementById('menuToggle');
+        const closeMenu = document.getElementById('closeMenu');
+        const sidebar = document.getElementById('sidebar');
+        const menuOverlay = document.getElementById('menuOverlay');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.add('active');
+            menuOverlay.classList.add('active');
+        });
+
+        const hideMenuHub = () => {
+            sidebar.classList.remove('active');
+            menuOverlay.classList.remove('active');
+        };
+
+        closeMenu.addEventListener('click', hideMenuHub);
+        menuOverlay.addEventListener('click', hideMenuHub);
+
+        // Google Drive URL එක Direct Image Link එකකට හරවන helper function එක
+        function formatImageUrl(url) {
+            if (!url) return '';
+            let cleanUrl = String(url).trim();
+            if (cleanUrl.includes('drive.google.com')) {
+                let id = '';
+                if (cleanUrl.includes('/d/')) {
+                    id = cleanUrl.split('/d/')[1].split('/')[0].split('?')[0];
+                } else if (cleanUrl.includes('id=')) {
+                    id = cleanUrl.split('id=')[1].split('&')[0];
+                }
+                if (id) {
+                    return `https://lh3.googleusercontent.com/d/${id}`;
+                }
+            }
+            return cleanUrl;
+        }
+
+        // Google Sheet Home News Slider Fetch Logic (With ShowInHome Filter)
+        async function loadHomeNewsSlider() {
+            const SHEET_ID = '1dbjK--IEeJC2WDEmHLipgs7t8eoNj43Qy0zZNFlY-F0';
+            const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+            const newsTrack = document.getElementById('homeNewsTrack');
+
+            if (!newsTrack) return;
+
+            try {
+                const response = await fetch(SHEET_URL);
+                const rawText = await response.text();
+                
+                const jsonData = JSON.parse(rawText.substring(47, rawText.length - 2));
+                const rows = jsonData.table.rows;
+
+                let sliderHTML = '';
+
+                rows.forEach(row => {
+                    if (!row.c) return;
+
+                    const showInHome = (row.c[7] && row.c[7].v) ? String(row.c[7].v).trim().toLowerCase() : 'no';
+
+                    if (showInHome !== 'yes') return;
+
+                    const title       = row.c[0] ? row.c[0].v : '';
+                    const category    = row.c[1] ? row.c[1].v : 'NEWS';
+                    const date        = row.c[2] ? row.c[2].v : '';
+                    const rawImage    = row.c[3] ? row.c[3].v : '';
+                    const image       = formatImageUrl(rawImage); // Image Format Converter
+                    const excerpt     = row.c[4] ? row.c[4].v : '';
+                    const readMoreUrl = (row.c[6] && row.c[6].v) ? row.c[6].v : 'news.html';
+
+                    sliderHTML += `
+                        <div class="news-card">
+                            <div class="news-img-wrap">
+                                <img src="${image}" alt="${title}">
+                                <span class="news-badge">${category}</span>
+                            </div>
+                            <div class="news-content">
+                                <span class="news-date">${date}</span>
+                                <h3 class="news-title">${title}</h3>
+                                <p class="news-excerpt">${excerpt}</p>
+                                <a href="${readMoreUrl}" class="news-read-more">Read More →</a>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                if (sliderHTML) {
+                    newsTrack.innerHTML = sliderHTML;
+                } else {
+                    newsTrack.innerHTML = '<p style="text-align:center; width:100%;">No featured news available on home page.</p>';
+                }
+
+            } catch (error) {
+                console.error('Error loading home news slider:', error);
+                newsTrack.innerHTML = '<p style="text-align:center; color:red; width:100%;">Failed to load news updates.</p>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadHomeNewsSlider);
+    </script>
+    <script src="paw.js?v=2"></script>
+</body>
+</html>

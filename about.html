@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="about.css">
+    <link rel="stylesheet" href="fix.css">
+    <title>About - A/Maithripala Senanayaka Central College</title>
+</head>
+<body>
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">MSNS</div>
+            <div class="close-icon" id="closeMenu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </div>
+        </div>
+
+        <nav class="sidebar-menu">
+            <a href="index.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                Home
+            </a>
+            <a href="#about" class="menu-item active-link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                About Us
+            </a>
+            <a href="#students" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                Students
+            </a>
+            <a href="#teachers" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                Teachers
+            </a>
+            <a href="#governing" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Governing Body
+            </a>
+            <a href="#contact" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                Contact
+            </a>
+            <a href="Past.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                Past Papers & Application
+            </a>
+            <a href="history.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                History
+            </a>
+            <a href="ab.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                About developer
+            </a>
+        </nav>
+    </div>
+
+    <!-- Header -->
+    <header id="top">
+        <div class="header-title">MSNS</div>
+        <div class="nav-icon" id="menuToggle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="3" y="3" width="5" height="8" rx="2.5" />
+                <rect x="10" y="3" width="11" height="8" rx="4" />
+                <rect x="3" y="13" width="5" height="8" rx="2.5" />
+                <rect x="10" y="13" width="11" height="8" rx="3" />
+            </svg>
+        </div>
+    </header>
+
+<!-- Page Header Banner -->
+        <section class="news-banner">
+            <h5>About<span> School</span></h5>
+            <p>A/Maithripala Senanayake Central College</p>
+        </section>
+
+    <div class="content-wrapper">
+
+        <!-- About Section -->
+        <section id="about">
+            <div class="section-title"><span>About School</span></div>
+            
+            <div style="text-align: center; margin-bottom: 20px;">
+                <img src="school bage.png" alt="School Badge" style="max-width: 120px; height: auto;">
+            </div>
+
+            <div class="glass-card">
+                <h4 class="video-card-title">School anthem</h4>
+                <div class="iframe-container">
+                    <iframe src="https://www.youtube.com/embed/1akiY0iJjnA" allowfullscreen></iframe>
+                </div>
+            </div>
+            <br>
+            <div class="glass-card">
+                <h4 class="video-card-title">School preview</h4>
+                <div class="iframe-container">
+                    <iframe src="https://www.youtube.com/embed/2DftH14DYn8" allowfullscreen></iframe>
+                </div>
+            </div>
+            <br>
+            <div class="grid-container">
+                <div class="info-card">
+                    <div class="card-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                    </div>
+                    <div class="card-text">
+                        <h3>Vision</h3>
+                        <p>A Perfect Child</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="card-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                    </div>
+                    <div class="card-text">
+                        <h3>Contribution</h3>
+                        <p>To plan and implement the measures needed to raise a generation of proud children equipped with skills suited to the nation's needs — able to work alongside the community, locally and internationally.</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="card-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+                    </div>
+                    <div class="card-text">
+                        <h3>Academic Excellence</h3>
+                        <p>Foreign language programs in Japanese, Korean and Chinese, backed by science labs, a library and smart IT classrooms.</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="card-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    </div>
+                    <div class="card-text">
+                        <h3>Students</h3>
+                        <p id="studentCount">0</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="card-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    </div>
+                    <div class="card-text">
+                        <h3>Teachers</h3>
+                        <p id="teacherCount">0</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Students Section -->
+        <section id="students">
+            <div class="section-title"><span>Students</span></div>
+            <div id="studentsGrid" class="msns-data-grid">
+                <p class="msns-loading-text">Loading student information...</p>
+            </div>
+            
+            <div class="pdf-btn-wrapper">
+                <a href="https://drive.google.com/file/d/1VtC2XwuS_V_WCGdOFW3r7ZHp1AU6vDQc/view?usp=drivesdk" class="pdf-download-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="12" y1="18" x2="12" y2="12"></line>
+                        <polyline points="9 15 12 18 15 15"></polyline>
+                    </svg>
+                    Students PDF
+                </a>
+            </div>
+        </section>
+
+        <!-- Teachers Section -->
+        <section id="teachers">
+            <div class="section-title"><span>Teachers</span></div>
+            <div id="teachersGrid" class="msns-data-grid">
+                <p class="msns-loading-text">Loading teacher information...</p>
+            </div>
+
+            <div class="pdf-btn-wrapper">
+                <a href="https://drive.google.com/file/d/10gIWgSmrYSLylT-tUiyJ9reB1cGqVd_0/view?usp=drivesdk" class="pdf-download-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="12" y1="18" x2="12" y2="12"></line>
+                        <polyline points="9 15 12 18 15 15"></polyline>
+                    </svg>
+                    Teachers PDF
+                </a>
+            </div>
+        </section>
+
+        <!-- Fast Open Tabs Section -->
+        <section id="quick-access">
+            <div class="section-title"><span>Fast Open Tabs</span></div>
+            <div class="quick-tabs-grid">
+                <a href="e.html" class="quick-tab-card">
+                    <div class="tab-icon-wrap">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                        </svg>
+                    </div>
+                    <div class="tab-details">
+                        <h3>Exam Results</h3>
+                        <p>O/L & A/L Examination Results</p>
+                    </div>
+                    <div class="tab-arrow">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </div>
+                </a>
+
+                <a href="Past.html" class="quick-tab-card">
+                    <div class="tab-icon-wrap">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                    </div>
+                    <div class="tab-details">
+                        <h3>Application</h3>
+                        <p>Forms & Student Registrations</p>
+                    </div>
+                    <div class="tab-arrow">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </div>
+                </a>
+
+                <a href="history.html" class="quick-tab-card">
+                    <div class="tab-icon-wrap">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </div>
+                    <div class="tab-details">
+                        <h3>History</h3>
+                        <p>Our Proud History & Journey</p>
+                    </div>
+                    <div class="tab-arrow">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Governing Body Section -->
+        <section id="governing">
+            <div class="section-title"><span>Governing Body</span></div>
+            <div class="governing-slider">
+                <div class="governing-track" id="governingTrack">
+                    <div class="people-card">
+                        <img src="courses-01.jpg" alt="Principal">
+                        <h3>Principal</h3>
+                        <p>Mr. Chanaka Devinda Karunasena</p>
+                    </div>
+                    <div class="people-card">
+                        <img src="courses-02.jpg" alt="Deputy Principal">
+                        <h3>Deputy Principal</h3>
+                        <p>Mrs. Jinendrani Wanninayaka</p>
+                    </div>
+                    <div class="people-card">
+                        <img src="courses-03.jpg" alt="Assistant Principal">
+                        <h3>Assistant Principal</h3>
+                        <p>Mr. Ajith Wijesiri</p>
+                    </div>
+                    <div class="people-card">
+                        <img src="courses-04.jpg" alt="Assistant Principal">
+                        <h3>Assistant Principal</h3>
+                        <p>Mrs. Priyanka C Fernando</p>
+                    </div>
+                </div>
+                <div class="slider-dots" id="sliderDots"></div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact">
+            <div class="section-title"><span>Contact</span></div>
+
+            <div class="map-frame">
+                <iframe src="https://maps.google.com/maps?q=Maithripala%20Senanayake%20Central%20College&t=&z=13&ie=UTF8&iwloc=&output=embed" loading="lazy"></iframe>
+            </div>
+
+            <div class="grid-container" style="margin-top:20px;">
+                <div class="info-card">
+                    <div class="card-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+                    </div>
+                    <div class="card-text"><h3>School Category</h3><p>1-AB</p></div>
+                </div>
+                <div class="info-card">
+                    <div class="card-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    </div>
+                    <div class="card-text"><h3>Information Number</h3><p>19001</p></div>
+                </div>
+                <div class="info-card">
+                    <div class="card-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l7-4 7 4v14"></path><path d="M9 9h1M14 9h1M9 13h1M14 13h1"></path></svg>
+                    </div>
+                    <div class="card-text"><h3>School Number</h3><p>01313</p></div>
+                </div>
+                <div class="info-card">
+                    <div class="card-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                    </div>
+                    <div class="card-text"><h3>Phone Number</h3><p><a href="tel:0252245700" style="color:inherit;text-decoration:none;">025 224 5700</a></p></div>
+                </div>
+                <div class="info-card">
+                    <div class="card-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    </div>
+                    <div class="card-text"><h3>Postal Code</h3><p>50500</p></div>
+                </div>
+                <div class="info-card">
+                    <div class="card-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z" opacity="0"></path><path d="M22 6 12 13 2 6"></path><rect x="2" y="4" width="20" height="16" rx="2"></rect></svg>
+                    </div>
+                    <div class="card-text"><h3>Email Address</h3><p><a href="mailto:maithripalasenanayakammv@gmail.com" style="color:inherit;text-decoration:none;">maithripalasenanayakammv@gmail.com</a></p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- School Full PDF Link Section -->
+        <section id="full-pdf-section">
+            <div class="pdf-btn-wrapper full-pdf-wrapper">
+                <a href="https://drive.google.com/file/d/10c5ceF4RN7kQJ3snqfJpWEKwfzg4g7Cx/view?usp=drivesdk" class="pdf-download-btn full-pdf-btn">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="12" y1="18" x2="12" y2="12"></line>
+                        <polyline points="9 15 12 18 15 15"></polyline>
+                    </svg>
+                    School Full PDF
+                </a>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Scroll To Top Button -->
+    <button id="backToTop" title="Go to top">↑</button>
+
+    <footer>
+        <p class="cr-text">© 2026 A/Maithripala Senanayake C.C</p>
+        <p class="al-text">MSNS.LK</p>
+        <p class="credit-text">Designer: K.D.G.S.M. Deniyegedara &nbsp;</p>
+    </footer>
+
+    <script>
+        // Menu Toggle Logic
+        const menuToggle = document.getElementById('menuToggle');
+        const closeMenu = document.getElementById('closeMenu');
+        const sidebar = document.getElementById('sidebar');
+        const menuOverlay = document.getElementById('menuOverlay');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.add('active');
+            menuOverlay.classList.add('active');
+        });
+
+        const hideMenuHub = () => {
+            sidebar.classList.remove('active');
+            menuOverlay.classList.remove('active');
+        };
+
+        closeMenu.addEventListener('click', hideMenuHub);
+        menuOverlay.addEventListener('click', hideMenuHub);
+
+        document.querySelectorAll('.menu-item[href^="#"]').forEach(link => {
+            link.addEventListener('click', hideMenuHub);
+        });
+
+        // Governing Body Auto Slider
+        const track = document.getElementById('governingTrack');
+        const dotsContainer = document.getElementById('sliderDots');
+
+        if (track && dotsContainer) {
+            const cards = track.querySelectorAll('.people-card');
+            let currentIndex = 0;
+
+            cards.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.classList.add('dot');
+                if (index === 0) dot.classList.add('active');
+                dot.addEventListener('click', () => goToSlide(index));
+                dotsContainer.appendChild(dot);
+            });
+
+            const dots = dotsContainer.querySelectorAll('.dot');
+
+            function goToSlide(index) {
+                currentIndex = index;
+                track.style.transform = `translateX(-${currentIndex * 100}%)`;
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === currentIndex);
+                });
+            }
+
+            function autoSlide() {
+                currentIndex = (currentIndex + 1) % cards.length;
+                goToSlide(currentIndex);
+            }
+
+            let slideInterval = setInterval(autoSlide, 3500);
+
+            const sliderElem = document.querySelector('.governing-slider');
+            if (sliderElem) {
+                sliderElem.addEventListener('mouseenter', () => clearInterval(slideInterval));
+                sliderElem.addEventListener('mouseleave', () => {
+                    slideInterval = setInterval(autoSlide, 3500);
+                });
+            }
+        }
+
+        // Back To Top
+        const backToTopBtn = document.getElementById('backToTop');
+        window.onscroll = function() {
+            if (document.body.scrollTop > 250 || document.documentElement.scrollTop > 250) {
+                backToTopBtn.style.display = "flex";
+            } else {
+                backToTopBtn.style.display = "none";
+            }
+        };
+
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        /* =========================================================
+           Google Sheet Fetch Logic for Students & Teachers
+           Sheet ID: 1leqBerTD58aRenPDTc8LkjOHZDSKjoC8StMMV4d_rvk
+           ========================================================= */
+        const SHEET_ID = '1leqBerTD58aRenPDTc8LkjOHZDSKjoC8StMMV4d_rvk';
+
+        // 1. Load Students Data (Tab: stu-no)
+        async function loadStudentsData() {
+            const container = document.getElementById('studentsGrid');
+            const studentCountElem = document.getElementById('studentCount');
+            const url = `https://opensheet.elk.sh/${SHEET_ID}/stu-no`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (!data || !Array.isArray(data) || data.length === 0) {
+                    container.innerHTML = '<p class="msns-loading-text">No student data available.</p>';
+                    return;
+                }
+
+                let html = '';
+                let grandTotal = 0;
+
+                data.forEach(item => {
+                    const section = item.section || item.Section || item.SECTION || 'Section';
+                    const girls = parseInt(item.Girls || item.girls || 0) || 0;
+                    const boys = parseInt(item.Boys || item.boys || 0) || 0;
+                    const total = girls + boys;
+                    grandTotal += total;
+
+                    html += `
+                        <div class="msns-custom-card">
+                            <div class="card-head-badge">
+                                <h3>Grade ${section}</h3>
+                            </div>
+                            <div class="card-body-content">
+                                <div class="stat-row">
+                                    <span class="stat-label">Girls</span>
+                                    <span class="stat-val girls-color">${girls}</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Boys</span>
+                                    <span class="stat-val boys-color">${boys}</span>
+                                </div>
+                                <div class="stat-row total-row">
+                                    <span class="stat-label">Total Students</span>
+                                    <span class="stat-val total-color">${total}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+                if (studentCountElem && grandTotal > 0) {
+                    studentCountElem.textContent = grandTotal;
+                }
+
+            } catch (err) {
+                console.error('Error loading student data:', err);
+                container.innerHTML = '<p class="msns-loading-text" style="color:#ef4444;">Failed to load student data.</p>';
+            }
+        }
+
+        // 2. Load Teachers Data (Tab: teacher)
+        async function loadTeachersData() {
+            const container = document.getElementById('teachersGrid');
+            const teacherCountElem = document.getElementById('teacherCount');
+            const url = `https://opensheet.elk.sh/${SHEET_ID}/teacher`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (!data || !Array.isArray(data) || data.length === 0) {
+                    container.innerHTML = '<p class="msns-loading-text">No teacher data available.</p>';
+                    return;
+                }
+
+                // 1. මුළු ගුරුවරුන් ගණන (Total Teachers) ගණනය කිරීම
+                let totalTeachersCount = 0;
+                data.forEach(item => {
+                    const values = Object.values(item);
+                    const count = parseInt(values[1] || item.TeacherNo || item['Teacher no'] || 0) || 0;
+                    totalTeachersCount += count;
+                });
+
+                let html = '';
+
+                // 2. එක එක විෂයට අදාළ Card එක සහ Avg % auto ගණනය කිරීම
+                data.forEach(item => {
+                    const keys = Object.keys(item);
+                    const values = Object.values(item);
+
+                    // Subject නම Dynamically ලබා ගැනීම (First column)
+                    const subjectKey = keys.find(k => k.trim().toLowerCase().includes('subject')) || keys[0];
+                    const subject = item[subjectKey] || values[0] || 'Subject';
+
+                    // Teacher ගණන Dynamically ලබා ගැනීම (Second column)
+                    const teacherKey = keys.find(k => k.trim().toLowerCase().replace(/[\s_]/g, '').includes('teacher')) || keys[1];
+                    const teacherNo = parseInt(item[teacherKey] || values[1] || 0) || 0;
+
+                    // මුළු ගුරුවරුන් ගණනින් ප්‍රතිශතය (%) Auto Calculate කිරීම
+                    const avg = totalTeachersCount > 0 
+                        ? ((teacherNo / totalTeachersCount) * 100).toFixed(1) + '%' 
+                        : '0%';
+
+                    html += `
+                        <div class="msns-custom-card">
+                            <div class="card-head-badge">
+                                <h3>${subject}</h3>
+                            </div>
+                            <div class="card-body-content">
+                                <div class="stat-row">
+                                    <span class="stat-label">Teachers</span>
+                                    <span class="stat-val total-color">${teacherNo}</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Average (Avg)</span>
+                                    <span class="stat-val avg-color">${avg}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+                if (teacherCountElem && totalTeachersCount > 0) {
+                    teacherCountElem.textContent = totalTeachersCount;
+                }
+
+            } catch (err) {
+                console.error('Error loading teacher data:', err);
+                container.innerHTML = '<p class="msns-loading-text" style="color:#ef4444;">Failed to load teacher data.</p>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStudentsData();
+            loadTeachersData();
+        });
+    </script>
+    <script src="min.js?v=2"></script>
+    <script src="paw.js?v=2"></script>
+</body>
+</html>
