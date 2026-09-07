@@ -253,82 +253,82 @@
             </div>
         </section>
 
-        <section id="termTestSection" class="admin-section">
-            <div class="section-header">
-                <h2>Term Test Results</h2>
-                <p>Link Google Sheets containing term test result marksheets.</p>
+<section id="termTestSection" class="admin-section">
+    <div class="section-header">
+        <h2>Term Test Results</h2>
+        <p>Link Google Sheets containing term test result marksheets.</p>
+    </div>
+
+    <div class="form-card">
+        <form id="termTestForm">
+            <div class="field-2col">
+                <div class="field">
+                    <label>Year</label>
+                    <input type="number" id="ttYear" class="custom-input" placeholder="2026" required />
+                </div>
+                <div class="field">
+                    <label>Term</label>
+                    <select id="ttTerm" class="custom-select" required>
+                        <option value="1st term">1st term</option>
+                        <option value="2nd term">2nd term</option>
+                        <option value="3rd term">3rd term</option>
+                    </select>
+                </div>
             </div>
 
-            <div class="form-card">
-                <form id="termTestForm">
-                    <div class="field-2col">
-                        <div class="field">
-                            <label>Year</label>
-                            <input type="number" id="ttYear" class="custom-input" placeholder="2026" required />
-                        </div>
-                        <div class="field">
-                            <label>Term</label>
-                            <select id="ttTerm" class="custom-select" required>
-                                <option value="1st term">1st term</option>
-                                <option value="2nd term">2nd term</option>
-                                <option value="3rd term">3rd term</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="field-2col">
-                        <div class="field">
-                            <label>Grade</label>
-                            <select id="ttGrade" class="custom-select" required>
-                                <option value="6">Grade 6</option>
-                                <option value="7">Grade 7</option>
-                                <option value="8">Grade 8</option>
-                                <option value="9">Grade 9</option>
-                                <option value="10">Grade 10</option>
-                                <option value="11">Grade 11</option>
-                                <option value="12">Grade 12</option>
-                                <option value="13">Grade 13</option>
-                            </select>
-                        </div>
-                        <div class="field">
-                            <label>Class</label>
-                            <select id="ttClass" class="custom-select" required>
-                                <option value="A">Class A</option>
-                                <option value="B">Class B</option>
-                                <option value="C">Class C</option>
-                                <option value="D">Class D</option>
-                                <option value="E">Class E</option>
-                                <option value="F">Class F</option>
-                                <option value="G">Class G</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="field" id="streamFieldBox" style="display: none;">
-                        <label>Stream (For Grade 12 & 13)</label>
-                        <select id="ttStream" class="custom-select">
-                            <option value="A/L Technology">A/L Technology</option>
-                            <option value="A/L Biological Science">A/L Biological Science</option>
-                            <option value="A/L Physical Science (Maths)">A/L Physical Science (Maths)</option>
-                            <option value="A/L Arts">A/L Arts</option>
-                            <option value="A/L Commerce">A/L Commerce</option>
-                        </select>
-                    </div>
-
-                    <div class="field">
-                        <label>Google Sheet Link</label>
-                        <input type="url" id="ttSheetUrl" class="custom-input" placeholder="https://docs.google.com/spreadsheets/d/..." required />
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa-solid fa-plus"></i> Add Term Test Sheet
-                    </button>
-                </form>
+            <div class="field-2col">
+                <div class="field">
+                    <label>Grade</label>
+                    <select id="ttGrade" class="custom-select" required>
+                        <option value="6">Grade 6</option>
+                        <option value="7">Grade 7</option>
+                        <option value="8">Grade 8</option>
+                        <option value="9">Grade 9</option>
+                        <option value="10">Grade 10</option>
+                        <option value="11">Grade 11</option>
+                        <option value="12">Grade 12</option>
+                        <option value="13">Grade 13</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Class</label>
+                    <select id="ttClass" class="custom-select" required>
+                        <option value="A">Class A</option>
+                        <option value="B">Class B</option>
+                        <option value="C">Class C</option>
+                        <option value="D">Class D</option>
+                        <option value="E">Class E</option>
+                        <option value="F">Class F</option>
+                        <option value="G">Class G</option>
+                    </select>
+                </div>
             </div>
 
-            <h3 class="sub-title">Added Term Test Sheets</h3>
-            <div id="termTestList" class="sheets-list"></div>
-        </section>
+            <div class="field" id="streamFieldBox" style="display: none;">
+                <label>Stream (For Grade 12 & 13)</label>
+                <select id="ttStream" class="custom-select">
+                    <option value="A/L Technology">A/L Technology</option>
+                    <option value="A/L Biological Science">A/L Biological Science</option>
+                    <option value="A/L Physical Science (Maths)">A/L Physical Science (Maths)</option>
+                    <option value="A/L Arts">A/L Arts</option>
+                    <option value="A/L Commerce">A/L Commerce</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Google Sheet Link</label>
+                <input type="url" id="ttSheetUrl" class="custom-input" placeholder="https://docs.google.com/spreadsheets/d/..." required />
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-plus"></i> Add Term Test Sheet
+            </button>
+        </form>
+    </div>
+
+    <h3 class="sub-title">Added Term Test Sheets</h3>
+    <div id="termTestList" class="sheets-list"></div>
+</section>
 
         <section id="documentsSection" class="admin-section">
             <div class="section-header">
