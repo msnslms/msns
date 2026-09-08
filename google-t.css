@@ -1,33 +1,40 @@
 /* ==========================================================================
-   GOOGLE TRANSLATE UI HIDER (Hide Top Banner & Tooltips)
+   GOOGLE TRANSLATE TOP BAR & IFRAME HIDER (COMPLETE FIX)
    ========================================================================== */
 
-/* 1. උඩින් වැටෙන සුදු පාට Banner එක හැංගීම */
-.goog-te-banner-frame.skiptranslate, 
-.goog-te-banner-frame {
+/* 1. Google Translate මගින් සාදන සියලුම Top Banner / Dynamic Iframe Hide කිරීම */
+.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
+iframe.skiptranslate,
+iframe[id^=":"],
+iframe[src*="translate.googleapis.com"],
+iframe[src*="translate.google.com"],
+.VIpgJd-yA0Tne-SK102c,
+.VIpgJd-yA0Tne-SK102c-i5102x,
+.VIpgJd-yA0Tne-SK102c-M9Bg4e {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
 }
 
-/* 2. Banner එක නිසා Body එක පහළට යාම වැලැක්වීම (හිස් ඉඩ නැති කිරීම) */
-body {
+/* 2. Banner එක නිසා Body එක පහළට බැසීම සම්පූර්ණයෙන්ම නැවැත්වීම */
+html, body {
     top: 0px !important;
     position: static !important;
+    margin-top: 0px !important;
 }
 
-/* 3. වචන උඩට Mouse එක ගෙනිච්චම වැටෙන Tooltip Popup එක හැංගීම */
-#goog-gt-tt, 
-.goog-te-balloon-frame {
+/* 3. වචන උඩට Mouse/Touch කළ විට එන Tooltip Popup Hide කිරීම */
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-tooltip {
     display: none !important;
 }
 
-/* 4. Translate වුන වචන වල Highlight වෙන එක නැති කිරීම */
+/* 4. Translate වූ වචන වල Highlight එක ඉවත් කිරීම */
 .goog-text-highlight {
     background-color: transparent !important;
     box-shadow: none !important;
 }
-
-/* 5. Google Translate Original Dropdown එක හැංගීම (අවශ්‍ය නම් පමණක්) */
-#google_translate_element .goog-te-gadget {
-    display: none !important;
-}
-
