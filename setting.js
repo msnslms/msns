@@ -1,14 +1,20 @@
 /* ==========================================================================
    1. TRANSLATION EXCLUSION LIST (Translate නොවිය යුතු Elements)
    ========================================================================== */
-// මෙතනට Class (.className), ID (#idName) හෝ Tags (code, pre, h1, span) එකතු කරන්න
+// භාෂා තෝරන මෙනුව සහ අදාළ කොටස් Translate වීම වැළැක්වීමට ඒවා මෙතනට ඇතුළත් කර ඇත.
 const doNotTranslateList = [
-
-  /* ඔයාගේ තවත් Class, ID හෝ Tags මෙතන කමා (,) දාලා එකතු කරන්න:
-     '.my-class',
-     '#my-id',
-     'button'
-  */
+  '#langDropdown',
+  '#selectedLangText',
+  '.custom-dropdown',
+  '.sidebar-title',
+  '.header-title',
+  '.dev-name',
+  '.credit-text',
+  '.al-text',
+  'code',
+  'pre',
+  '#closeMenu',
+  '#menuToggle'
 ];
 
 /* ==========================================================================
@@ -17,33 +23,21 @@ const doNotTranslateList = [
 // Dark Mode එකේදී Load විය යුතු CSS Files List එක
 const darkCssFiles = [
   'setting-d.css',
-  /* තව Dark CSS Files තියෙනවා නම් මෙතන කමා (,) දාලා එකතු කරන්න:
-     'dark-header.css',
-     'dark-sidebar.css'
-  */
 ];
 
 // White / Light Mode එකේදී Load විය යුතු CSS Files List එක
 const whiteCssFiles = [
   'setting-w.css',
-  /* තව White CSS Files තියෙනවා නම් මෙතන කමා (,) දාලා එකතු කරන්න:
-     'white-header.css',
-     'white-sidebar.css'
-  */
 ];
 
 /* ==========================================================================
    3. CUSTOM INLINE CSS RULES (JS එක ඇතුළෙන්ම අමතර CSS දාන්න ඕන නම්)
    ========================================================================== */
 // Dark Mode එකේදී JS එකෙන් Inject වෙන්න ඕන අමතර CSS Rules
-const darkCustomCssRules = [
-  /* උදාහරණ: 'body { background-color: #0d0f12 !important; }', */
-];
+const darkCustomCssRules = [];
 
 // White Mode එකේදී JS එකෙන් Inject වෙන්න ඕන අමතර CSS Rules
-const whiteCustomCssRules = [
-  /* උදාහරණ: 'body { background-color: #f8fafc !important; }', */
-];
+const whiteCustomCssRules = [];
 
 /* ==========================================================================
    4. DOM INITIALIZATION
@@ -119,22 +113,18 @@ function applyTheme(theme) {
     if (label) label.innerText = '☀️ Light Mode (White)';
   }
 
-  // 1. External CSS Files Switch කිරීම (තෝරාගත් තීම් එකේ CSS විතරක් පෙන්වා අනෙක්වා ඉවත් කරයි)
+  // 1. External CSS Files Switch කිරීම
   applyThemeCssFiles(activeTheme);
 
-  // 2. JS Custom CSS Rules Inject කිරීම (Array වල ඇති Custom CSS)
+  // 2. JS Custom CSS Rules Inject කිරීම
   injectCustomCssRules(activeTheme);
 }
 
-// External CSS Files Load/Unload කරන Function එක
 function applyThemeCssFiles(activeTheme) {
-  // පරණ dynamic theme CSS links සියල්ල DOM එකෙන් ඉවත් කිරීම
   document.querySelectorAll('link[data-dynamic-theme="true"]').forEach(el => el.remove());
 
-  // තෝරාගත් Theme එකට අදාළ Files Array එක ලබාගැනීම
   const filesToLoad = activeTheme === 'white' ? whiteCssFiles : darkCssFiles;
 
-  // අදාළ CSS Files පමණක් dynamic ලෙස Inject කිරීම
   filesToLoad.forEach(filePath => {
     if (filePath && filePath.trim() !== '') {
       const link = document.createElement('link');
@@ -146,7 +136,6 @@ function applyThemeCssFiles(activeTheme) {
   });
 }
 
-// Dynamic ලෙස Array ඇතුළේ ඇති Inline CSS Rules Head එකට Inject කිරීම
 function injectCustomCssRules(activeTheme) {
   let styleTag = document.getElementById('js-dynamic-theme-styles');
   if (!styleTag) {
@@ -193,10 +182,16 @@ function selectLanguage(langCode, langName) {
   // 1. Google Translate Cookie Set කිරීම
   setGoogleTranslateCookie(langCode);
 
-  // 2. Google Translate Trigger කිරීම
+  // 2. English (Default) වලට මාරු වෙනවා නම්, 100% Original එක ගන්න Page එක Refresh කරනවා.
+  if (langCode === 'en') {
+    window.location.reload();
+    return;
+  }
+
+  // 3. වෙන භාෂාවක් නම් Google Translate Trigger කරනවා
   triggerGoogleTranslate(langCode);
   
-  // 3. Font & Size Adjust කිරීම
+  // 4. Font & Size Adjust කිරීම
   applyFontStyles(langCode);
 }
 
@@ -243,6 +238,13 @@ function googleTranslateElementInit() {
     autoDisplay: false
   }, 'google_translate_element');
 
+  // Google Top Bar එක බලෙන්ම Body එක පහළට තල්ලු කිරීම වැළැක්වීම
+  setInterval(() => {
+    if (document.body.style.top && document.body.style.top !== '0px') {
+      document.body.style.top = '0px';
+    }
+  }, 200);
+
   // Page එක Load වෙද්දී Saved වී තිබූ Language එක Auto Trigger කිරීම
   const savedLang = localStorage.getItem('msns_lang');
   if (savedLang && savedLang !== 'en') {
@@ -287,25 +289,5 @@ function applyFontStyles(langCode) {
         font-family: 'Plus Jakarta Sans', sans-serif !important;
       }
     `;
-  }
-}
-// Google Translate CallBack Function
-function googleTranslateElementInit() {
-  new google.translate.TranslateElement({
-    pageLanguage: 'en',
-    autoDisplay: false
-  }, 'google_translate_element');
-
-  // Google Top Bar එක බලෙන්ම Body එක පහළට තල්ලු කිරීම වැළැක්වීම
-  setInterval(() => {
-    if (document.body.style.top && document.body.style.top !== '0px') {
-      document.body.style.top = '0px';
-    }
-  }, 200);
-
-  // Page එක Load වෙද්දී Saved වී තිබූ Language එක Auto Trigger කිරීම
-  const savedLang = localStorage.getItem('msns_lang');
-  if (savedLang && savedLang !== 'en') {
-    triggerGoogleTranslate(savedLang);
   }
 }
