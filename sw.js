@@ -1,4 +1,4 @@
-const CACHE_NAME = 'msns-v1';
+const CACHE_NAME = 'msns-v2';
 const urlsToCache = [
   './',
   '1.jpg',
