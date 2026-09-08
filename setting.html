@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - MSNS.LK</title>
+    
+    <!-- Google Fonts (English, Sinhala & Tamil Fonts) -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Sinhala:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Main Stylesheets -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="fix.css">
+    
+    <!-- Dynamic Theme Stylesheet (Default setting-d.css) -->
+    <link id="dynamic-theme-css" rel="stylesheet" href="setting-d.css">
+</head>
+<body>
+
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <!-- Sidebar Menu -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">MSNS</div>
+            <div class="close-icon" id="closeMenu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </div>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <a href="index.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                Home
+            </a>
+            <a href="index.html#about" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                About Us
+            </a>
+            <a href="Past.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                Past Papers & Application
+            </a>
+            <a href="ab.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                About developer
+            </a>
+            <a href="settings.html" class="menu-item active-link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                Settings
+            </a>
+        </nav>
+    </div>
+
+    <!-- Header Navigation Bar -->
+    <header id="top">
+        <div class="header-title">MSNS</div>
+        <div class="nav-icon" id="menuToggle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="3" y="3" width="5" height="8" rx="2.5" />
+                <rect x="10" y="3" width="11" height="8" rx="4" />
+                <rect x="3" y="13" width="5" height="8" rx="2.5" />
+                <rect x="10" y="13" width="11" height="8" rx="3" />
+            </svg>
+        </div>
+    </header>
+
+    <!-- Main Settings Content -->
+    <div class="content-wrapper">
+
+        <div class="settings-header">
+            <h2>⚙️ System Settings</h2>
+            <p>Customize your viewing theme & language preferences.</p>
+        </div>
+
+        <!-- 1. Theme Setting Card -->
+        <div class="setting-card">
+            <div class="setting-info">
+                <h3>🎨 Theme Mode (තේමාව)</h3>
+                <p>Select your preferred visual appearance.</p>
+            </div>
+            
+            <div class="custom-dropdown" id="themeDropdown">
+                <div class="dropdown-trigger" onclick="toggleDropdown('themeDropdown')">
+                    <span id="selectedThemeText">💻 System Default</span>
+                    <span class="arrow-icon">↓</span>
+                </div>
+                <div class="dropdown-menu">
+                    <div class="dropdown-item" onclick="selectTheme('dark')">
+                        <span>🌙 Dark Mode</span>
+                    </div>
+                    <div class="dropdown-item" onclick="selectTheme('white')">
+                        <span>☀️ Light Mode (White)</span>
+                    </div>
+                    <div class="dropdown-item" onclick="selectTheme('system')">
+                        <span>💻 System Default</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Language Setting Card -->
+        <div class="setting-card">
+            <div class="setting-info">
+                <h3>🌐 Language (භාෂාව)</h3>
+                <p>Choose your preferred reading language.</p>
+            </div>
+
+            <div class="custom-dropdown" id="langDropdown">
+                <div class="dropdown-trigger" onclick="toggleDropdown('langDropdown')">
+                    <span id="selectedLangText">English <small style="opacity: 0.7;">(Default)</small></span>
+                    <span class="arrow-icon">↓</span>
+                </div>
+                <div class="dropdown-menu">
+                    <div class="dropdown-group-title">Suggested Languages</div>
+                    
+                    <div class="dropdown-item" onclick="selectLanguage('en', 'English (Default)')">
+                        <div class="lang-text-group">
+                            <span class="lang-main">English</span>
+                            <span class="lang-sub">Default</span>
+                        </div>
+                    </div>
+                    
+                    <div class="dropdown-item" onclick="selectLanguage('si', 'සිංහල (Sinhala)')">
+                        <div class="lang-text-group">
+                            <span class="lang-main">සිංහල</span>
+                            <span class="lang-sub">Sinhala</span>
+                        </div>
+                    </div>
+
+                    <div class="dropdown-item" onclick="selectLanguage('ta', 'தமிழ் (Tamil)')">
+                        <div class="lang-text-group">
+                            <span class="lang-main">தமிழ்</span>
+                            <span class="lang-sub">Tamil</span>
+                        </div>
+                    </div>
+
+                    <div class="dropdown-group-title">World Languages</div>
+
+                    <div class="dropdown-item" onclick="selectLanguage('hi', 'हिन्दी (Hindi)')">
+                        <span class="lang-main">हिन्दी</span>
+                    </div>
+                    <div class="dropdown-item" onclick="selectLanguage('ja', '日本語 (Japanese)')">
+                        <span class="lang-main">日本語</span>
+                    </div>
+                    <div class="dropdown-item" onclick="selectLanguage('es', 'Español (Spanish)')">
+                        <span class="lang-main">Español</span>
+                    </div>
+                    <div class="dropdown-item" onclick="selectLanguage('fr', 'Français (French)')">
+                        <span class="lang-main">Français</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden Google Translate Element -->
+        <div id="google_translate_element" style="display:none;"></div>
+
+        <!-- 3. Tutorials Section -->
+        <section class="tutorial-section">
+            <div class="section-title">
+                <span>🎥 Website User Guide & Tutorials</span>
+            </div>
+
+            <div class="video-container">
+                <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Website Tutorial" allowfullscreen></iframe>
+            </div>
+
+            <div class="guide-points-card">
+                <h3>📌 වෙබ් අඩවිය භාවිත කරන ආකාරය (Guide Points)</h3>
+                <ul class="guide-list">
+                    <li><strong>මුල් පිටුව (Home):</strong> ප්‍රධාන තොරතුරු සහ නවතම යාවත්කාලීන කිරීම් පරීක්ෂා කිරීමට Home පිටුව භාවිතා කරන්න.</li>
+                    <li><strong>Theme වෙනස් කිරීම:</strong> ඔබගේ දුරකථනයේ හෝ පරිගණකයේ Mode එක අනුව System Setting එක හරහා Auto Dark/Light වෙනස් වේ.</li>
+                    <li><strong>භාෂාව වෙනස් කිරීම:</strong> Sinhala, Tamil හෝ වෙනත් ඕනෑම ප්‍රධාන භාෂාවකට මාරු වූ පසු අකුරුවල ප්‍රමාණයන් ස්වයංක්‍රීයව පාලනය වේ.</li>
+                    <li><strong>Past Papers:</strong> පසුගිය විභාග ප්‍රශ්න පත්‍ර ලබා ගැනීමට Menu එකෙන් Past Papers කොටසට පිවිසෙන්න.</li>
+                </ul>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p class="cr-text">© 2026 A/Maithripala Senanayake Central College</p>
+        <p class="al-text">MSNS.EDU.LK</p>
+        <p class="credit-text">Editor: K.D.G.S.M. DENIYEGEDARA</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        const menuToggle = document.getElementById('menuToggle');
+        const closeMenu = document.getElementById('closeMenu');
+        const sidebar = document.getElementById('sidebar');
+        const menuOverlay = document.getElementById('menuOverlay');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.add('active');
+            menuOverlay.classList.add('active');
+        });
+
+        const hideMenuHub = () => {
+            sidebar.classList.remove('active');
+            menuOverlay.classList.remove('active');
+        };
+
+        closeMenu.addEventListener('click', hideMenuHub);
+        menuOverlay.addEventListener('click', hideMenuHub);
+    </script>
+    
+    <!-- Settings Logic JS -->
+    <script src="setting.js"></script>
+    <!-- Google Translate API -->
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>
