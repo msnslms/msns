@@ -289,3 +289,23 @@ function applyFontStyles(langCode) {
     `;
   }
 }
+// Google Translate CallBack Function
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    autoDisplay: false
+  }, 'google_translate_element');
+
+  // Google Top Bar එක බලෙන්ම Body එක පහළට තල්ලු කිරීම වැළැක්වීම
+  setInterval(() => {
+    if (document.body.style.top && document.body.style.top !== '0px') {
+      document.body.style.top = '0px';
+    }
+  }, 200);
+
+  // Page එක Load වෙද්දී Saved වී තිබූ Language එක Auto Trigger කිරීම
+  const savedLang = localStorage.getItem('msns_lang');
+  if (savedLang && savedLang !== 'en') {
+    triggerGoogleTranslate(savedLang);
+  }
+}
