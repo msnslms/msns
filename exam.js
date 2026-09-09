@@ -67,6 +67,7 @@ function initPreloadListeners() {
                 const fetchKey = `${year}_T${term}_G${grade}_C${cls}_${stream}`;
                 if (currentPreloadKey !== fetchKey) {
                     currentPreloadKey = fetchKey;
+                    preloadedSheetMatrix = null;
                     console.log('🚀 Pre-fetching sheet data in background...');
                     try {
                         preloadedSheetMatrix = await getOrFetchSheetData(year, term, grade, cls, stream);
@@ -137,7 +138,7 @@ async function getOrFetchSheetData(year, term, grade, cls, stream) {
     return matrix;
 }
 
-// Google Sheets GViz Fetcher
+// Google Sheets GViz Fetcher (Fixed & Robust Parsing)
 async function fetchGoogleSheetAsMatrix(sheetUrl) {
     const sheetIdMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
     if (!sheetIdMatch) throw new Error('Invalid Google Sheet URL format.');
@@ -154,12 +155,24 @@ async function fetchGoogleSheetAsMatrix(sheetUrl) {
     if (!res.ok) throw new Error('Failed to download Google Sheet data.');
 
     const text = await res.text();
-    const jsonString = text.replace(/^/*O_o*\/[^\(]*\(/, '').replace(/\);?\s*$/, '');
+    
+    // Robust Extraction of JSON Payload
+    const startIdx = text.indexOf('(');
+    const endIdx = text.lastIndexOf(')');
+    if (startIdx === -1 || endIdx === -1) {
+        throw new Error('Invalid response structure from Google Sheets.');
+    }
+    
+    const jsonString = text.substring(startIdx + 1, endIdx);
     const json = JSON.parse(jsonString);
+
+    if (!json.table || !json.table.rows) {
+        throw new Error('No data found in Google Sheet.');
+    }
 
     const rows = json.table.rows;
     return rows.map(r => {
-        if (!r.c) return [];
+        if (!r || !r.c) return [];
         return r.c.map(cell => cell ? (cell.v !== null && cell.v !== undefined ? cell.v.toString().trim() : '') : '');
     });
 }
@@ -187,9 +200,13 @@ function initSearchForm() {
 
         try {
             const fetchKey = `${year}_T${term}_G${grade}_C${cls}_${stream}`;
-            let sheetMatrix = (currentPreloadKey === fetchKey && preloadedSheetMatrix) 
-                                ? preloadedSheetMatrix 
-                                : await getOrFetchSheetData(year, term, grade, cls, stream);
+            let sheetMatrix = null;
+
+            if (currentPreloadKey === fetchKey && preloadedSheetMatrix) {
+                sheetMatrix = preloadedSheetMatrix;
+            } else {
+                sheetMatrix = await getOrFetchSheetData(year, term, grade, cls, stream);
+            }
 
             if (!sheetMatrix || sheetMatrix.length === 0) {
                 showStatus('No documents were found for this selection.', 'error');
@@ -215,9 +232,9 @@ function processAndRenderResults(matrix, indexNum, gradeStr, cls, year, term, st
     let nameColIdx = -1;
 
     for (let r = 0; r < Math.min(matrix.length, 12); r++) {
-        const row = matrix[r];
+        const row = matrix[r] || [];
         for (let c = 0; c < row.length; c++) {
-            const val = row[c].toLowerCase();
+            const val = (row[c] || '').toString().toLowerCase();
             if (val.includes('index') || val === 'index no' || val === 'index_no') {
                 headerRowIdx = r;
                 indexColIdx = c;
@@ -239,9 +256,10 @@ function processAndRenderResults(matrix, indexNum, gradeStr, cls, year, term, st
     // Find Student Row
     let studentRow = null;
     for (let r = headerRowIdx + 1; r < matrix.length; r++) {
-        const rowVal = matrix[r][indexColIdx];
+        const row = matrix[r] || [];
+        const rowVal = row[indexColIdx];
         if (rowVal && rowVal.toString().trim().toLowerCase() === indexNum.toLowerCase()) {
-            studentRow = matrix[r];
+            studentRow = row;
             break;
         }
     }
