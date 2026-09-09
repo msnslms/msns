@@ -131,25 +131,52 @@ async function getOrFetchSheetData(year, term, grade, cls, stream) {
         throw new Error('Could not fetch configuration data. Please check connection.');
     }
 
-    // Match Record from NPoint API JSON
-    const matched = npointManifestCache.find(item => {
-        const matchYear = item.year && item.year.toString().trim() === year.toString().trim();
-        
-        const itemTermNum = item.term ? item.term.toString().replace(/\D/g, '') : '';
-        const searchTermNum = term.toString().replace(/\D/g, '');
-        const matchTerm = (itemTermNum && searchTermNum && itemTermNum === searchTermNum) ||
-                          (item.term && item.term.toString().toLowerCase().includes(term.toString().toLowerCase()));
+// 3. Fetch Google Sheet Link and Parse to 2D Array Matrix
+async function getOrFetchSheetData(year, term, grade, cls, stream) {
+    const cacheKey = `sheet_data_${year}_T${term}_G${grade}_C${cls}_${stream || 'none'}`;
+    const cachedItem = localStorage.getItem(cacheKey);
 
-        const matchGrade = item.grade && item.grade.toString().trim() === grade.toString().trim();
-        const matchClass = item.class && item.class.toString().trim().toLowerCase() === cls.toString().trim().toLowerCase();
-        
+    if (cachedItem) {
+        try {
+            const { timestamp, data } = JSON.parse(cachedItem);
+            if (Date.now() - timestamp < ONE_WEEK_MS) {
+                return data;
+            }
+        } catch (e) {
+            localStorage.removeItem(cacheKey);
+        }
+    }
+
+    if (!npointManifestCache) {
+        await preloadNpointManifest();
+    }
+
+    if (!npointManifestCache || !Array.isArray(npointManifestCache)) {
+        throw new Error('Could not fetch configuration data. Please check connection.');
+    }
+
+    // ===== මෙන්න මේ කොටස තමයි වෙනස් කළේ =====
+    const matched = npointManifestCache.find(item => {
+        const itemYear = (item.year || item.Year || '').toString().trim();
+        const itemTerm = (item.term || item.Term || '').toString().trim().replace(/\D/g, '');
+        const itemGrade = (item.grade || item.Grade || '').toString().trim();
+        const itemClass = (item.class || item.Class || '').toString().trim().toLowerCase();
+        const itemStream = (item.stream || item.Stream || '').toString().trim().toLowerCase();
+        const rawStream = stream ? stream.toString().trim().toLowerCase() : '';
+
+        const matchYear = itemYear === year.toString().trim();
+        const matchTerm = itemTerm === term.toString().replace(/\D/g, '');
+        const matchGrade = itemGrade === grade.toString().trim();
+        const matchClass = itemClass === cls.toString().trim().toLowerCase();
         let matchStream = true;
+
         if (parseInt(grade) >= 12 && stream) {
-            matchStream = item.stream && item.stream.toString().trim().toLowerCase() === stream.toString().trim().toLowerCase();
+            matchStream = itemStream === rawStream;
         }
 
         return matchYear && matchTerm && matchGrade && matchClass && matchStream;
     });
+    // ==========================================
 
     if (!matched || (!matched.sheetUrl && !matched.link && !matched.url)) {
         throw new Error('Result sheet URL for this selection was not found.');
