@@ -650,6 +650,104 @@ function renderAlStreamsForm() {
     });
 }
 
+
+
+// ==========================================
+// 6. PAST PAPERS & DOCUMENTS MODULE
+// ==========================================
+function initDocumentsModule() {
+    const docButtonsContainer = $('documentsButtonsContainer');
+    if (!docButtonsContainer) return;
+
+    const links = [
+        { label: 'Edit Text Book', url: 'https://docs.google.com/spreadsheets/d/1WZ13wzcv_Ca7u3ohBZnLgEUrs7h7wgQBo83-A-n4Ne0/edit?usp=drivesdk', icon: 'fa-book' },
+        { label: "Edit Teacher's Guide", url: 'https://docs.google.com/spreadsheets/d/1eOlkqUHWBo_PT9rc9IdwPaQtBWcBQ_pK2Z3g7XTqRXM/edit?usp=drivesdk', icon: 'fa-chalkboard-user' },
+        { label: 'Edit Short Notes', url: 'https://docs.google.com/spreadsheets/d/1FuK5JY1SP33OOrACsoFxC5WyZYqbyj_Q4-K4C54TEv4/edit?usp=drivesdk', icon: 'fa-note-sticky' },
+        { label: 'Edit Application', url: 'https://docs.google.com/spreadsheets/d/19zyl4ZulZc8iTbodIEosWaJlZgFLn3SVqIomV_9tP5o/edit?usp=drivesdk', icon: 'fa-file-lines' }
+    ];
+
+    docButtonsContainer.innerHTML = links.map(item => `
+        <a href="${item.url}" target="_blank" class="btn btn-primary" style="display:flex; align-items:center; gap:10px; padding:12px 20px; font-weight:bold; font-size:15px; text-decoration:none; margin-bottom:12px; border-radius:8px;">
+            <i class="fa-solid ${item.icon}"></i> ${item.label}
+        </a>
+    `).join('');
+}
+
+// ==========================================
+// 7. GEMINI API MODULE
+// ==========================================
+function initGeminiModule() {
+    $('geminiKeyForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const keyVal = $('geminiKeyInput').value.trim();
+        if (!keyVal) return;
+
+        try {
+            await addDoc(collection(db, 'api'), {
+                apiKey: keyVal,
+                createdAt: new Date().toISOString()
+            });
+            showToast('Gemini API Key එක සාර්ථකව Save විය!', 'ok');
+            $('geminiKeyInput').value = '';
+            loadGeminiKeys();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    });
+
+    loadGeminiKeys();
+}
+
+async function loadGeminiKeys() {
+    const container = $('geminiKeysContainer');
+    if (!container) return;
+    try {
+        const snap = await getDocs(collection(db, 'api'));
+        container.innerHTML = '';
+        snap.forEach(docSnap => {
+            const d = docSnap.data();
+            const keyMasked = d.apiKey ? `${d.apiKey.substring(0, 8)}••••••••••••` : 'API Key';
+            const card = document.createElement('div');
+            card.className = 'contact-item';
+            card.style.display = 'flex';
+            card.style.alignItems = 'center';
+            card.style.justifyContent = 'space-between';
+            card.style.marginBottom = '10px';
+            card.style.padding = '10px';
+            card.style.border = '1px solid var(--border-color)';
+            card.style.borderRadius = '6px';
+
+            card.innerHTML = `
+                <div>
+                    <i class="fa-solid fa-key" style="color:#ffd966; margin-right:8px;"></i>
+                    <span>${keyMasked}</span>
+                </div>
+                <button class="btn btn-danger btn-delete-key" data-id="${docSnap.id}" style="padding:4px 10px;">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            `;
+            container.appendChild(card);
+        });
+
+        container.querySelectorAll('.btn-delete-key').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (confirm('මෙම API Key එක Delete කිරීමට තහවුරු කරන්න?')) {
+                    await deleteDoc(doc(db, 'api', btn.dataset.id));
+                    showToast('Key එක Delete විය', 'ok');
+                    loadGeminiKeys();
+                }
+            });
+        });
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+/* Admin app service worker */
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('a-sw.js');
+}
+
 // ==========================================
 // 5. ADVANCED TERM TEST RESULT MODULE
 // ==========================================
@@ -1001,100 +1099,3 @@ async function loadTermTestList() {
         console.error(err);
     }
 }
-
-// ==========================================
-// 6. PAST PAPERS & DOCUMENTS MODULE
-// ==========================================
-function initDocumentsModule() {
-    const docButtonsContainer = $('documentsButtonsContainer');
-    if (!docButtonsContainer) return;
-
-    const links = [
-        { label: 'Edit Text Book', url: 'https://docs.google.com/spreadsheets/d/1WZ13wzcv_Ca7u3ohBZnLgEUrs7h7wgQBo83-A-n4Ne0/edit?usp=drivesdk', icon: 'fa-book' },
-        { label: "Edit Teacher's Guide", url: 'https://docs.google.com/spreadsheets/d/1eOlkqUHWBo_PT9rc9IdwPaQtBWcBQ_pK2Z3g7XTqRXM/edit?usp=drivesdk', icon: 'fa-chalkboard-user' },
-        { label: 'Edit Short Notes', url: 'https://docs.google.com/spreadsheets/d/1FuK5JY1SP33OOrACsoFxC5WyZYqbyj_Q4-K4C54TEv4/edit?usp=drivesdk', icon: 'fa-note-sticky' },
-        { label: 'Edit Application', url: 'https://docs.google.com/spreadsheets/d/19zyl4ZulZc8iTbodIEosWaJlZgFLn3SVqIomV_9tP5o/edit?usp=drivesdk', icon: 'fa-file-lines' }
-    ];
-
-    docButtonsContainer.innerHTML = links.map(item => `
-        <a href="${item.url}" target="_blank" class="btn btn-primary" style="display:flex; align-items:center; gap:10px; padding:12px 20px; font-weight:bold; font-size:15px; text-decoration:none; margin-bottom:12px; border-radius:8px;">
-            <i class="fa-solid ${item.icon}"></i> ${item.label}
-        </a>
-    `).join('');
-}
-
-// ==========================================
-// 7. GEMINI API MODULE
-// ==========================================
-function initGeminiModule() {
-    $('geminiKeyForm')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const keyVal = $('geminiKeyInput').value.trim();
-        if (!keyVal) return;
-
-        try {
-            await addDoc(collection(db, 'api'), {
-                apiKey: keyVal,
-                createdAt: new Date().toISOString()
-            });
-            showToast('Gemini API Key එක සාර්ථකව Save විය!', 'ok');
-            $('geminiKeyInput').value = '';
-            loadGeminiKeys();
-        } catch (err) {
-            showToast(err.message, 'error');
-        }
-    });
-
-    loadGeminiKeys();
-}
-
-async function loadGeminiKeys() {
-    const container = $('geminiKeysContainer');
-    if (!container) return;
-    try {
-        const snap = await getDocs(collection(db, 'api'));
-        container.innerHTML = '';
-        snap.forEach(docSnap => {
-            const d = docSnap.data();
-            const keyMasked = d.apiKey ? `${d.apiKey.substring(0, 8)}••••••••••••` : 'API Key';
-            const card = document.createElement('div');
-            card.className = 'contact-item';
-            card.style.display = 'flex';
-            card.style.alignItems = 'center';
-            card.style.justifyContent = 'space-between';
-            card.style.marginBottom = '10px';
-            card.style.padding = '10px';
-            card.style.border = '1px solid var(--border-color)';
-            card.style.borderRadius = '6px';
-
-            card.innerHTML = `
-                <div>
-                    <i class="fa-solid fa-key" style="color:#ffd966; margin-right:8px;"></i>
-                    <span>${keyMasked}</span>
-                </div>
-                <button class="btn btn-danger btn-delete-key" data-id="${docSnap.id}" style="padding:4px 10px;">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            `;
-            container.appendChild(card);
-        });
-
-        container.querySelectorAll('.btn-delete-key').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                if (confirm('මෙම API Key එක Delete කිරීමට තහවුරු කරන්න?')) {
-                    await deleteDoc(doc(db, 'api', btn.dataset.id));
-                    showToast('Key එක Delete විය', 'ok');
-                    loadGeminiKeys();
-                }
-            });
-        });
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-/* Admin app service worker */
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('a-sw.js');
-}
-
