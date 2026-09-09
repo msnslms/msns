@@ -146,7 +146,7 @@ async function getOrFetchSheetData(year, term, grade, cls, stream) {
     
     try {
         const q = query(
-            collection(db, 'term-test-results'), 
+            collection(db, 'term-test-student-results'), 
             where('grade', 'in', [grade, parseInt(grade), grade.toString()])
         );
 
@@ -356,3 +356,4 @@ function renderStudentResult(rows, indexNum, grade, cls, year, term) {
         $('resultCardWrapper').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
 }
+
