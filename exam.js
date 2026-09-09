@@ -1,52 +1,8 @@
-// 1. Data ටික Direct JS Variable එකක් ලෙස මෙතනම ඇතුළත් කර ඇත (No fetch required!)
-const MANIFEST_DATA = [
-  { "year": "2026", "term": "2", "grade": "6", "class": "A", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/15OgTuVlHFgOwW6eCqdIsaVlScFRNw1hp/edit" },
-  { "year": "2026", "term": "2", "grade": "6", "class": "B", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1odkEX5pSnEP1oguNeA4_FxpKyjNdFCwZ/edit" },
-  { "year": "2026", "term": "2", "grade": "6", "class": "C", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1kyW6Qsz067VRdE9dzZBcjg8G4Xo9bfld/edit" },
-  { "year": "2026", "term": "2", "grade": "6", "class": "D", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1aMLfKyJJNUr0wnDh03HEB5_7Z9DudhRM/edit" },
-  { "year": "2026", "term": "2", "grade": "6", "class": "E", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1BTlRnlSjZ2p9zlpdjzjs72Rkb1eFdHdd/edit" },
-  { "year": "2026", "term": "2", "grade": "6", "class": "F", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1RxK0mxjZD8aaEVzBVTymWvXLuIM3Ciyi/edit" },
-  { "year": "2026", "term": "2", "grade": "6", "class": "G", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1V5r17qjDOK9tHy0Nrg99vrhPjnuvdqb-/edit" },
-  { "year": "2026", "term": "2", "grade": "7", "class": "A", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1qP6WYzxWSuwwURFe9vOpnBrRlOFHgkgd/edit" },
-  { "year": "2026", "term": "2", "grade": "7", "class": "B", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1S_HR-97DLd0gXTGSCDVChH3GIDkpnHud/edit" },
-  { "year": "2026", "term": "2", "grade": "7", "class": "C", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1X29gmNf5Iku_pNL5FDtIX7Hu6qFVtSAj/edit" },
-  { "year": "2026", "term": "2", "grade": "7", "class": "D", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1RxrRx2lPTYa_697eGTpqIIns4_kKDRSC/edit" },
-  { "year": "2026", "term": "2", "grade": "7", "class": "E", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1w33XYAG56nbSD52fGN1Uk8jeOlxHFd5z/edit" },
-  { "year": "2026", "term": "2", "grade": "7", "class": "F", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1Hrd_8Nlhswkm_JMmIHkx-c4eYT8liRFg/edit" },
-  { "year": "2026", "term": "2", "grade": "7", "class": "G", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1L9cAT5aEw_o2VxcUuuyv9kjqothUwu1H/edit" },
-  { "year": "2026", "term": "2", "grade": "8", "class": "A", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1hbSCHIPcLnCVBdXzDxydZY5Y3gicOyMK/edit" },
-  { "year": "2026", "term": "2", "grade": "8", "class": "B", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1Q-KcRDhiCrJg3PGZHdsO7B-gwfI_DyAP/edit" },
-  { "year": "2026", "term": "2", "grade": "8", "class": "C", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1PFBHf61D_pT3N7i8rJl21DM4cp7uHV0F/edit" },
-  { "year": "2026", "term": "2", "grade": "8", "class": "D", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/15EXfofSmnwLanSHesZ8Sa-k0sHgTK3zI/edit" },
-  { "year": "2026", "term": "2", "grade": "8", "class": "E", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/19rK44V3IiFLia9YJcXAl8XAtRLETxhUi/edit" },
-  { "year": "2026", "term": "2", "grade": "8", "class": "F", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1pXanpx3daGYDZzoyePF4S88SYosGA1qm/edit" },
-  { "year": "2026", "term": "2", "grade": "8", "class": "G", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1r-DzwQQYbiAOEqB6Ukn9jDrmP8N85z4n/edit" },
-  { "year": "2026", "term": "2", "grade": "9", "class": "A", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1katmCAUhoUyseAhv1ny23b1NgrkMc4N7/edit" },
-  { "year": "2026", "term": "2", "grade": "9", "class": "B", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1CoHRzXx6bBegNAzDIG7kn7QD-egSeMJo/edit" },
-  { "year": "2026", "term": "2", "grade": "9", "class": "C", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1akQz_PPT3Addt5Q1aqRXsJ-62-rry760/edit" },
-  { "year": "2026", "term": "2", "grade": "9", "class": "D", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1JCtghR_AC8j0FQOOcavUvSz1ihi3GS7U/edit" },
-  { "year": "2026", "term": "2", "grade": "9", "class": "E", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1JCtghR_AC8j0FQOOcavUvSz1ihi3GS7U/edit" },
-  { "year": "2026", "term": "2", "grade": "9", "class": "F", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1FngqXftN6_a6SQ17wo1BDkxD8YmpJdWw/edit" },
-  { "year": "2026", "term": "2", "grade": "9", "class": "G", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1FgDdV0XKWoOQffcFMbmjG91W2LePGrCC/edit" },
-  { "year": "2026", "term": "2", "grade": "10", "class": "A", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1lItLzggNq1Ioj4uo44muICvNrb109uFP/edit" },
-  { "year": "2026", "term": "2", "grade": "10", "class": "B", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1yiQVXWqGw0sYDTcMezcvF42T-W-Nadtn/edit" },
-  { "year": "2026", "term": "2", "grade": "10", "class": "C", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1yvTcYsUthpHKkWCs44VQ5iOxWCWpUUJL/edit" },
-  { "year": "2026", "term": "2", "grade": "10", "class": "D", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1x3smT-aK6Nu6KFalXfODI0P5lqYDQ4LV/edit" },
-  { "year": "2026", "term": "2", "grade": "10", "class": "E", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/10jBjYe6tXw-xXe340MYfdPURTWhpBjKf/edit" },
-  { "year": "2026", "term": "2", "grade": "10", "class": "F", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1fqn-hWXjBqWvJPbERVOqqVqJIBxmtBLd/edit" },
-  { "year": "2026", "term": "2", "grade": "10", "class": "G", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1QxgxoC_OK17GswYTs7QfQtTF2ua1czwQ/edit" },
-  { "year": "2026", "term": "2", "grade": "11", "class": "A", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1297WBMLa-DwtP63AM6rCn-RBsP8imJjL/edit" },
-  { "year": "2026", "term": "2", "grade": "11", "class": "B", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1PkPsY-R_8nULLJcI_JQvuo_NXuq4GJw6/edit" },
-  { "year": "2026", "term": "2", "grade": "11", "class": "C", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1VVQfKtdytq10kSFjo2mRyJefNBxC3XMa/edit" },
-  { "year": "2026", "term": "2", "grade": "11", "class": "D", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1fJ34qv5wRXupcQAqnjBj3s8JbXuq71vT/edit" },
-  { "year": "2026", "term": "2", "grade": "11", "class": "E", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1aD9_07EBw_tapenguXPfX7TJ56O8dw8J/edit" },
-  { "year": "2026", "term": "2", "grade": "11", "class": "F", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1aD9_07EBw_tapenguXPfX7TJ56O8dw8J/edit" },
-  { "year": "2026", "term": "2", "grade": "11", "class": "G", "stream": "", "sheetUrl": "https://docs.google.com/spreadsheets/d/1Z_1JOn2n_4ypdVHFlXfoaaW9XXZ6XPVW/edit" }
-];
-
+// Global Configuration & Cache
+const NPOINT_API_URL = 'https://api.npoint.io/14e592b7888053bb471b';
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
-let npointManifestCache = MANIFEST_DATA; 
+let npointManifestCache = null;
 let preloadedSheetMatrix = null;
 let currentPreloadKey = '';
 
@@ -58,9 +14,10 @@ document.addEventListener('DOMContentLoaded', () => {
     initPreloadListeners();
     initSearchForm();
     initPDFGenerator();
+    preloadNpointManifest(); // Start initial background fetch
 });
 
-// UI Helper (Status Message)
+// UI Helper
 function showStatus(msg, type = 'info') {
     const box = $('statusMessage');
     if (!box) return;
@@ -68,30 +25,45 @@ function showStatus(msg, type = 'info') {
     box.innerText = msg;
 }
 
-// UI Helper (Green Button Loading State Animation)
+// UI Helper (Button Loading State) - Loading එක කොළ පාටින් පෙන්වීමට වෙනස් කර ඇත
 function toggleButtonLoading(isLoading) {
     const form = $('resultSearchForm');
     if (!form) return;
 
     let loaderText = $('btnLoaderText');
     
+    // Loader element එක නැත්නම් අලුතින් හදනවා
     if (!loaderText) {
         loaderText = document.createElement('div');
         loaderText.id = 'btnLoaderText';
-        // කොළ පාට (Green) වර්ණය සහ Animation එක මෙතනින් සකසා ඇත
-        loaderText.style.cssText = 'color: #28a745; font-weight: bold; margin-top: 15px; text-align: center; font-size: 16px; display: none; animation: pulse 1.5s infinite;';
+        // මෙහි color: #198754 යනු පැහැදිලි කොළ පාටකි (Green)
+        loaderText.style.cssText = 'color: #198754; font-weight: bold; margin-top: 15px; text-align: center; font-size: 16px; display: none; animation: pulse 1.5s infinite;';
         form.appendChild(loaderText);
         
         const style = document.createElement('style');
-        style.innerHTML = `@keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }`;
+        style.innerHTML = `@keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }`;
         document.head.appendChild(style);
     }
 
     if (isLoading) {
-        loaderText.innerHTML = '⏳ Loading... (දත්ත ලබා ගනිමින් පවතී...)';
+        // ලෝඩ් වෙන බව පැහැදිලිව පෙන්වන Text එක
+        loaderText.innerHTML = '⏳ ලෝඩ් වෙමින් පවතී... (Loading...) කරුණාකර රැඳී සිටින්න...';
         loaderText.style.display = 'block';
     } else {
         loaderText.style.display = 'none';
+    }
+}
+
+// 1. Initial Manifest Preload
+async function preloadNpointManifest() {
+    try {
+        const res = await fetch(NPOINT_API_URL);
+        if (res.ok) {
+            npointManifestCache = await res.json();
+            console.log('⚡ NPoint Manifest successfully preloaded.');
+        }
+    } catch (err) {
+        console.warn('Manifest preload issue:', err);
     }
 }
 
@@ -125,6 +97,7 @@ function initPreloadListeners() {
                 if (currentPreloadKey !== fetchKey) {
                     currentPreloadKey = fetchKey;
                     preloadedSheetMatrix = null;
+                    console.log('🚀 Pre-fetching sheet data in background...');
                     try {
                         preloadedSheetMatrix = await getOrFetchSheetData(year, term, grade, cls, stream);
                     } catch (e) {
@@ -152,18 +125,21 @@ async function getOrFetchSheetData(year, term, grade, cls, stream) {
         }
     }
 
-    if (!npointManifestCache || !Array.isArray(npointManifestCache)) {
-        throw new Error('Manifest data එක හමු නොවීය. කරුණාකර JS file එක පරීක්ෂා කරන්න.');
+    if (!npointManifestCache) {
+        await preloadNpointManifest();
     }
 
-    // Match Record (Flexible matching for Case & Trim)
+    if (!npointManifestCache || !Array.isArray(npointManifestCache)) {
+        throw new Error('Could not fetch configuration data. Please check connection.');
+    }
+
+    // Match Record from NPoint API JSON (Case-Insensitive Fix එක මෙතන ඇත)
     const matched = npointManifestCache.find(item => {
         const itemYear = (item.year || item.Year || '').toString().trim();
         const itemTerm = (item.term || item.Term || '').toString().trim().replace(/\D/g, '');
         const itemGrade = (item.grade || item.Grade || '').toString().trim();
         const itemClass = (item.class || item.Class || '').toString().trim().toLowerCase();
         const itemStream = (item.stream || item.Stream || '').toString().trim().toLowerCase();
-        
         const rawStream = stream ? stream.toString().trim().toLowerCase() : '';
 
         const matchYear = itemYear === year.toString().trim();
@@ -180,7 +156,7 @@ async function getOrFetchSheetData(year, term, grade, cls, stream) {
     });
 
     if (!matched || (!matched.sheetUrl && !matched.link && !matched.url)) {
-        throw new Error('තෝරාගත් වසර, ශ්‍රේණිය සහ පන්තිය සඳහා Sheet Link එක JS Data හි හමු නොවීය.');
+        throw new Error('Result sheet URL for this selection was not found.');
     }
 
     const rawUrl = matched.sheetUrl || matched.link || matched.url;
@@ -193,10 +169,10 @@ async function getOrFetchSheetData(year, term, grade, cls, stream) {
     return matrix;
 }
 
-// Google Sheets GViz Fetcher
+// Google Sheets GViz Fetcher (Robust Parsing)
 async function fetchGoogleSheetAsMatrix(sheetUrl) {
     const sheetIdMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-    if (!sheetIdMatch) throw new Error('Google Sheet URL එක වැරදියි. URL එක නිවැරදිදැයි බලන්න.');
+    if (!sheetIdMatch) throw new Error('Invalid Google Sheet URL format.');
     
     const spreadsheetId = sheetIdMatch[1];
     
@@ -206,21 +182,22 @@ async function fetchGoogleSheetAsMatrix(sheetUrl) {
     const gvizUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json${gidParam}`;
 
     const res = await fetch(gvizUrl);
-    if (!res.ok) throw new Error('Google Sheet එක Download කරගත නොහැකි විය. Sheet එක Public View දී ඇත්දැයි බලන්න.');
+    if (!res.ok) throw new Error('Failed to download Google Sheet data.');
 
     const text = await res.text();
     
+    // Extract JSON part safely
     const startIdx = text.indexOf('{');
     const endIdx = text.lastIndexOf('}');
     if (startIdx === -1 || endIdx === -1) {
-        throw new Error('Google Sheet එකෙන් ලැබුණු Data සැකසීමට නොහැකි විය.');
+        throw new Error('Invalid response structure from Google Sheets.');
     }
     
     const jsonString = text.substring(startIdx, endIdx + 1);
     const json = JSON.parse(jsonString);
 
     if (!json.table || !json.table.rows) {
-        throw new Error('Google Sheet එකේ කිසිදු Data එකක් නැත.');
+        throw new Error('No data found in Google Sheet.');
     }
 
     const rows = json.table.rows;
@@ -244,13 +221,14 @@ function initSearchForm() {
         const stream = (parseInt(grade) >= 12) ? $('searchStream').value : '';
 
         if (!grade || !cls || !indexNum) {
-            showStatus('කරුණාකර අවශ්‍ය සියලුම විස්තර ඇතුළත් කරන්න.', 'error');
+            showStatus('Please enter all required details.', 'error');
             return;
         }
 
+        // Hide previous result and show loading state
         $('resultCardWrapper').style.display = 'none';
         showStatus(''); 
-        toggleButtonLoading(true); // Loading එක On වෙනවා
+        toggleButtonLoading(true);
 
         try {
             const fetchKey = `${year}_T${term}_G${grade}_C${cls}_${stream}`;
@@ -263,7 +241,7 @@ function initSearchForm() {
             }
 
             if (!sheetMatrix || sheetMatrix.length === 0) {
-                showStatus('මෙම තෝරා ගැනීමට අදාළ දත්ත හමු නොවීය.', 'error');
+                showStatus('No documents were found for this selection.', 'error');
                 toggleButtonLoading(false);
                 return;
             }
@@ -272,17 +250,18 @@ function initSearchForm() {
             showStatus('', 'info');
         } catch (err) {
             console.error(err);
-            showStatus(err.message || 'දත්ත ලබාගැනීමේදී දෝෂයක් සිදු විය.', 'error');
+            showStatus(err.message || 'An error occurred while fetching results.', 'error');
         } finally {
-            toggleButtonLoading(false); // Loading එක Off වෙනවා
+            toggleButtonLoading(false);
         }
     });
 }
 
-// 5. Dynamic Parsing Logic
+// 5. Dynamic Parsing Logic for All Grades
 function processAndRenderResults(matrix, indexNum, gradeStr, cls, year, term, stream) {
     const gradeVal = parseInt(gradeStr);
     
+    // Header Row Detection
     let headerRowIdx = -1;
     let indexColIdx = -1;
     let nameColIdx = -1;
@@ -302,12 +281,14 @@ function processAndRenderResults(matrix, indexNum, gradeStr, cls, year, term, st
         if (headerRowIdx !== -1 && nameColIdx !== -1) break;
     }
 
+    // Fallbacks
     if (headerRowIdx === -1) headerRowIdx = (gradeVal === 10 || gradeVal === 11) ? 6 : 7;
-    if (indexColIdx === -1) indexColIdx = 1;
-    if (nameColIdx === -1) nameColIdx = 2;
+    if (indexColIdx === -1) indexColIdx = 1; // B Column
+    if (nameColIdx === -1) nameColIdx = 2;  // C Column
 
     const headerRow = matrix[headerRowIdx] || [];
 
+    // Find Student Row
     let studentRow = null;
     for (let r = headerRowIdx + 1; r < matrix.length; r++) {
         const row = matrix[r] || [];
@@ -319,7 +300,7 @@ function processAndRenderResults(matrix, indexNum, gradeStr, cls, year, term, st
     }
 
     if (!studentRow) {
-        showStatus(`"${indexNum}" විභාග අංකය මෙම Sheet එකෙහි හමු නොවීය.`, 'error');
+        showStatus(`Index number "${indexNum}" was not found in this sheet.`, 'error');
         return;
     }
 
@@ -381,7 +362,7 @@ function processAndRenderResults(matrix, indexNum, gradeStr, cls, year, term, st
     });
 }
 
-// 6. UI Builder
+// 6. UI Builder (100% English Output)
 function renderEnglishA4Report(data) {
     $('rIndex').innerText = data.indexNum;
     $('rClass').innerText = `Grade ${data.grade}-${data.cls}${data.stream ? ' (' + data.stream + ')' : ''}`;
@@ -414,7 +395,7 @@ function renderEnglishA4Report(data) {
     }, 100);
 }
 
-// 7. PDF Downloader
+// 7. Dynamic Single Page PDF Downloader via html2pdf.js
 function initPDFGenerator() {
     window.downloadResultPDF = function () {
         const element = document.getElementById('a4Sheet');
@@ -436,3 +417,4 @@ function initPDFGenerator() {
         }
     };
 }
+
