@@ -109,9 +109,9 @@ async function getOrFetchSheetData(year, term, grade, cls, stream) {
         const matchYear = item.year && item.year.toString().trim() === year.toString().trim();
         
         const itemTermNum = item.term ? item.term.toString().replace(/\D/g, '') : '';
-        const searchTermNum = term.toString().replace(/\D/g, '');
+        const searchTermNum = term ? term.toString().replace(/\D/g, '') : '';
         const matchTerm = (itemTermNum && searchTermNum && itemTermNum === searchTermNum) ||
-                          (item.term && item.term.toString().toLowerCase().includes(term.toString().toLowerCase()));
+                          (item.term && term && item.term.toString().toLowerCase().includes(term.toString().toLowerCase()));
 
         const matchGrade = item.grade && item.grade.toString().trim() === grade.toString().trim();
         const matchClass = item.class && item.class.toString().trim().toLowerCase() === cls.toString().trim().toLowerCase();
@@ -173,7 +173,11 @@ async function fetchGoogleSheetAsMatrix(sheetUrl) {
     const rows = json.table.rows;
     return rows.map(r => {
         if (!r || !r.c) return [];
-        return r.c.map(cell => cell ? (cell.v !== null && cell.v !== undefined ? cell.v.toString().trim() : '') : '');
+        return r.c.map(cell => {
+            if (!cell) return '';
+            const val = (cell.f !== undefined && cell.f !== null) ? cell.f : cell.v;
+            return (val !== null && val !== undefined) ? val.toString().trim() : '';
+        });
     });
 }
 
@@ -183,20 +187,31 @@ function initSearchForm() {
     form?.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const year = $('searchYear').value;
-        const term = $('searchTerm').value;
-        const grade = $('searchGrade').value;
-        const cls = $('searchClass').value;
-        const indexNum = $('searchIndex').value.trim();
-        const stream = (parseInt(grade) >= 12) ? $('searchStream').value : '';
+        const year = $('searchYear')?.value || '';
+        const term = $('searchTerm')?.value || '';
+        const grade = $('searchGrade')?.value || '';
+        const cls = $('searchClass')?.value || '';
+        const indexNum = $('searchIndex')?.value ? $('searchIndex').value.trim() : '';
+        const stream = (parseInt(grade) >= 12) ? ($('searchStream')?.value || '') : '';
 
         if (!grade || !cls || !indexNum) {
             showStatus('Please enter all required details.', 'error');
             return;
         }
 
-        $('resultCardWrapper').style.display = 'none';
-        showStatus('Fetching results, please wait...', 'info');
+        // Get submit button and set Loading state
+        const submitBtn = form.querySelector('button[type="submit"]') || form.querySelector('button');
+        const originalBtnText = submitBtn ? submitBtn.innerText : 'Get Results';
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Loading... ⏳';
+        }
+
+        const resultCard = $('resultCardWrapper');
+        if (resultCard) resultCard.style.display = 'none';
+
+        showStatus('⏳ Fetching results, please wait...', 'info');
 
         try {
             const fetchKey = `${year}_T${term}_G${grade}_C${cls}_${stream}`;
@@ -213,11 +228,19 @@ function initSearchForm() {
                 return;
             }
 
-            processAndRenderResults(sheetMatrix, indexNum, grade, cls, year, term, stream);
-            showStatus('', 'info');
+            const isSuccess = processAndRenderResults(sheetMatrix, indexNum, grade, cls, year, term, stream);
+            if (isSuccess) {
+                showStatus('✅ Results fetched successfully!', 'success');
+            }
         } catch (err) {
             console.error(err);
             showStatus(err.message || 'An error occurred while fetching results.', 'error');
+        } finally {
+            // Restore submit button state
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalBtnText;
+            }
         }
     });
 }
@@ -266,7 +289,7 @@ function processAndRenderResults(matrix, indexNum, gradeStr, cls, year, term, st
 
     if (!studentRow) {
         showStatus(`Index number "${indexNum}" was not found in this sheet.`, 'error');
-        return;
+        return false;
     }
 
     const studentName = studentRow[nameColIdx] || 'N/A';
@@ -339,39 +362,45 @@ function processAndRenderResults(matrix, indexNum, gradeStr, cls, year, term, st
         avgVal,
         positionVal
     });
+
+    return true;
 }
 
 // 6. UI Builder (100% English Output)
 function renderEnglishA4Report(data) {
-    $('rIndex').innerText = data.indexNum;
-    $('rClass').innerText = `Grade ${data.grade}-${data.cls}${data.stream ? ' (' + data.stream + ')' : ''}`;
-    $('rName').innerText = data.studentName;
+    if ($('rIndex')) $('rIndex').innerText = data.indexNum;
+    if ($('rClass')) $('rClass').innerText = `Grade ${data.grade}-${data.cls}${data.stream ? ' (' + data.stream + ')' : ''}`;
+    if ($('rName')) $('rName').innerText = data.studentName;
     
     // Exam Header Title
     const ordinalTerm = data.term === '1' ? '1st' : data.term === '2' ? '2nd' : '3rd';
-    $('a4TermTitle').innerText = `${data.year} - ${ordinalTerm} Term Evaluation Report`;
+    if ($('a4TermTitle')) $('a4TermTitle').innerText = `${data.year} - ${ordinalTerm} Term Evaluation Report`;
 
     // Populate Subjects Table
     const tableBody = $('rTableBody');
-    tableBody.innerHTML = '';
-
-    data.subjectsList.forEach((sub, idx) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${idx + 1}</td>
-            <td style="text-align: left; font-weight: 600;">${sub.name}</td>
-            <td style="font-weight: 700;">${sub.mark}</td>
-        `;
-        tableBody.appendChild(row);
-    });
+    if (tableBody) {
+        tableBody.innerHTML = '';
+        data.subjectsList.forEach((sub, idx) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${idx + 1}</td>
+                <td style="text-align: left; font-weight: 600;">${sub.name}</td>
+                <td style="font-weight: 700;">${sub.mark}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
 
     // Inject Total, Average, Position inside summary card & table bottom
-    $('rTotal').innerText = data.totalVal;
-    $('rAvg').innerText = data.avgVal;
-    $('rRank').innerText = data.positionVal;
+    if ($('rTotal')) $('rTotal').innerText = data.totalVal;
+    if ($('rAvg')) $('rAvg').innerText = data.avgVal;
+    if ($('rRank')) $('rRank').innerText = data.positionVal;
 
-    $('resultCardWrapper').style.display = 'block';
-    $('resultCardWrapper').scrollIntoView({ behavior: 'smooth' });
+    const resultCard = $('resultCardWrapper');
+    if (resultCard) {
+        resultCard.style.display = 'block';
+        resultCard.scrollIntoView({ behavior: 'smooth' });
+    }
 }
 
 // 7. Dynamic Single Page PDF Downloader via html2pdf.js
@@ -396,4 +425,3 @@ function initPDFGenerator() {
         }
     };
 }
-
