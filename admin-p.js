@@ -1,7 +1,7 @@
 // Import Firebase ES Modules
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { 
-    getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, where, serverTimestamp 
+    getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, where, serverTimestamp, writeBatch 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Firebase Configuration
@@ -65,20 +65,27 @@ function initAuth() {
 
     $('loginForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const uname = $('loginUsername').value.trim();
-        const pwd = $('loginPassword').value.trim();
+        const unameInput = $('loginUsername');
+        const pwdInput = $('loginPassword');
+        
+        if (!unameInput || !pwdInput) return;
+
+        const uname = unameInput.value.trim().toLowerCase();
+        const pwd = pwdInput.value.trim();
 
         try {
-            let adminDocRef = doc(db, 'admin-users', uname);
-            let adminSnap = await getDoc(adminDocRef);
-
             let userData = null;
             let detectedRole = null;
 
+            // 1. Check direct doc ID match
+            let adminDocRef = doc(db, 'admin-users', uname);
+            let adminSnap = await getDoc(adminDocRef);
+
             if (adminSnap.exists()) {
                 userData = adminSnap.data();
-                detectedRole = adminSnap.id;
+                detectedRole = userData.role || adminSnap.id;
             } else {
+                // 2. Query by 'username' field
                 const q = query(collection(db, 'admin-users'), where('username', '==', uname));
                 const querySnap = await getDocs(q);
                 if (!querySnap.empty) {
@@ -89,7 +96,7 @@ function initAuth() {
             }
 
             if (userData && (userData.password === pwd || userData.pwd === pwd)) {
-                currentAdminRole = detectedRole.toLowerCase();
+                currentAdminRole = (detectedRole || 'admin').toLowerCase();
                 sessionStorage.setItem('adminRole', currentAdminRole);
                 $('loginModal')?.classList.remove('active');
                 applyRolePermissions();
@@ -98,7 +105,7 @@ function initAuth() {
                 showToast('Username හෝ Password වැරදිය!', 'error');
             }
         } catch (err) {
-            console.error(err);
+            console.error('Login Error:', err);
             showToast('Login දෝෂයක්: ' + err.message, 'error');
         }
     });
@@ -175,7 +182,7 @@ function switchSection(sectionId) {
 }
 
 // ==========================================
-// 2. USERS MANAGEMENT MODULE
+// 2. USERS MANAGEMENT MODULE (Optimized)
 // ==========================================
 async function loadUsersData() {
     try {
@@ -195,7 +202,7 @@ function renderUsersList() {
     const container = $('usersContainer');
     if (!container) return;
     
-    const searchTerm = $('userSearchInput')?.value.toLowerCase() || '';
+    const searchTerm = $('userSearchInput')?.value.toLowerCase().trim() || '';
     container.innerHTML = '';
 
     const filtered = loadedUsers.filter(u => {
@@ -212,6 +219,9 @@ function renderUsersList() {
         return;
     }
 
+    // Fast rendering for 1000+ elements using DocumentFragment
+    const fragment = document.createDocumentFragment();
+
     filtered.forEach(user => {
         const card = document.createElement('div');
         card.className = 'user-card';
@@ -222,7 +232,7 @@ function renderUsersList() {
         card.innerHTML = `
             <div class="user-card-top" style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
                 <div class="user-avatar" style="width:40px; height:40px; border-radius:50%; background:#ffd966; color:#000; display:flex; align-items:center; justify-content:center; font-weight:bold;">
-                    ${name[0].toUpperCase()}
+                    ${(name[0] || 'U').toUpperCase()}
                 </div>
                 <div class="user-info">
                     <h4 style="margin:0;">${name}</h4>
@@ -243,8 +253,10 @@ function renderUsersList() {
                 </button>
             </div>
         `;
-        container.appendChild(card);
+        fragment.appendChild(card);
     });
+
+    container.appendChild(fragment);
 
     container.querySelectorAll('.btn-toggle-user').forEach(btn => {
         btn.addEventListener('click', () => toggleUserStatus(btn.dataset.id, btn.dataset.disabled === 'true'));
@@ -286,11 +298,22 @@ async function deleteUserAccount(userId) {
         await deleteDoc(doc(db, 'users', userId));
         const aiQuery = query(collection(db, 'ai'), where('userId', '==', userId));
         const aiSnap = await getDocs(aiQuery);
-        const deletePromises = [];
-        aiSnap.forEach((aiDoc) => {
-            deletePromises.push(deleteDoc(doc(db, 'ai', aiDoc.id)));
-        });
-        await Promise.all(deletePromises);
+        
+        // Batch delete associated AI documents
+        if (!aiSnap.empty) {
+            let batch = writeBatch(db);
+            let count = 0;
+            aiSnap.forEach((aiDoc) => {
+                batch.delete(doc(db, 'ai', aiDoc.id));
+                count++;
+                if (count === 400) {
+                    batch.commit();
+                    batch = writeBatch(db);
+                    count = 0;
+                }
+            });
+            if (count > 0) await batch.commit();
+        }
 
         showToast('User සහ අදාළ දත්ත සාර්ථකව Delete විය!', 'ok');
         loadUsersData();
@@ -300,7 +323,7 @@ async function deleteUserAccount(userId) {
 }
 
 // ==========================================
-// 3. NEWS UPDATE MODULE (Fixed 100%)
+// 3. NEWS UPDATE MODULE
 // ==========================================
 function initNewsModule() {
     if ($('newsDate') && !$('newsDate').value) {
@@ -314,7 +337,6 @@ function initNewsModule() {
         let imgUrl = $('newsImageUrl')?.value || '';
 
         try {
-            // Upload to ImgBB if file is selected
             if (fileInput && fileInput.files.length > 0) {
                 const formData = new FormData();
                 formData.append('image', fileInput.files[0]);
@@ -333,7 +355,6 @@ function initNewsModule() {
                 }
             }
 
-            // Base news object (common for both add & update)
             const newsObject = {
                 title: ($('newsTitle').value || '').trim(),
                 category: ($('newsCategory').value || '').trim(),
@@ -347,13 +368,11 @@ function initNewsModule() {
             };
 
             if (id) {
-                // EDIT existing news - preserve createdAt & views
                 await updateDoc(doc(db, 'news', id), newsObject);
                 showToast('News එක යාවත්කාලීන විය!', 'ok');
             } else {
-                // ADD new news - initialize views & createdAt
                 newsObject.views = 0;
-                newsObject.createdAt = serverTimestamp(); // 🔥 Firestore Timestamp for proper sorting
+                newsObject.createdAt = serverTimestamp();
                 await addDoc(collection(db, 'news'), newsObject);
                 showToast('News එක සාර්ථකව පලකෙරිණි!', 'ok');
             }
@@ -363,7 +382,6 @@ function initNewsModule() {
             if ($('newsImageUrl')) $('newsImageUrl').value = '';
             if ($('imagePreviewBox')) $('imagePreviewBox').innerHTML = '';
             
-            // Reset date to today
             if ($('newsDate')) $('newsDate').value = new Date().toISOString().split('T')[0];
             
             loadNewsList();
@@ -381,16 +399,15 @@ async function loadNewsList() {
     if (!container) return;
     
     try {
-        console.log('📰 Loading news list from Firestore...');
         const snap = await getDocs(collection(db, 'news'));
         container.innerHTML = '';
-
-        console.log('📄 News docs count:', snap.size);
 
         if (snap.empty) {
             container.innerHTML = '<p style="color:var(--text-muted); grid-column: 1/-1; text-align:center; padding:20px;">පලකළ පුවත් කිසිවක් නැත.</p>';
             return;
         }
+
+        const fragment = document.createDocumentFragment();
 
         snap.forEach(docSnap => {
             const data = docSnap.data();
@@ -428,10 +445,11 @@ async function loadNewsList() {
                     </div>
                 </div>
             `;
-            container.appendChild(card);
+            fragment.appendChild(card);
         });
 
-        // Edit Button Event Listener
+        container.appendChild(fragment);
+
         container.querySelectorAll('.btn-edit-news').forEach(btn => {
             btn.addEventListener('click', async () => {
                 try {
@@ -461,7 +479,6 @@ async function loadNewsList() {
             });
         });
 
-        // Delete Button Event Listener
         container.querySelectorAll('.btn-delete-news').forEach(btn => {
             btn.addEventListener('click', async () => {
                 if (confirm('මෙම News එක සම්පූර්ණයෙන්ම Delete කිරීමට තහවුරු කරන්න?')) {
@@ -476,9 +493,8 @@ async function loadNewsList() {
             });
         });
     } catch (err) {
-        console.error('❌ Error loading news list:', err);
+        console.error('Error loading news list:', err);
         container.innerHTML = `<p style="color:#e74c3c; text-align:center; padding:20px;">News ලැයිස්තුව ලෝඩ් කිරීමේදී දෝෂයක්: ${err.message}</p>`;
-        showToast('News ලැයිස්තුව ලෝඩ් කිරීමේදී දෝෂයක් සිදුවිය', 'error');
     }
 }
 
@@ -650,10 +666,352 @@ function renderAlStreamsForm() {
     });
 }
 
+// ==========================================
+// 5. ADVANCED TERM TEST RESULT MODULE (Batch Fast Upload Fix)
+// ==========================================
+let parsedSheetStudents = [];
+let currentMeta = {};
 
+function initTermTestModule() {
+    const streamBox = $('streamFieldBox');
+    const ttGrade = $('ttGrade');
+    const ttForm = $('termTestForm');
+
+    ttGrade?.addEventListener('change', (e) => {
+        const val = parseInt(e.target.value);
+        if (streamBox) {
+            streamBox.style.display = (val === 12 || val === 13) ? 'block' : 'none';
+        }
+    });
+
+    ttForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const url = $('ttSheetUrl').value.trim();
+        if (!url) return;
+
+        currentMeta = {
+            year: $('ttYear').value,
+            term: $('ttTerm').value,
+            grade: $('ttGrade').value,
+            class: $('ttClass').value,
+            stream: (parseInt($('ttGrade').value) >= 12) ? $('ttStream').value : '',
+            sheetUrl: url
+        };
+
+        const btn = $('btnFetchSheet');
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Reading Google Sheet...`;
+
+        try {
+            parsedSheetStudents = await fetchAndParseGoogleSheet(url);
+            renderSheetPreview(parsedSheetStudents);
+            showToast('Google Sheet එක සාර්ථකව Read විය!', 'ok');
+        } catch (err) {
+            console.error(err);
+            showToast('Sheet එක Read කිරීම අසාර්ථකයි: ' + err.message, 'error');
+            if ($('ttPreviewContainer')) $('ttPreviewContainer').style.display = 'none';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> Sheet එක Read කර Preview බලන්න`;
+        }
+    });
+
+    // Highly Optimized Batch Upload Strategy for 1000+ Records
+    $('btnUploadToFirestore')?.addEventListener('click', async () => {
+        if (!parsedSheetStudents || parsedSheetStudents.length === 0) {
+            showToast('Upload කිරීමට Data හමු නොවුණි!', 'error');
+            return;
+        }
+
+        const uploadBtn = $('btnUploadToFirestore');
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Saving 1000+ Records...`;
+
+        try {
+            // 1. Master Record in 'term-test-results'
+            const sheetRef = await addDoc(collection(db, 'term-test-results'), {
+                ...currentMeta,
+                studentCount: parsedSheetStudents.length,
+                createdAt: new Date().toISOString()
+            });
+
+            // 2. Batch Upload (Groups of 400 - fast & safe for Firestore)
+            const BATCH_SIZE = 400;
+            let batch = writeBatch(db);
+            let countInBatch = 0;
+            let totalSaved = 0;
+
+            for (let i = 0; i < parsedSheetStudents.length; i++) {
+                const student = parsedSheetStudents[i];
+                const newStudentRef = doc(collection(db, 'term-test-student-results'));
+
+                batch.set(newStudentRef, {
+                    sheetId: sheetRef.id,
+                    year: currentMeta.year,
+                    term: currentMeta.term,
+                    grade: currentMeta.grade,
+                    class: currentMeta.class,
+                    stream: currentMeta.stream,
+                    indexNumber: student.indexNumber,
+                    name: student.name,
+                    results: student.results,
+                    createdAt: new Date().toISOString()
+                });
+
+                countInBatch++;
+                totalSaved++;
+
+                // Trigger batch commit every 400 items or at the end
+                if (countInBatch === BATCH_SIZE || i === parsedSheetStudents.length - 1) {
+                    await batch.commit();
+                    batch = writeBatch(db);
+                    countInBatch = 0;
+                }
+
+                // Update UI Row Indicator
+                const tr = document.getElementById(`tr-student-${i}`);
+                if (tr) {
+                    tr.classList.add('uploaded-row');
+                    const statusTd = tr.querySelector('.status-cell');
+                    if (statusTd) {
+                        statusTd.innerHTML = `<span class="status-pill saved"><i class="fa-solid fa-check"></i> Saved</span>`;
+                    }
+                }
+            }
+
+            showToast(`සියලුම (${totalSaved}) Results සාර්ථකව Firestore එකට Save විය!`, 'ok');
+            ttForm.reset();
+            loadTermTestList();
+
+        } catch (err) {
+            console.error('Batch Upload Error:', err);
+            showToast('Save කිරීමේදී දෝෂයක් විය: ' + err.message, 'error');
+        } finally {
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Add to Firestore`;
+        }
+    });
+
+    loadTermTestList();
+}
+
+// GOOGLE SHEET CSV FETCH & FIXED PARSER
+async function fetchAndParseGoogleSheet(sheetUrl) {
+    // Spreadsheet ID extraction regex fix
+    const matches = sheetUrl.match(/\/d\/([a-zA-Z0-9\-_]+)/i);
+    if (!matches || !matches[1]) {
+        throw new Error('අවලංගු Google Sheet Link එකකි!');
+    }
+    const spreadsheetId = matches[1];
+    const csvUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=mark%20sheet`;
+
+    const response = await fetch(csvUrl);
+    if (!response.ok) {
+        throw new Error('Google Sheet එක Share කර "Anyone with the link can view" ලබා දී ඇත්දැයි බලන්න.');
+    }
+
+    const csvText = await response.text();
+    return parseCSVToStudentResults(csvText);
+}
+
+function parseCSVToStudentResults(csvText) {
+    const lines = csvText.split(/\r\n|\n/).map(l => parseCSVLine(l)).filter(row => row.some(cell => cell.trim() !== ''));
+
+    if (lines.length < 2) {
+        throw new Error('Sheet එකේ දත්ත නොමැත!');
+    }
+
+    let headerIndex = -1;
+    let indexColIdx = -1;
+    let nameColIdx = -1;
+
+    for (let i = 0; i < Math.min(lines.length, 10); i++) {
+        const row = lines[i].map(c => c.toLowerCase().trim());
+        const foundIndex = row.findIndex(c => c.includes('index') || c.includes('විභාග අංකය') || c.includes('අංකය'));
+        const foundName = row.findIndex(c => c.includes('name') || c.includes('නම') || c.includes('student name'));
+
+        if (foundIndex !== -1 && foundName !== -1) {
+            headerIndex = i;
+            indexColIdx = foundIndex;
+            nameColIdx = foundName;
+            break;
+        }
+    }
+
+    if (headerIndex === -1) {
+        headerIndex = 0;
+        indexColIdx = 0;
+        nameColIdx = 1;
+    }
+
+    const headers = lines[headerIndex];
+    const subjectColumns = [];
+    const ignoredHeaderKeywords = ['main subject', 'bucket 1', 'bucket 2', 'bucket 3', 'bucket', 'total', 'average', 'rank', 'place', 'එකතුව', 'සාමාන්‍යය', 'ස්ථානය'];
+
+    headers.forEach((colName, idx) => {
+        if (idx !== indexColIdx && idx !== nameColIdx) {
+            const cleanCol = colName.trim();
+            const lowerCol = cleanCol.toLowerCase();
+
+            const isIgnored = ignoredHeaderKeywords.some(key => lowerCol.includes(key));
+            if (cleanCol !== '' && !isIgnored) {
+                subjectColumns.push({ index: idx, name: cleanCol });
+            }
+        }
+    });
+
+    const students = [];
+
+    for (let i = headerIndex + 1; i < lines.length; i++) {
+        const row = lines[i];
+        const indexNum = row[indexColIdx] ? row[indexColIdx].trim() : '';
+        const name = row[nameColIdx] ? row[nameColIdx].trim() : '';
+
+        if (indexNum || name) {
+            const results = {};
+            subjectColumns.forEach(sub => {
+                const mark = row[sub.index] ? row[sub.index].trim() : '-';
+                if (mark !== '') {
+                    results[sub.name] = mark;
+                }
+            });
+
+            students.push({
+                indexNumber: indexNum,
+                name: name,
+                results: results
+            });
+        }
+    }
+
+    return students;
+}
+
+function parseCSVLine(text) {
+    let p = '', c = '', r = [];
+    let q = false;
+    for (let i = 0; i < text.length; i++) {
+        c = text[i];
+        if (c === '"') {
+            if (q && text[i + 1] === '"') {
+                p += '"'; i++;
+            } else {
+                q = !q;
+            }
+        } else if (c === ',' && !q) {
+            r.push(p); p = '';
+        } else {
+            p += c;
+        }
+    }
+    r.push(p);
+    return r;
+}
+
+function renderSheetPreview(students) {
+    const container = $('ttPreviewContainer');
+    const tbody = $('ttPreviewBody');
+    const summary = $('ttParsedSummary');
+
+    if (!container || !tbody) return;
+
+    tbody.innerHTML = '';
+    if (summary) summary.textContent = `Total Students Found: ${students.length}`;
+
+    const fragment = document.createDocumentFragment();
+
+    students.forEach((s, idx) => {
+        const tr = document.createElement('tr');
+        tr.id = `tr-student-${idx}`;
+
+        let resultsHTML = '<div class="results-tag-box">';
+        for (const [sub, mark] of Object.entries(s.results)) {
+            resultsHTML += `<div class="sub-tag">${sub}: <span>${mark}</span></div>`;
+        }
+        resultsHTML += '</div>';
+
+        tr.innerHTML = `
+            <td style="font-weight: 800; color: #60a5fa;">${s.indexNumber || 'N/A'}</td>
+            <td style="font-weight: 600;">${s.name || 'N/A'}</td>
+            <td>${resultsHTML}</td>
+            <td class="status-cell" style="text-align: center;">
+                <span class="status-pill">Pending</span>
+            </td>
+        `;
+        fragment.appendChild(tr);
+    });
+
+    tbody.appendChild(fragment);
+    container.style.display = 'block';
+    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+async function loadTermTestList() {
+    const container = $('termTestList');
+    if (!container) return;
+
+    try {
+        const snap = await getDocs(collection(db, 'term-test-results'));
+        container.innerHTML = '';
+
+        if (snap.empty) {
+            container.innerHTML = `<p style="color: var(--text-muted); font-size: 0.88rem;">එකතු කළ Sheets කිසිවක් නොමැත.</p>`;
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        snap.forEach(docSnap => {
+            const d = docSnap.data();
+            const item = document.createElement('div');
+            item.className = 'contact-item';
+            item.style.display = 'flex';
+            item.style.alignItems = 'center';
+            item.style.justifyContent = 'space-between';
+            item.style.marginBottom = '10px';
+            item.style.padding = '12px 16px';
+            item.style.background = 'var(--surface-color)';
+            item.style.border = '1px solid var(--border-color)';
+            item.style.borderRadius = '12px';
+
+            item.innerHTML = `
+                <div>
+                    <i class="fa-solid fa-file-excel" style="color:#10b981; margin-right:10px; font-size: 1.2rem;"></i>
+                    <span><strong>${d.year}</strong> | ${d.term} | Grade ${d.grade}-${d.class} ${d.stream ? `(${d.stream})` : ''} <small style="color:var(--text-muted); margin-left:8px;">(${d.studentCount || 0} Students)</small></span>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <a href="${d.sheetUrl}" target="_blank" class="btn btn-ghost" style="padding:6px 12px; font-size:0.8rem;">Open Sheet</a>
+                    <button class="btn btn-danger btn-delete-tt" data-id="${docSnap.id}" style="padding:6px 12px; font-size:0.8rem;">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            fragment.appendChild(item);
+        });
+
+        container.appendChild(fragment);
+
+        container.querySelectorAll('.btn-delete-tt').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (confirm('මෙම Sheet Link එක සහ අදාළ Results Records Delete කිරීමට තහවුරු කරන්න?')) {
+                    try {
+                        await deleteDoc(doc(db, 'term-test-results', btn.dataset.id));
+                        showToast('Delete විය', 'ok');
+                        loadTermTestList();
+                    } catch (err) {
+                        showToast('Delete දෝෂයක්: ' + err.message, 'error');
+                    }
+                }
+            });
+        });
+
+    } catch (err) {
+        console.error(err);
+    }
+}
 
 // ==========================================
-// 6. PAST PAPERS & DOCUMENTS MODULE
+// 6. DOCUMENTS MODULE
 // ==========================================
 function initDocumentsModule() {
     const docButtonsContainer = $('documentsButtonsContainer');
@@ -704,6 +1062,9 @@ async function loadGeminiKeys() {
     try {
         const snap = await getDocs(collection(db, 'api'));
         container.innerHTML = '';
+        
+        const fragment = document.createDocumentFragment();
+
         snap.forEach(docSnap => {
             const d = docSnap.data();
             const keyMasked = d.apiKey ? `${d.apiKey.substring(0, 8)}••••••••••••` : 'API Key';
@@ -726,8 +1087,10 @@ async function loadGeminiKeys() {
                     <i class="fa-solid fa-trash"></i>
                 </button>
             `;
-            container.appendChild(card);
+            fragment.appendChild(card);
         });
+
+        container.appendChild(fragment);
 
         container.querySelectorAll('.btn-delete-key').forEach(btn => {
             btn.addEventListener('click', async () => {
@@ -743,359 +1106,7 @@ async function loadGeminiKeys() {
     }
 }
 
-/* Admin app service worker */
+/* Service worker registration */
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('a-sw.js');
-}
-
-// ==========================================
-// 5. ADVANCED TERM TEST RESULT MODULE
-// ==========================================
-
-// Global variable parsed records තබාගැනීමට
-let parsedSheetStudents = [];
-let currentMeta = {};
-
-function initTermTestModule() {
-    const streamBox = $('streamFieldBox');
-    const ttGrade = $('ttGrade');
-    const ttForm = $('termTestForm');
-
-    // Grade 12/13 සදහා Stream පෙන්වීම
-    ttGrade?.addEventListener('change', (e) => {
-        const val = parseInt(e.target.value);
-        if (streamBox) {
-            streamBox.style.display = (val === 12 || val === 13) ? 'block' : 'none';
-        }
-    });
-
-    // Google Sheet එක Fetch කර Data Read කිරීම
-    ttForm?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const url = $('ttSheetUrl').value.trim();
-        if (!url) return;
-
-        currentMeta = {
-            year: $('ttYear').value,
-            term: $('ttTerm').value,
-            grade: $('ttGrade').value,
-            class: $('ttClass').value,
-            stream: (parseInt($('ttGrade').value) >= 12) ? $('ttStream').value : '',
-            sheetUrl: url
-        };
-
-        const btn = $('btnFetchSheet');
-        btn.disabled = true;
-        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Reading Google Sheet...`;
-
-        try {
-            parsedSheetStudents = await fetchAndParseGoogleSheet(url);
-            renderSheetPreview(parsedSheetStudents);
-            showToast('Google Sheet එක සාර්ථකව Read විය!', 'ok');
-        } catch (err) {
-            console.error(err);
-            showToast('Sheet එක Read කිරීම අසාර්ථකයි: ' + err.message, 'error');
-            $('ttPreviewContainer').style.display = 'none';
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> Sheet එක Read කර Preview බලන්න`;
-        }
-    });
-
-    // Firestore වෙත එකින් එක Data Save කිරීමේ Event එක
-    $('btnUploadToFirestore')?.addEventListener('click', async () => {
-        if (!parsedSheetStudents || parsedSheetStudents.length === 0) {
-            showToast('Upload කිරීමට Data හමු නොවුණි!', 'error');
-            return;
-        }
-
-        const uploadBtn = $('btnUploadToFirestore');
-        uploadBtn.disabled = true;
-        uploadBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Saving...`;
-
-        try {
-            // 1. ප්‍රධාන Sheet Meta Record එක Firestore වල 'term-test-results' වලට එකතු කිරීම
-            const sheetRef = await addDoc(collection(db, 'term-test-results'), {
-                ...currentMeta,
-                studentCount: parsedSheetStudents.length,
-                createdAt: new Date().toISOString()
-            });
-
-            let savedCount = 0;
-
-            // 2. එකින් එක Student Results 'term-test-student-results' collection එකට Upload වීම
-            for (let i = 0; i < parsedSheetStudents.length; i++) {
-                const student = parsedSheetStudents[i];
-                
-                // Firestore එකට Insert කිරීම (Index Number එක, Grade එක සහ Class එක එකතු කර unique document key හෝ fields සාදයි)
-                const studentDocData = {
-                    sheetId: sheetRef.id,
-                    year: currentMeta.year,
-                    term: currentMeta.term,
-                    grade: currentMeta.grade,
-                    class: currentMeta.class,
-                    stream: currentMeta.stream,
-                    indexNumber: student.indexNumber,
-                    name: student.name,
-                    results: student.results, // Object { Sinhala: 85, Science: 90, ... }
-                    createdAt: new Date().toISOString()
-                };
-
-                // Index number එක doc ID එක විදියටත් හෝ auto ID විදියටත් දැමිය හැක
-                await addDoc(collection(db, 'term-test-student-results'), studentDocData);
-
-                // ** SUCCESS GREEN ROW ANIMATION **
-                const tr = document.getElementById(`tr-student-${i}`);
-                if (tr) {
-                    tr.classList.add('uploaded-row');
-                    const statusTd = tr.querySelector('.status-cell');
-                    if (statusTd) {
-                        statusTd.innerHTML = `<span class="status-pill saved"><i class="fa-solid fa-check"></i> Saved</span>`;
-                    }
-                }
-
-                savedCount++;
-                // smooth write sensation එක සඳහා කුඩා Delay එකක්
-                await new Promise(res => setTimeout(res, 120));
-            }
-
-            showToast(`සියලුම (${savedCount}) Results සාර්ථකව Firestore එකට Save විය!`, 'ok');
-            ttForm.reset();
-            loadTermTestList();
-
-        } catch (err) {
-            console.error(err);
-            showToast('Save කිරීමේදී දෝෂයක් විය: ' + err.message, 'error');
-        } finally {
-            uploadBtn.disabled = false;
-            uploadBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Add to Firestore`;
-        }
-    });
-
-    loadTermTestList();
-}
-
-// ==========================================
-// GOOGLE SHEET CSV FETCH & DYNAMIC PARSER
-// ==========================================
-async function fetchAndParseGoogleSheet(sheetUrl) {
-    // Spreadsheet ID එක Extract කරගැනීම
-    const matches = sheetUrl.match(/\/d\/([a-zA- Lanka0-9-_]+)/i);
-    if (!matches || !matches[1]) {
-        throw new Error('අවලංගු Google Sheet Link එකකි!');
-    }
-    const spreadsheetId = matches[1];
-
-    // 'mark sheet' tab එක CSV ලෙස ගෙන්නා ගැනීමේ export link එක
-    const csvUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=mark%20sheet`;
-
-    const response = await fetch(csvUrl);
-    if (!response.ok) {
-        throw new Error('Google Sheet එක Share කර "Anyone with the link can view" ලබා දී ඇත්දැයි බලන්න.');
-    }
-
-    const csvText = await response.text();
-    return parseCSVToStudentResults(csvText);
-}
-
-// CSV TEXT PARSER & DYNAMIC SUBJECT DETECTOR
-function parseCSVToStudentResults(csvText) {
-    const lines = csvText.split(/\r\n|\n/).map(l => parseCSVLine(l)).filter(row => row.some(cell => cell.trim() !== ''));
-
-    if (lines.length < 2) {
-        throw new Error('Sheet එකේ දත්ත නොමැත!');
-    }
-
-    // Dynamic header matching (Index number & Name සොයාගැනීම)
-    let headerIndex = -1;
-    let indexColIdx = -1;
-    let nameColIdx = -1;
-
-    for (let i = 0; i < Math.min(lines.length, 10); i++) {
-        const row = lines[i].map(c => c.toLowerCase().trim());
-        const foundIndex = row.findIndex(c => c.includes('index') || c.includes('විභාග අංකය') || c.includes('අංකය'));
-        const foundName = row.findIndex(c => c.includes('name') || c.includes('නම') || c.includes('student name'));
-
-        if (foundIndex !== -1 && foundName !== -1) {
-            headerIndex = i;
-            indexColIdx = foundIndex;
-            nameColIdx = foundName;
-            break;
-        }
-    }
-
-    if (headerIndex === -1) {
-        // Default: 0 = Index, 1 = Name ලෙස උපකල්පනය කරයි
-        headerIndex = 0;
-        indexColIdx = 0;
-        nameColIdx = 1;
-    }
-
-    const headers = lines[headerIndex];
-    const subjectColumns = [];
-
-    // Main subject, Bucket 1, 2, 3 වැනි අනවශ්‍ය headers අයින් කර Subject Name හඳුනාගැනීම
-    const ignoredHeaderKeywords = ['main subject', 'bucket 1', 'bucket 2', 'bucket 3', 'bucket', 'total', 'average', 'rank', 'place', 'එකතුව', 'සාමාන්‍යය', 'ස්ථානය'];
-
-    headers.forEach((colName, idx) => {
-        if (idx !== indexColIdx && idx !== nameColIdx) {
-            const cleanCol = colName.trim();
-            const lowerCol = cleanCol.toLowerCase();
-
-            // Bucket titles, Total/Rank අතහැර සැබෑ Subjects විතරක් හඳුනා ගනී
-            const isIgnored = ignoredHeaderKeywords.some(key => lowerCol.includes(key));
-            if (cleanCol !== '' && !isIgnored) {
-                subjectColumns.push({ index: idx, name: cleanCol });
-            }
-        }
-    });
-
-    const students = [];
-
-    // Student Data Rows අරන් Results Map කිරීම
-    for (let i = headerIndex + 1; i < lines.length; i++) {
-        const row = lines[i];
-        const indexNum = row[indexColIdx] ? row[indexColIdx].trim() : '';
-        const name = row[nameColIdx] ? row[nameColIdx].trim() : '';
-
-        // Index number එක හෝ Name එක තිබේ නම් පමණක් සලකා බලයි
-        if (indexNum || name) {
-            const results = {};
-            subjectColumns.forEach(sub => {
-                const mark = row[sub.index] ? row[sub.index].trim() : '-';
-                if (mark !== '') {
-                    results[sub.name] = mark;
-                }
-            });
-
-            students.push({
-                indexNumber: indexNum,
-                name: name,
-                results: results
-            });
-        }
-    }
-
-    return students;
-}
-
-// Utility: Quotes සමඟ එන CSV Lines හරියට Split කිරීමට
-function parseCSVLine(text) {
-    let p = '', c = '', r = [];
-    let q = false;
-    for (let i = 0; i < text.length; i++) {
-        c = text[i];
-        if (c === '"') {
-            if (q && text[i + 1] === '"') {
-                p += '"'; i++;
-            } else {
-                q = !q;
-            }
-        } else if (c === ',' && !q) {
-            r.push(p); p = '';
-        } else {
-            p += c;
-        }
-    }
-    r.push(p);
-    return r;
-}
-
-// ==========================================
-// RENDER PREVIEW TABLE IN UI
-// ==========================================
-function renderSheetPreview(students) {
-    const container = $('ttPreviewContainer');
-    const tbody = $('ttPreviewBody');
-    const summary = $('ttParsedSummary');
-
-    if (!container || !tbody) return;
-
-    tbody.innerHTML = '';
-    summary.textContent = `Total Students Found: ${students.length}`;
-
-    students.forEach((s, idx) => {
-        const tr = document.createElement('tr');
-        tr.id = `tr-student-${idx}`;
-
-        // Results Tags සාදා ගැනීම (Sinhala : 85)
-        let resultsHTML = '<div class="results-tag-box">';
-        for (const [sub, mark] of Object.entries(s.results)) {
-            resultsHTML += `<div class="sub-tag">${sub}: <span>${mark}</span></div>`;
-        }
-        resultsHTML += '</div>';
-
-        tr.innerHTML = `
-            <td style="font-weight: 800; color: #60a5fa;">${s.indexNumber || 'N/A'}</td>
-            <td style="font-weight: 600;">${s.name || 'N/A'}</td>
-            <td>${resultsHTML}</td>
-            <td class="status-cell" style="text-align: center;">
-                <span class="status-pill">Pending</span>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-
-    container.style.display = 'block';
-    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-// ==========================================
-// LOAD ADDED SHEETS LIST FROM FIRESTORE
-// ==========================================
-async function loadTermTestList() {
-    const container = $('termTestList');
-    if (!container) return;
-
-    try {
-        const snap = await getDocs(collection(db, 'term-test-results'));
-        container.innerHTML = '';
-
-        if (snap.empty) {
-            container.innerHTML = `<p style="color: var(--text-muted); font-size: 0.88rem;">එකතු කළ Sheets කිසිවක් නොමැත.</p>`;
-            return;
-        }
-
-        snap.forEach(docSnap => {
-            const d = docSnap.data();
-            const item = document.createElement('div');
-            item.className = 'contact-item';
-            item.style.display = 'flex';
-            item.style.alignItems = 'center';
-            item.style.justifyContent = 'space-between';
-            item.style.marginBottom = '10px';
-            item.style.padding = '12px 16px';
-            item.style.background = 'var(--surface-color)';
-            item.style.border = '1px solid var(--border-color)';
-            item.style.borderRadius = '12px';
-
-            item.innerHTML = `
-                <div>
-                    <i class="fa-solid fa-file-excel" style="color:#10b981; margin-right:10px; font-size: 1.2rem;"></i>
-                    <span><strong>${d.year}</strong> | ${d.term} | Grade ${d.grade}-${d.class} ${d.stream ? `(${d.stream})` : ''} <small style="color:var(--text-muted); margin-left:8px;">(${d.studentCount || 0} Students)</small></span>
-                </div>
-                <div style="display:flex; gap:8px;">
-                    <a href="${d.sheetUrl}" target="_blank" class="btn btn-ghost" style="padding:6px 12px; font-size:0.8rem;">Open Sheet</a>
-                    <button class="btn btn-danger btn-delete-tt" data-id="${docSnap.id}" style="padding:6px 12px; font-size:0.8rem;">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </div>
-            `;
-            container.appendChild(item);
-        });
-
-        // Delete Handler
-        container.querySelectorAll('.btn-delete-tt').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                if (confirm('මෙම Sheet Link එක සහ අදාළ Results Records Delete කිරීමට තහවුරු කරන්න?')) {
-                    await deleteDoc(doc(db, 'term-test-results', btn.dataset.id));
-                    showToast('Delete විය', 'ok');
-                    loadTermTestList();
-                }
-            });
-        });
-
-    } catch (err) {
-        console.error(err);
-    }
+    navigator.serviceWorker.register('a-sw.js').catch(() => {});
 }
