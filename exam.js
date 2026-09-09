@@ -14,15 +14,36 @@ document.addEventListener('DOMContentLoaded', () => {
     initPreloadListeners();
     initSearchForm();
     initPDFGenerator();
-    preloadNpointManifest(); // Start initial background fetch
+    preloadNpointManifest(); // Start background manifest fetch
 });
 
-// UI Helper
+// UI Helper (Status Messages)
 function showStatus(msg, type = 'info') {
     const box = $('statusMessage');
     if (!box) return;
     box.className = `status-msg ${type}`;
     box.innerText = msg;
+}
+
+// UI Helper (Loading Indicator)
+function toggleButtonLoading(isLoading) {
+    const form = $('resultSearchForm');
+    if (!form) return;
+
+    let loaderText = $('btnLoaderText');
+    if (!loaderText) {
+        loaderText = document.createElement('div');
+        loaderText.id = 'btnLoaderText';
+        loaderText.style.cssText = 'color: #ff8c00; font-weight: 700; margin-top: 15px; text-align: center; font-size: 15px; display: none;';
+        form.appendChild(loaderText);
+    }
+
+    if (isLoading) {
+        loaderText.innerHTML = '⏳ Loading result... කරුණාකර රැඳී සිටින්න...';
+        loaderText.style.display = 'block';
+    } else {
+        loaderText.style.display = 'none';
+    }
 }
 
 // 1. Initial Manifest Preload
@@ -38,7 +59,7 @@ async function preloadNpointManifest() {
     }
 }
 
-// Stream Selection Listener (Triggered for Grade 12 & 13)
+// Stream Selection Listener (Grade 12 & 13)
 function initGradeChangeListener() {
     const gradeSelect = $('searchGrade');
     const streamBox = $('streamSelectBox');
@@ -51,7 +72,7 @@ function initGradeChangeListener() {
     });
 }
 
-// 2. High-Speed Background Pre-fetching on Selection
+// 2. Background Pre-fetching on Option Change
 function initPreloadListeners() {
     const triggerElements = ['searchYear', 'searchTerm', 'searchGrade', 'searchClass', 'searchStream'];
     
@@ -80,7 +101,7 @@ function initPreloadListeners() {
     });
 }
 
-// 3. Fetch Google Sheet Link and Parse to 2D Array Matrix
+// 3. Get Sheet Data with LocalStorage Caching
 async function getOrFetchSheetData(year, term, grade, cls, stream) {
     const cacheKey = `sheet_data_${year}_T${term}_G${grade}_C${cls}_${stream || 'none'}`;
     const cachedItem = localStorage.getItem(cacheKey);
@@ -132,201 +153,29 @@ async function getOrFetchSheetData(year, term, grade, cls, stream) {
     const matrix = await fetchGoogleSheetAsMatrix(rawUrl);
 
     try {
-        localStorage.setItem(cacheKey, JSON.stringify({ timestamp: Date.now(), data:කණගාටු වෙන්න එපා, අපි ඕක හරියටම හදාගමු. ගොඩක් වෙලාවට ඔය කෝඩ් එක වැඩ නොකරන්න හේතුව තමයි **Google Sheets වලින් එන Data එක (JSON) Parse වෙන විදියෙ පොඩි අවුලක් තියෙන එක**. ඒ වගේම ඔයා ඉල්ලපු විදියට, Button එක එබුවට පස්සෙ යටින් ලස්සනට පේන පාටකින් **"⏳ Loading result..."** කියලා වැටෙන්නත්, ගොඩක් වේගයෙන් Data ටික අරන් පෙන්නන්නත් මම කෝඩ් එක Update කළා.
-
-ඔයාගෙ **පරණ දේවල් කිසිම දෙයක් අයින් කළේ නෑ**, Caching වගේ වේගවත් කරන දේවල් තවත් හොඳට හැදුවා.
-
-පහත තියෙන සම්පූර්ණ JavaScript Code එක ඔයාගෙ පරණ එක වෙනුවට දාන්න:
-
-```javascript
-// Global Configuration & Cache
-const NPOINT_API_URL = '[https://api.npoint.io/14e592b7888053bb471b](https://api.npoint.io/14e592b7888053bb471b)';
-const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-
-let npointManifestCache = null;
-let preloadedSheetMatrix = null;
-let currentPreloadKey = '';
-
-// Helper function
-const $ = (id) => document.getElementById(id);
-
-document.addEventListener('DOMContentLoaded', () => {
-    initGradeChangeListener();
-    initPreloadListeners();
-    initSearchForm();
-    initPDFGenerator();
-    preloadNpointManifest(); // Start initial background fetch
-});
-
-// UI Helper (Status Messages)
-function showStatus(msg, type = 'info') {
-    const box = $('statusMessage');
-    if (!box) return;
-    box.className = `status-msg ${type}`;
-    box.innerText = msg;
-}
-
-// UI Helper (Button Loading State - ඔයා ඉල්ලපු අලුත් කෑල්ල)
-function toggleButtonLoading(isLoading) {
-    const form = $('resultSearchForm');
-    if (!form) return;
-
-    let loaderText = $('btnLoaderText');
-    
-    // Loader element එක නැත්නම් අලුතින් හදනවා
-    if (!loaderText) {
-        loaderText = document.createElement('div');
-        loaderText.id = 'btnLoaderText';
-        // පේන පාටක් (Orange/Amber) සහ ලස්සන style එකක්
-        loaderText.style.cssText = 'color: #ff8c00; font-weight: bold; margin-top: 15px; text-align: center; font-size: 15px; display: none; animation: pulse 1.5s infinite;';
-        form.appendChild(loaderText);
-        
-        // පොඩි Animation එකක් එකතු කරනවා ලස්සන වෙන්න
-        const style = document.createElement('style');
-        style.innerHTML = `@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }`;
-        document.head.appendChild(style);
-    }
-
-    if (isLoading) {
-        loaderText.innerHTML = '⏳ Loading result... කරුණාකර රැඳී සිටින්න...';
-        loaderText.style.display = 'block';
-    } else {
-        loaderText.style.display = 'none';
-    }
-}
-
-// 1. Initial Manifest Preload
-async function preloadNpointManifest() {
-    try {
-        const res = await fetch(NPOINT_API_URL);
-        if (res.ok) {
-            npointManifestCache = await res.json();
-            console.log('⚡ NPoint Manifest successfully preloaded.');
-        }
-    } catch (err) {
-        console.warn('Manifest preload issue:', err);
-    }
-}
-
-// Stream Selection Listener (Triggered for Grade 12 & 13)
-function initGradeChangeListener() {
-    const gradeSelect = $('searchGrade');
-    const streamBox = $('streamSelectBox');
-
-    gradeSelect?.addEventListener('change', (e) => {
-        const val = parseInt(e.target.value);
-        if (streamBox) {
-            streamBox.style.display = (val === 12 || val === 13) ? 'block' : 'none';
-        }
-    });
-}
-
-// 2. High-Speed Background Pre-fetching on Selection
-function initPreloadListeners() {
-    const triggerElements = ['searchYear', 'searchTerm', 'searchGrade', 'searchClass', 'searchStream'];
-    
-    triggerElements.forEach(id => {
-        $(id)?.addEventListener('change', async () => {
-            const year = $('searchYear')?.value;
-            const term = $('searchTerm')?.value;
-            const grade = $('searchGrade')?.value;
-            const cls = $('searchClass')?.value;
-            const stream = (parseInt(grade) >= 12) ? $('searchStream')?.value : '';
-
-            if (year && term && grade && cls) {
-                const fetchKey = `${year}_T${term}_G${grade}_C${cls}_${stream}`;
-                if (currentPreloadKey !== fetchKey) {
-                    currentPreloadKey = fetchKey;
-                    preloadedSheetMatrix = null;
-                    console.log('🚀 Pre-fetching sheet data in background...');
-                    try {
-                        preloadedSheetMatrix = await getOrFetchSheetData(year, term, grade, cls, stream);
-                    } catch (e) {
-                        preloadedSheetMatrix = null;
-                    }
-                }
-            }
-        });
-    });
-}
-
-// 3. Fetch Google Sheet Link and Parse to 2D Array Matrix
-async function getOrFetchSheetData(year, term, grade, cls, stream) {
-    const cacheKey = `sheet_data_${year}_T${term}_G${grade}_C${cls}_${stream || 'none'}`;
-    const cachedItem = localStorage.getItem(cacheKey);
-
-    // Cache එකෙන් ගන්නවා (වේගවත් කරන්න)
-    if (cachedItem) {
-        try {
-            const { timestamp, data } = JSON.parse(cachedItem);
-            if (Date.now() - timestamp < ONE_WEEK_MS) {
-                return data;
-            }
-        } catch (e) {
-            localStorage.removeItem(cacheKey);
-        }
-    }
-
-    if (!npointManifestCache) {
-        await preloadNpointManifest();
-    }
-
-    if (!npointManifestCache || !Array.isArray(npointManifestCache)) {
-        throw new Error('Could not fetch configuration data. Please check connection.');
-    }
-
-    // Match Record from NPoint API JSON
-    const matched = npointManifestCache.find(item => {
-        const matchYear = item.year && item.year.toString().trim() === year.toString().trim();
-        
-        const itemTermNum = item.term ? item.term.toString().replace(/\D/g, '') : '';
-        const searchTermNum = term.toString().replace(/\D/g, '');
-        const matchTerm = (itemTermNum && searchTermNum && itemTermNum === searchTermNum) ||
-                          (item.term && item.term.toString().toLowerCase().includes(term.toString().toLowerCase()));
-
-        const matchGrade = item.grade && item.grade.toString().trim() === grade.toString().trim();
-        const matchClass = item.class && item.class.toString().trim().toLowerCase() === cls.toString().trim().toLowerCase();
-        
-        let matchStream = true;
-        if (parseInt(grade) >= 12 && stream) {
-            matchStream = item.stream && item.stream.toString().trim().toLowerCase() === stream.toString().trim().toLowerCase();
-        }
-
-        return matchYear && matchTerm && matchGrade && matchClass && matchStream;
-    });
-
-    if (!matched || (!matched.sheetUrl && !matched.link && !matched.url)) {
-        throw new Error('Result sheet URL for this selection was not found.');
-    }
-
-    const rawUrl = matched.sheetUrl || matched.link || matched.url;
-    const matrix = await fetchGoogleSheetAsMatrix(rawUrl);
-
-    try {
         localStorage.setItem(cacheKey, JSON.stringify({ timestamp: Date.now(), data: matrix }));
     } catch(e) {}
 
     return matrix;
 }
 
-// Google Sheets GViz Fetcher (හදාපු Robust Parsing එක - දැන් වැඩ කරනවා 100%)
+// 4. Google Sheets GViz Fetcher & Parser
 async function fetchGoogleSheetAsMatrix(sheetUrl) {
     const sheetIdMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
     if (!sheetIdMatch) throw new Error('Invalid Google Sheet URL format.');
     
     const spreadsheetId = sheetIdMatch[1];
     
-    let gidMatch = sheetUrl.match(/gid=([0-9]+)/);
-    let gidParam = gidMatch ? `&gid=${gidMatch[1]}` : '';
+    const gidMatch = sheetUrl.match(/gid=([0-9]+)/);
+    const gidParam = gidMatch ? `&gid=${gidMatch[1]}` : '';
 
-    const gvizUrl = `[https://docs.google.com/spreadsheets/d/$](https://docs.google.com/spreadsheets/d/$){spreadsheetId}/gviz/tq?tqx=out:json${gidParam}`;
+    const gvizUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json${gidParam}`;
 
     const res = await fetch(gvizUrl);
     if (!res.ok) throw new Error('Failed to download Google Sheet data.');
 
     const text = await res.text();
     
-    // වඩාත් ආරක්ෂිතව JSON එක වෙන් කරගැනීම (Fix for parsing error)
     const startIdx = text.indexOf('{');
     const endIdx = text.lastIndexOf('}');
     if (startIdx === -1 || endIdx === -1) {
@@ -343,11 +192,16 @@ async function fetchGoogleSheetAsMatrix(sheetUrl) {
     const rows = json.table.rows;
     return rows.map(r => {
         if (!r || !r.c) return [];
-        return r.c.map(cell => cell ? (cell.v !== null && cell.v !== undefined ? cell.v.toString().trim() : '') : '');
+        return r.c.map(cell => {
+            if (!cell) return '';
+            if (cell.v !== null && cell.v !== undefined) return cell.v.toString().trim();
+            if (cell.f !== null && cell.f !== undefined) return cell.f.toString().trim();
+            return '';
+        });
     });
 }
 
-// 4. Form Submit & Result Processor
+// 5. Search Form Handler
 function initSearchForm() {
     const form = $('resultSearchForm');
     form?.addEventListener('submit', async (e) => {
@@ -365,10 +219,9 @@ function initSearchForm() {
             return;
         }
 
-        // පරණ Result එක හංගලා Loading State එක ඔන් කරනවා
         $('resultCardWrapper').style.display = 'none';
         showStatus(''); 
-        toggleButtonLoading(true); // ඔයා ඉල්ලපු ලෝඩින් ටෙක්ස්ට් එක යටින් වැටෙනවා
+        toggleButtonLoading(true);
 
         try {
             const fetchKey = `${year}_T${term}_G${grade}_C${cls}_${stream}`;
@@ -392,16 +245,15 @@ function initSearchForm() {
             console.error(err);
             showStatus(err.message || 'An error occurred while fetching results.', 'error');
         } finally {
-            toggleButtonLoading(false); // වැඩේ ඉවර උනාම ලෝඩින් ටෙක්ස්ට් එක අයින් වෙනවා
+            toggleButtonLoading(false);
         }
     });
 }
 
-// 5. Dynamic Parsing Logic for All Grades
+// 6. Result Parsing Logic
 function processAndRenderResults(matrix, indexNum, gradeStr, cls, year, term, stream) {
     const gradeVal = parseInt(gradeStr);
     
-    // Header Row Detection
     let headerRowIdx = -1;
     let indexColIdx = -1;
     let nameColIdx = -1;
@@ -421,14 +273,12 @@ function processAndRenderResults(matrix, indexNum, gradeStr, cls, year, term, st
         if (headerRowIdx !== -1 && nameColIdx !== -1) break;
     }
 
-    // Fallbacks
     if (headerRowIdx === -1) headerRowIdx = (gradeVal === 10 || gradeVal === 11) ? 6 : 7;
-    if (indexColIdx === -1) indexColIdx = 1; // B Column
-    if (nameColIdx === -1) nameColIdx = 2;  // C Column
+    if (indexColIdx === -1) indexColIdx = 1;
+    if (nameColIdx === -1) nameColIdx = 2;
 
     const headerRow = matrix[headerRowIdx] || [];
 
-    // Find Student Row
     let studentRow = null;
     for (let r = headerRowIdx + 1; r < matrix.length; r++) {
         const row = matrix[r] || [];
@@ -502,7 +352,7 @@ function processAndRenderResults(matrix, indexNum, gradeStr, cls, year, term, st
     });
 }
 
-// 6. UI Builder (100% English Output)
+// 7. Render Report to HTML
 function renderEnglishA4Report(data) {
     $('rIndex').innerText = data.indexNum;
     $('rClass').innerText = `Grade ${data.grade}-${data.cls}${data.stream ? ' (' + data.stream + ')' : ''}`;
@@ -530,13 +380,12 @@ function renderEnglishA4Report(data) {
 
     $('resultCardWrapper').style.display = 'block';
     
-    // Result එක ආවට පස්සේ ඒක ලඟට ස්ක්‍රෝල් වෙනවා
     setTimeout(() => {
         $('resultCardWrapper').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
 }
 
-// 7. Dynamic Single Page PDF Downloader via html2pdf.js
+// 8. Single Page PDF Downloader
 function initPDFGenerator() {
     window.downloadResultPDF = function () {
         const element = document.getElementById('a4Sheet');
