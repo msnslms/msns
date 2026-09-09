@@ -252,11 +252,10 @@
                 </div>
             </div>
         </section>
-
 <section id="termTestSection" class="admin-section">
     <div class="section-header">
         <h2>Term Test Results</h2>
-        <p>Link Google Sheets containing term test result marksheets.</p>
+        <p>Google Sheet එකක් Link කර Results Direct Auto Read & Firestore Sync කරන්න.</p>
     </div>
 
     <div class="form-card">
@@ -320,13 +319,42 @@
                 <input type="url" id="ttSheetUrl" class="custom-input" placeholder="https://docs.google.com/spreadsheets/d/..." required />
             </div>
 
-            <button type="submit" class="btn btn-primary">
-                <i class="fa-solid fa-plus"></i> Add Term Test Sheet
+            <button type="submit" class="btn btn-primary btn-block" id="btnFetchSheet">
+                <i class="fa-solid fa-magnifying-glass"></i> Sheet එක Read කර Preview බලන්න
             </button>
         </form>
     </div>
 
-    <h3 class="sub-title">Added Term Test Sheets</h3>
+    <!-- PREVIEW AREA & FIRESTORE SYNC -->
+    <div id="ttPreviewContainer" class="sheet-preview-card" style="display: none;">
+        <div class="preview-header-bar">
+            <div class="preview-title-info">
+                <h4><i class="fa-solid fa-table-list"></i> Auto Parsed Results Preview</h4>
+                <p id="ttParsedSummary">0 Records Found</p>
+            </div>
+            <button id="btnUploadToFirestore" class="btn btn-primary" style="background: #10b981; border-color: #10b981;">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Add to Firestore
+            </button>
+        </div>
+
+        <div class="tt-table-responsive">
+            <table class="tt-preview-table">
+                <thead>
+                    <tr>
+                        <th style="width: 120px;">Index No</th>
+                        <th style="width: 200px;">Name</th>
+                        <th>Results (Subjects & Marks)</th>
+                        <th style="width: 100px; text-align: center;">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="ttPreviewBody">
+                    <!-- Dynamic Rows Fill Here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <h3 class="sub-title" style="margin-top: 30px;">Added Term Test Sheets</h3>
     <div id="termTestList" class="sheets-list"></div>
 </section>
 

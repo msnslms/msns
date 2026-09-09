@@ -649,54 +649,315 @@ function renderAlStreamsForm() {
         });
     });
 }
+
 // ==========================================
-// 5. TERM TEST RESULT MODULE
+// 5. ADVANCED TERM TEST RESULT MODULE
 // ==========================================
+
+// Global variable parsed records තබාගැනීමට
+let parsedSheetStudents = [];
+let currentMeta = {};
+
 function initTermTestModule() {
-    $('ttGrade')?.addEventListener('change', (e) => {
+    const streamBox = $('streamFieldBox');
+    const ttGrade = $('ttGrade');
+    const ttForm = $('termTestForm');
+
+    // Grade 12/13 සදහා Stream පෙන්වීම
+    ttGrade?.addEventListener('change', (e) => {
         const val = parseInt(e.target.value);
-        if ($('streamFieldBox')) {
-            $('streamFieldBox').style.display = (val === 12 || val === 13) ? 'block' : 'none';
+        if (streamBox) {
+            streamBox.style.display = (val === 12 || val === 13) ? 'block' : 'none';
         }
     });
 
-    $('termTestForm')?.addEventListener('submit', async (e) => {
+    // Google Sheet එක Fetch කර Data Read කිරීම
+    ttForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
-        // පන්ති තේරීමේදී HTML වල value එක වැරදිලා තිබුණොත් (උදා: G වෙනුවට A සේව් වීම) 
-        // එය මඟහැරීමට තෝරාගත් option එකේ පේන්න තියෙන Text එක ලබා ගනිමු.
-        const classEl = $('ttClass');
-        const classVal = classEl.options ? classEl.options[classEl.selectedIndex].text.trim() : classEl.value.trim();
+        const url = $('ttSheetUrl').value.trim();
+        if (!url) return;
 
-        const docData = {
+        currentMeta = {
             year: $('ttYear').value,
             term: $('ttTerm').value,
             grade: $('ttGrade').value,
-            class: classVal, // නිවැරදි කරපු අගය මෙතනට ලබා දීම
+            class: $('ttClass').value,
             stream: (parseInt($('ttGrade').value) >= 12) ? $('ttStream').value : '',
-            sheetUrl: $('ttSheetUrl').value.trim(),
-            createdAt: new Date().toISOString()
+            sheetUrl: url
         };
 
+        const btn = $('btnFetchSheet');
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Reading Google Sheet...`;
+
         try {
-            await addDoc(collection(db, 'term-test-results'), docData);
-            showToast('Term Test Sheet එක සාර්ථකව එකතු විය!', 'ok');
-            $('termTestForm').reset();
-            loadTermTestList();
+            parsedSheetStudents = await fetchAndParseGoogleSheet(url);
+            renderSheetPreview(parsedSheetStudents);
+            showToast('Google Sheet එක සාර්ථකව Read විය!', 'ok');
         } catch (err) {
-            showToast(err.message, 'error');
+            console.error(err);
+            showToast('Sheet එක Read කිරීම අසාර්ථකයි: ' + err.message, 'error');
+            $('ttPreviewContainer').style.display = 'none';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> Sheet එක Read කර Preview බලන්න`;
+        }
+    });
+
+    // Firestore වෙත එකින් එක Data Save කිරීමේ Event එක
+    $('btnUploadToFirestore')?.addEventListener('click', async () => {
+        if (!parsedSheetStudents || parsedSheetStudents.length === 0) {
+            showToast('Upload කිරීමට Data හමු නොවුණි!', 'error');
+            return;
+        }
+
+        const uploadBtn = $('btnUploadToFirestore');
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Saving...`;
+
+        try {
+            // 1. ප්‍රධාන Sheet Meta Record එක Firestore වල 'term-test-results' වලට එකතු කිරීම
+            const sheetRef = await addDoc(collection(db, 'term-test-results'), {
+                ...currentMeta,
+                studentCount: parsedSheetStudents.length,
+                createdAt: new Date().toISOString()
+            });
+
+            let savedCount = 0;
+
+            // 2. එකින් එක Student Results 'term-test-student-results' collection එකට Upload වීම
+            for (let i = 0; i < parsedSheetStudents.length; i++) {
+                const student = parsedSheetStudents[i];
+                
+                // Firestore එකට Insert කිරීම (Index Number එක, Grade එක සහ Class එක එකතු කර unique document key හෝ fields සාදයි)
+                const studentDocData = {
+                    sheetId: sheetRef.id,
+                    year: currentMeta.year,
+                    term: currentMeta.term,
+                    grade: currentMeta.grade,
+                    class: currentMeta.class,
+                    stream: currentMeta.stream,
+                    indexNumber: student.indexNumber,
+                    name: student.name,
+                    results: student.results, // Object { Sinhala: 85, Science: 90, ... }
+                    createdAt: new Date().toISOString()
+                };
+
+                // Index number එක doc ID එක විදියටත් හෝ auto ID විදියටත් දැමිය හැක
+                await addDoc(collection(db, 'term-test-student-results'), studentDocData);
+
+                // ** SUCCESS GREEN ROW ANIMATION **
+                const tr = document.getElementById(`tr-student-${i}`);
+                if (tr) {
+                    tr.classList.add('uploaded-row');
+                    const statusTd = tr.querySelector('.status-cell');
+                    if (statusTd) {
+                        statusTd.innerHTML = `<span class="status-pill saved"><i class="fa-solid fa-check"></i> Saved</span>`;
+                    }
+                }
+
+                savedCount++;
+                // smooth write sensation එක සඳහා කුඩා Delay එකක්
+                await new Promise(res => setTimeout(res, 120));
+            }
+
+            showToast(`සියලුම (${savedCount}) Results සාර්ථකව Firestore එකට Save විය!`, 'ok');
+            ttForm.reset();
+            loadTermTestList();
+
+        } catch (err) {
+            console.error(err);
+            showToast('Save කිරීමේදී දෝෂයක් විය: ' + err.message, 'error');
+        } finally {
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Add to Firestore`;
         }
     });
 
     loadTermTestList();
 }
 
+// ==========================================
+// GOOGLE SHEET CSV FETCH & DYNAMIC PARSER
+// ==========================================
+async function fetchAndParseGoogleSheet(sheetUrl) {
+    // Spreadsheet ID එක Extract කරගැනීම
+    const matches = sheetUrl.match(/\/d\/([a-zA- Lanka0-9-_]+)/i);
+    if (!matches || !matches[1]) {
+        throw new Error('අවලංගු Google Sheet Link එකකි!');
+    }
+    const spreadsheetId = matches[1];
+
+    // 'mark sheet' tab එක CSV ලෙස ගෙන්නා ගැනීමේ export link එක
+    const csvUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=mark%20sheet`;
+
+    const response = await fetch(csvUrl);
+    if (!response.ok) {
+        throw new Error('Google Sheet එක Share කර "Anyone with the link can view" ලබා දී ඇත්දැයි බලන්න.');
+    }
+
+    const csvText = await response.text();
+    return parseCSVToStudentResults(csvText);
+}
+
+// CSV TEXT PARSER & DYNAMIC SUBJECT DETECTOR
+function parseCSVToStudentResults(csvText) {
+    const lines = csvText.split(/\r\n|\n/).map(l => parseCSVLine(l)).filter(row => row.some(cell => cell.trim() !== ''));
+
+    if (lines.length < 2) {
+        throw new Error('Sheet එකේ දත්ත නොමැත!');
+    }
+
+    // Dynamic header matching (Index number & Name සොයාගැනීම)
+    let headerIndex = -1;
+    let indexColIdx = -1;
+    let nameColIdx = -1;
+
+    for (let i = 0; i < Math.min(lines.length, 10); i++) {
+        const row = lines[i].map(c => c.toLowerCase().trim());
+        const foundIndex = row.findIndex(c => c.includes('index') || c.includes('විභාග අංකය') || c.includes('අංකය'));
+        const foundName = row.findIndex(c => c.includes('name') || c.includes('නම') || c.includes('student name'));
+
+        if (foundIndex !== -1 && foundName !== -1) {
+            headerIndex = i;
+            indexColIdx = foundIndex;
+            nameColIdx = foundName;
+            break;
+        }
+    }
+
+    if (headerIndex === -1) {
+        // Default: 0 = Index, 1 = Name ලෙස උපකල්පනය කරයි
+        headerIndex = 0;
+        indexColIdx = 0;
+        nameColIdx = 1;
+    }
+
+    const headers = lines[headerIndex];
+    const subjectColumns = [];
+
+    // Main subject, Bucket 1, 2, 3 වැනි අනවශ්‍ය headers අයින් කර Subject Name හඳුනාගැනීම
+    const ignoredHeaderKeywords = ['main subject', 'bucket 1', 'bucket 2', 'bucket 3', 'bucket', 'total', 'average', 'rank', 'place', 'එකතුව', 'සාමාන්‍යය', 'ස්ථානය'];
+
+    headers.forEach((colName, idx) => {
+        if (idx !== indexColIdx && idx !== nameColIdx) {
+            const cleanCol = colName.trim();
+            const lowerCol = cleanCol.toLowerCase();
+
+            // Bucket titles, Total/Rank අතහැර සැබෑ Subjects විතරක් හඳුනා ගනී
+            const isIgnored = ignoredHeaderKeywords.some(key => lowerCol.includes(key));
+            if (cleanCol !== '' && !isIgnored) {
+                subjectColumns.push({ index: idx, name: cleanCol });
+            }
+        }
+    });
+
+    const students = [];
+
+    // Student Data Rows අරන් Results Map කිරීම
+    for (let i = headerIndex + 1; i < lines.length; i++) {
+        const row = lines[i];
+        const indexNum = row[indexColIdx] ? row[indexColIdx].trim() : '';
+        const name = row[nameColIdx] ? row[nameColIdx].trim() : '';
+
+        // Index number එක හෝ Name එක තිබේ නම් පමණක් සලකා බලයි
+        if (indexNum || name) {
+            const results = {};
+            subjectColumns.forEach(sub => {
+                const mark = row[sub.index] ? row[sub.index].trim() : '-';
+                if (mark !== '') {
+                    results[sub.name] = mark;
+                }
+            });
+
+            students.push({
+                indexNumber: indexNum,
+                name: name,
+                results: results
+            });
+        }
+    }
+
+    return students;
+}
+
+// Utility: Quotes සමඟ එන CSV Lines හරියට Split කිරීමට
+function parseCSVLine(text) {
+    let p = '', c = '', r = [];
+    let q = false;
+    for (let i = 0; i < text.length; i++) {
+        c = text[i];
+        if (c === '"') {
+            if (q && text[i + 1] === '"') {
+                p += '"'; i++;
+            } else {
+                q = !q;
+            }
+        } else if (c === ',' && !q) {
+            r.push(p); p = '';
+        } else {
+            p += c;
+        }
+    }
+    r.push(p);
+    return r;
+}
+
+// ==========================================
+// RENDER PREVIEW TABLE IN UI
+// ==========================================
+function renderSheetPreview(students) {
+    const container = $('ttPreviewContainer');
+    const tbody = $('ttPreviewBody');
+    const summary = $('ttParsedSummary');
+
+    if (!container || !tbody) return;
+
+    tbody.innerHTML = '';
+    summary.textContent = `Total Students Found: ${students.length}`;
+
+    students.forEach((s, idx) => {
+        const tr = document.createElement('tr');
+        tr.id = `tr-student-${idx}`;
+
+        // Results Tags සාදා ගැනීම (Sinhala : 85)
+        let resultsHTML = '<div class="results-tag-box">';
+        for (const [sub, mark] of Object.entries(s.results)) {
+            resultsHTML += `<div class="sub-tag">${sub}: <span>${mark}</span></div>`;
+        }
+        resultsHTML += '</div>';
+
+        tr.innerHTML = `
+            <td style="font-weight: 800; color: #60a5fa;">${s.indexNumber || 'N/A'}</td>
+            <td style="font-weight: 600;">${s.name || 'N/A'}</td>
+            <td>${resultsHTML}</td>
+            <td class="status-cell" style="text-align: center;">
+                <span class="status-pill">Pending</span>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    container.style.display = 'block';
+    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ==========================================
+// LOAD ADDED SHEETS LIST FROM FIRESTORE
+// ==========================================
 async function loadTermTestList() {
     const container = $('termTestList');
     if (!container) return;
+
     try {
         const snap = await getDocs(collection(db, 'term-test-results'));
         container.innerHTML = '';
+
+        if (snap.empty) {
+            container.innerHTML = `<p style="color: var(--text-muted); font-size: 0.88rem;">එකතු කළ Sheets කිසිවක් නොමැත.</p>`;
+            return;
+        }
+
         snap.forEach(docSnap => {
             const d = docSnap.data();
             const item = document.createElement('div');
@@ -705,18 +966,19 @@ async function loadTermTestList() {
             item.style.alignItems = 'center';
             item.style.justifyContent = 'space-between';
             item.style.marginBottom = '10px';
-            item.style.padding = '10px';
+            item.style.padding = '12px 16px';
+            item.style.background = 'var(--surface-color)';
             item.style.border = '1px solid var(--border-color)';
-            item.style.borderRadius = '6px';
+            item.style.borderRadius = '12px';
 
             item.innerHTML = `
                 <div>
-                    <i class="fa-solid fa-file-excel" style="color:#10b981; margin-right:8px;"></i>
-                    <span><strong>${d.year}</strong> | ${d.term} | Grade ${d.grade}-${d.class} ${d.stream ? `(${d.stream})` : ''}</span>
+                    <i class="fa-solid fa-file-excel" style="color:#10b981; margin-right:10px; font-size: 1.2rem;"></i>
+                    <span><strong>${d.year}</strong> | ${d.term} | Grade ${d.grade}-${d.class} ${d.stream ? `(${d.stream})` : ''} <small style="color:var(--text-muted); margin-left:8px;">(${d.studentCount || 0} Students)</small></span>
                 </div>
                 <div style="display:flex; gap:8px;">
-                    <a href="${d.sheetUrl}" target="_blank" class="btn btn-ghost" style="padding:4px 10px;">Open</a>
-                    <button class="btn btn-danger btn-delete-tt" data-id="${docSnap.id}" style="padding:4px 10px;">
+                    <a href="${d.sheetUrl}" target="_blank" class="btn btn-ghost" style="padding:6px 12px; font-size:0.8rem;">Open Sheet</a>
+                    <button class="btn btn-danger btn-delete-tt" data-id="${docSnap.id}" style="padding:6px 12px; font-size:0.8rem;">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
@@ -724,20 +986,21 @@ async function loadTermTestList() {
             container.appendChild(item);
         });
 
+        // Delete Handler
         container.querySelectorAll('.btn-delete-tt').forEach(btn => {
             btn.addEventListener('click', async () => {
-                if (confirm('මෙම Sheet Link එක Delete කිරීමට තහවුරු කරන්න?')) {
+                if (confirm('මෙම Sheet Link එක සහ අදාළ Results Records Delete කිරීමට තහවුරු කරන්න?')) {
                     await deleteDoc(doc(db, 'term-test-results', btn.dataset.id));
                     showToast('Delete විය', 'ok');
                     loadTermTestList();
                 }
             });
         });
+
     } catch (err) {
         console.error(err);
     }
 }
-
 
 // ==========================================
 // 6. PAST PAPERS & DOCUMENTS MODULE
