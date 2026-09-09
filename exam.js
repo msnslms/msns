@@ -1,215 +1,77 @@
-// Global Configuration & Cache
-const NPOINT_API_URL = 'https://api.npoint.io/14e592b7888053bb471b';
-const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+// Import Firebase ES Modules
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { 
+    getFirestore, collection, query, where, getDocs 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-let npointManifestCache = null;
-let preloadedSheetMatrix = null;
-let currentPreloadKey = '';
+// Firebase Configuration (ඔබගේ Configuration එක වෙනස් කර නැත)
+const firebaseConfig = {
+  apiKey: "AIzaSyDgg7n1LwcrRiV2kjgSM5E3XX27twweMg8",
+  authDomain: "msns-79.firebaseapp.com",
+  projectId: "msns-79",
+  storageBucket: "msns-79.firebasestorage.app",
+  messagingSenderId: "108137376740",
+  appId: "1:108137376740:web:78ed2f442c035a072f75f1",
+  measurementId: "G-3GTFJKTS7D"
+};
 
-// Helper function
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// DOM Elements 
 const $ = (id) => document.getElementById(id);
+
+// Caching Duration: 1 Week in Milliseconds
+const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 document.addEventListener('DOMContentLoaded', () => {
     initGradeChangeListener();
-    initPreloadListeners();
     initSearchForm();
-    initPDFGenerator();
-    preloadNpointManifest(); // Start initial background fetch
 });
 
-// UI Helper
-function showStatus(msg, type = 'info') {
-    const box = $('statusMessage');
-    if (!box) return;
-    box.className = `status-msg ${type}`;
-    box.innerText = msg;
-}
-
-// UI Helper (Button Loading State) - Loading එක කොළ පාටින් පෙන්වීමට වෙනස් කර ඇත
-function toggleButtonLoading(isLoading) {
-    const form = $('resultSearchForm');
-    if (!form) return;
-
-    let loaderText = $('btnLoaderText');
-    
-    // Loader element එක නැත්නම් අලුතින් හදනවා
-    if (!loaderText) {
-        loaderText = document.createElement('div');
-        loaderText.id = 'btnLoaderText';
-        // මෙහි color: #198754 යනු පැහැදිලි කොළ පාටකි (Green)
-        loaderText.style.cssText = 'color: #198754; font-weight: bold; margin-top: 15px; text-align: center; font-size: 16px; display: none; animation: pulse 1.5s infinite;';
-        form.appendChild(loaderText);
-        
-        const style = document.createElement('style');
-        style.innerHTML = `@keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }`;
-        document.head.appendChild(style);
-    }
-
-    if (isLoading) {
-        // ලෝඩ් වෙන බව පැහැදිලිව පෙන්වන Text එක
-        loaderText.innerHTML = '⏳ ලෝඩ් වෙමින් පවතී... (Loading...) කරුණාකර රැඳී සිටින්න...';
-        loaderText.style.display = 'block';
-    } else {
-        loaderText.style.display = 'none';
-    }
-}
-
-// 1. Initial Manifest Preload
-async function preloadNpointManifest() {
-    try {
-        const res = await fetch(NPOINT_API_URL);
-        if (res.ok) {
-            npointManifestCache = await res.json();
-            console.log('⚡ NPoint Manifest successfully preloaded.');
-        }
-    } catch (err) {
-        console.warn('Manifest preload issue:', err);
-    }
-}
-
-// Stream Selection Listener (Triggered for Grade 12 & 13)
 function initGradeChangeListener() {
     const gradeSelect = $('searchGrade');
     const streamBox = $('streamSelectBox');
+    const streamSelect = $('searchStream');
 
     gradeSelect?.addEventListener('change', (e) => {
         const val = parseInt(e.target.value);
         if (streamBox) {
-            streamBox.style.display = (val === 12 || val === 13) ? 'block' : 'none';
-        }
-    });
-}
-
-// 2. High-Speed Background Pre-fetching on Selection
-function initPreloadListeners() {
-    const triggerElements = ['searchYear', 'searchTerm', 'searchGrade', 'searchClass', 'searchStream'];
-    
-    triggerElements.forEach(id => {
-        $(id)?.addEventListener('change', async () => {
-            const year = $('searchYear')?.value;
-            const term = $('searchTerm')?.value;
-            const grade = $('searchGrade')?.value;
-            const cls = $('searchClass')?.value;
-            const stream = (parseInt(grade) >= 12) ? $('searchStream')?.value : '';
-
-            if (year && term && grade && cls) {
-                const fetchKey = `${year}_T${term}_G${grade}_C${cls}_${stream}`;
-                if (currentPreloadKey !== fetchKey) {
-                    currentPreloadKey = fetchKey;
-                    preloadedSheetMatrix = null;
-                    console.log('🚀 Pre-fetching sheet data in background...');
-                    try {
-                        preloadedSheetMatrix = await getOrFetchSheetData(year, term, grade, cls, stream);
-                    } catch (e) {
-                        preloadedSheetMatrix = null;
-                    }
-                }
+            if (val === 12 || val === 13) {
+                streamBox.style.display = 'block';
+                streamSelect.required = true; // 12/13 නම් Stream එක අනිවාර්යයි
+            } else {
+                streamBox.style.display = 'none';
+                streamSelect.required = false; // නැත්නම් අනිවාර්ය නෑ
+                streamSelect.value = ''; // අගය හිස් කරනවා
             }
-        });
-    });
-}
-
-// 3. Fetch Google Sheet Link and Parse to 2D Array Matrix
-async function getOrFetchSheetData(year, term, grade, cls, stream) {
-    const cacheKey = `sheet_data_${year}_T${term}_G${grade}_C${cls}_${stream || 'none'}`;
-    const cachedItem = localStorage.getItem(cacheKey);
-
-    if (cachedItem) {
-        try {
-            const { timestamp, data } = JSON.parse(cachedItem);
-            if (Date.now() - timestamp < ONE_WEEK_MS) {
-                return data;
-            }
-        } catch (e) {
-            localStorage.removeItem(cacheKey);
         }
-    }
-
-    if (!npointManifestCache) {
-        await preloadNpointManifest();
-    }
-
-    if (!npointManifestCache || !Array.isArray(npointManifestCache)) {
-        throw new Error('Could not fetch configuration data. Please check connection.');
-    }
-
-    // Match Record from NPoint API JSON (Case-Insensitive Fix එක මෙතන ඇත)
-    const matched = npointManifestCache.find(item => {
-        const itemYear = (item.year || item.Year || '').toString().trim();
-        const itemTerm = (item.term || item.Term || '').toString().trim().replace(/\D/g, '');
-        const itemGrade = (item.grade || item.Grade || '').toString().trim();
-        const itemClass = (item.class || item.Class || '').toString().trim().toLowerCase();
-        const itemStream = (item.stream || item.Stream || '').toString().trim().toLowerCase();
-        const rawStream = stream ? stream.toString().trim().toLowerCase() : '';
-
-        const matchYear = itemYear === year.toString().trim();
-        const matchTerm = itemTerm === term.toString().replace(/\D/g, '');
-        const matchGrade = itemGrade === grade.toString().trim();
-        const matchClass = itemClass === cls.toString().trim().toLowerCase();
-        let matchStream = true;
-
-        if (parseInt(grade) >= 12 && stream) {
-            matchStream = itemStream === rawStream;
-        }
-
-        return matchYear && matchTerm && matchGrade && matchClass && matchStream;
-    });
-
-    if (!matched || (!matched.sheetUrl && !matched.link && !matched.url)) {
-        throw new Error('Result sheet URL for this selection was not found.');
-    }
-
-    const rawUrl = matched.sheetUrl || matched.link || matched.url;
-    const matrix = await fetchGoogleSheetAsMatrix(rawUrl);
-
-    try {
-        localStorage.setItem(cacheKey, JSON.stringify({ timestamp: Date.now(), data: matrix }));
-    } catch(e) {}
-
-    return matrix;
-}
-
-// Google Sheets GViz Fetcher (Robust Parsing)
-async function fetchGoogleSheetAsMatrix(sheetUrl) {
-    const sheetIdMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-    if (!sheetIdMatch) throw new Error('Invalid Google Sheet URL format.');
-    
-    const spreadsheetId = sheetIdMatch[1];
-    
-    let gidMatch = sheetUrl.match(/gid=([0-9]+)/);
-    let gidParam = gidMatch ? `&gid=${gidMatch[1]}` : '';
-
-    const gvizUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json${gidParam}`;
-
-    const res = await fetch(gvizUrl);
-    if (!res.ok) throw new Error('Failed to download Google Sheet data.');
-
-    const text = await res.text();
-    
-    // Extract JSON part safely
-    const startIdx = text.indexOf('{');
-    const endIdx = text.lastIndexOf('}');
-    if (startIdx === -1 || endIdx === -1) {
-        throw new Error('Invalid response structure from Google Sheets.');
-    }
-    
-    const jsonString = text.substring(startIdx, endIdx + 1);
-    const json = JSON.parse(jsonString);
-
-    if (!json.table || !json.table.rows) {
-        throw new Error('No data found in Google Sheet.');
-    }
-
-    const rows = json.table.rows;
-    return rows.map(r => {
-        if (!r || !r.c) return [];
-        return r.c.map(cell => cell ? (cell.v !== null && cell.v !== undefined ? cell.v.toString().trim() : '') : '');
     });
 }
 
-// 4. Form Submit & Result Processor
+function showStatus(msg, type = 'info') {
+    const box = $('statusMessage');
+    if (!box) return;
+    
+    // පරණ classes අයින් කරලා අලුත් ඒවා දානවා
+    box.className = `status-msg ${type}`;
+    
+    // Loading animation එකක් එක්ක message එක පෙන්වීම
+    if (type === 'info') {
+        box.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${msg}`;
+    } else if (type === 'error') {
+        box.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${msg}`;
+    } else if (type === 'success') {
+        box.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${msg}`;
+    } else {
+        box.innerText = msg;
+    }
+}
+
 function initSearchForm() {
     const form = $('resultSearchForm');
+    const btnSearch = $('btnSearch'); // Search Button එක
+
     form?.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -221,200 +83,276 @@ function initSearchForm() {
         const stream = (parseInt(grade) >= 12) ? $('searchStream').value : '';
 
         if (!grade || !cls || !indexNum) {
-            showStatus('Please enter all required details.', 'error');
+            showStatus('කරුණාකර සියලු විස්තර සම්පූර්ණ කරන්න.', 'error');
             return;
         }
 
-        // Hide previous result and show loading state
         $('resultCardWrapper').style.display = 'none';
-        showStatus(''); 
-        toggleButtonLoading(true);
+        showStatus('දත්ත ලබා ගනිමින් පවතී... කරුණාකර රැඳී සිටින්න.', 'info');
+        
+        // Button එක disable කරනවා සෙවුම අවසන් වෙනකන්
+        if(btnSearch) {
+             btnSearch.disabled = true;
+             btnSearch.style.opacity = '0.7';
+        }
 
         try {
-            const fetchKey = `${year}_T${term}_G${grade}_C${cls}_${stream}`;
-            let sheetMatrix = null;
-
-            if (currentPreloadKey === fetchKey && preloadedSheetMatrix) {
-                sheetMatrix = preloadedSheetMatrix;
-            } else {
-                sheetMatrix = await getOrFetchSheetData(year, term, grade, cls, stream);
-            }
-
-            if (!sheetMatrix || sheetMatrix.length === 0) {
-                showStatus('No documents were found for this selection.', 'error');
-                toggleButtonLoading(false);
+            // 1. Google Sheet Data ගන්නවා (කලින් තිබුණ Logic එකමයි)
+            const parsedSheetData = await getOrFetchSheetData(year, term, grade, cls, stream);
+            
+            if (!parsedSheetData || parsedSheetData.length === 0) {
+                showStatus('මෙම පන්තියට අදාළ Google Sheet ලේඛනය හමුනොවුණි.', 'error');
+                if(btnSearch) { btnSearch.disabled = false; btnSearch.style.opacity = '1'; }
                 return;
             }
 
-            processAndRenderResults(sheetMatrix, indexNum, grade, cls, year, term, stream);
-            showStatus('', 'info');
+            // 2. ඒ Data ඇතුලෙන් ළමයාව හොයනවා
+            renderStudentResult(parsedSheetData, indexNum, grade, cls, year, term);
+            
         } catch (err) {
             console.error(err);
-            showStatus(err.message || 'An error occurred while fetching results.', 'error');
+            showStatus('ප්‍රතිඵල ලබාගැනීමේදී දෝෂයක් සිදුවිය: ' + err.message, 'error');
         } finally {
-            toggleButtonLoading(false);
+            // අන්තිමට Button එක ආයෙත් enable කරනවා
+            if(btnSearch) {
+                 btnSearch.disabled = false;
+                 btnSearch.style.opacity = '1';
+            }
         }
     });
 }
 
-// 5. Dynamic Parsing Logic for All Grades
-function processAndRenderResults(matrix, indexNum, gradeStr, cls, year, term, stream) {
-    const gradeVal = parseInt(gradeStr);
-    
-    // Header Row Detection
-    let headerRowIdx = -1;
-    let indexColIdx = -1;
-    let nameColIdx = -1;
+/**
+ * Fetch Firestore URL or Load Cached Sheet Data (1-Week Local Cache)
+ * වෙනස් කර නැත - කලින් තිබුණ විදිහටමයි
+ */
+async function getOrFetchSheetData(year, term, grade, cls, stream) {
+    const cacheKey = `term_data_${year}_T${term}_G${grade}_C${cls}_${stream || 'none'}`;
+    const cachedItem = localStorage.getItem(cacheKey);
 
-    for (let r = 0; r < Math.min(matrix.length, 12); r++) {
-        const row = matrix[r] || [];
-        for (let c = 0; c < row.length; c++) {
-            const val = (row[c] || '').toString().toLowerCase();
-            if (val.includes('index') || val === 'index no' || val === 'index_no') {
-                headerRowIdx = r;
-                indexColIdx = c;
+    if (cachedItem) {
+        try {
+            const { timestamp, data } = JSON.parse(cachedItem);
+            if (Date.now() - timestamp < ONE_WEEK_MS) {
+                console.log('⚡ Loading sheet data from 7-day LocalCache...');
+                return data;
             }
-            if (val.includes('name')) {
-                nameColIdx = c;
-            }
+        } catch (e) {
+            localStorage.removeItem(cacheKey);
         }
-        if (headerRowIdx !== -1 && nameColIdx !== -1) break;
     }
 
-    // Fallbacks
-    if (headerRowIdx === -1) headerRowIdx = (gradeVal === 10 || gradeVal === 11) ? 6 : 7;
-    if (indexColIdx === -1) indexColIdx = 1; // B Column
-    if (nameColIdx === -1) nameColIdx = 2;  // C Column
+    console.log('🔥 Querying Firestore for term-test sheet URL...');
+    
+    try {
+        const q = query(
+            collection(db, 'term-test-results'), 
+            where('grade', 'in', [grade, parseInt(grade), grade.toString()])
+        );
 
-    const headerRow = matrix[headerRowIdx] || [];
+        const querySnap = await getDocs(q);
+        
+        if (querySnap.empty) {
+            throw new Error(`Grade ${grade} සඳහා මාර්ගගත Sheet සබැඳියක් Firestore හි හමුනොවුණි.`);
+        }
 
-    // Find Student Row
-    let studentRow = null;
-    for (let r = headerRowIdx + 1; r < matrix.length; r++) {
-        const row = matrix[r] || [];
-        const rowVal = row[indexColIdx];
-        if (rowVal && rowVal.toString().trim().toLowerCase() === indexNum.toLowerCase()) {
-            studentRow = row;
+        let matchedDocData = null;
+
+        for (const doc of querySnap.docs) {
+            const data = doc.data();
+
+            const matchYear = data.year && (data.year.toString() === year.toString());
+            const matchTerm = data.term && (data.term.toString() === term.toString());
+            const matchClass = data.class && (data.class.toString().trim().toLowerCase() === cls.trim().toLowerCase());
+            
+            let matchStream = true;
+            if (parseInt(grade) >= 12 && stream) {
+                matchStream = data.stream && (data.stream.toString().trim().toLowerCase() === stream.trim().toLowerCase());
+            }
+
+            if (matchYear && matchTerm && matchClass && matchStream) {
+                matchedDocData = data;
+                break;
+            }
+        }
+
+        if (!matchedDocData) {
+            throw new Error(`Grade ${grade}-${cls} (Year: ${year}, Term: ${term}) සඳහා අදාළ දත්ත Firestore හි ඇතුලත් කර නැත.`);
+        }
+
+        const rawSheetUrl = matchedDocData.sheetUrl;
+
+        if (!rawSheetUrl) throw new Error('Firestore හි Sheet URL එක හිස්ව පවතී.');
+
+        const sheetData = await fetchGoogleSheetCSV(rawSheetUrl);
+
+        localStorage.setItem(cacheKey, JSON.stringify({
+            timestamp: Date.now(),
+            data: sheetData
+        }));
+
+        return sheetData;
+
+    } catch (error) {
+        console.error("Firestore Query Error: ", error);
+        throw error;
+    }
+}
+
+/**
+ * Handles both Standard Google Sheets and Google Drive Excel (.xlsx) Links
+ * වෙනස් කර නැත - කලින් තිබුණ විදිහටමයි
+ */
+async function fetchGoogleSheetCSV(url) {
+    const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+    if (!match || !match[1]) {
+        throw new Error('වලංගු නැති Google Sheet හෝ Drive URL එකකි.');
+    }
+
+    const sheetId = match[1];
+
+    try {
+        const csvExportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+        let response = await fetch(csvExportUrl);
+
+        if (!response.ok) {
+            console.log("Standard export failed. Trying alternative export method for Drive file...");
+            const altExportUrl = `https://docs.google.com/spreadsheets/u/0/d/${sheetId}/export?format=csv`;
+            response = await fetch(altExportUrl);
+        }
+
+        if (!response.ok) {
+            throw new Error(`Google Sheet එක ලබාගැනීමට අපොහොසත් විය. (Status: ${response.status}). Sheet එක "Anyone with the link can view" ලෙස සකසා ඇත්දැයි පරීක්ෂා කරන්න.`);
+        }
+
+        const csvText = await response.text();
+        
+        if (csvText.trim().startsWith('<html') || csvText.trim().startsWith('<!DOCTYPE')) {
+            throw new Error('Sheet එක ලබාගැනීමට නොහැක. කරුණාකර එය Public/Viewer (Anyone with the link) ලෙස Share කර ඇති බව තහවුරු කරන්න.');
+        }
+
+        return parseCSVText(csvText);
+
+    } catch (error) {
+         console.error("Fetch Error:", error);
+         throw new Error('Sheet එක කියවීමේදී දෝෂයක්: ' + error.message);
+    }
+}
+
+/**
+ * Simple CSV Parser
+ * වෙනස් කර නැත - කලින් තිබුණ විදිහටමයි
+ */
+function parseCSVText(csvText) {
+    const lines = csvText.split(/\r\n|\n/);
+    const result = [];
+    for (let i = 0; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        const row = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
+        const cleanedRow = row.map(cell => cell ? cell.replace(/^"(.*)"$/, '$1').trim() : '');
+        result.push(cleanedRow);
+    }
+    return result;
+}
+
+/**
+ * Locate Student Index & Extract Results Based on Grade Structure
+ * අලුත් UI එකට හරියටම set වෙන්න පොඩි වෙනස්කම් කරලා තියෙනවා
+ */
+function renderStudentResult(rows, indexNum, grade, cls, year, term) {
+    const numGrade = parseInt(grade);
+    let subjectRowIndex, dataStartRowIndex, indexCol, nameCol, firstSubjectCol;
+
+    if (numGrade >= 10 && numGrade <= 11) {
+        subjectRowIndex = 6;
+        dataStartRowIndex = 7;
+        indexCol = 1;
+        nameCol = 2;
+        firstSubjectCol = 3;
+    } else {
+        subjectRowIndex = 7;
+        dataStartRowIndex = 8;
+        indexCol = 1;
+        nameCol = 2;
+        firstSubjectCol = 3;
+    }
+
+    if (rows.length <= dataStartRowIndex) {
+        showStatus('Sheet එකේ දත්ත ප්‍රමාණවත් නොවේ.', 'error');
+        return;
+    }
+
+    const subjectsRow = rows[subjectRowIndex] || [];
+    let targetStudentRow = null;
+
+    for (let r = dataStartRowIndex; r < rows.length; r++) {
+        const row = rows[r];
+        if (row[indexCol] && row[indexCol].toString().trim().toLowerCase() === indexNum.toLowerCase()) {
+            targetStudentRow = row;
             break;
         }
     }
 
-    if (!studentRow) {
-        showStatus(`Index number "${indexNum}" was not found in this sheet.`, 'error');
+    if (!targetStudentRow) {
+        showStatus(`විභාග අංක ${indexNum} සඳහා ප්‍රතිඵල හමුනොවුණි.`, 'error');
         return;
     }
 
-    const studentName = studentRow[nameColIdx] || 'N/A';
-    let subjectsList = [];
-    let totalVal = 'N/A', avgVal = 'N/A', positionVal = 'N/A';
+    const studentName = targetStudentRow[nameCol] || 'N/A';
+    const markList = [];
+    let totalMarks = '-';
+    let avgMarks = '-';
+    let rankPos = '-';
 
-    const ignoredHeaders = [
-        'main subjects', 'bucket 1', 'bucket 2', 'bucket 3', 
-        'bucket i', 'bucket ii', 'bucket iii', 'group 1', 'group 2', 'group 3',
-        'index', 'index no', 'index_no', 'name', 'student name'
-    ];
+    for (let c = firstSubjectCol; c < subjectsRow.length; c++) {
+        const subTitle = subjectsRow[c]?.trim();
+        const markVal = targetStudentRow[c]?.trim() || '-';
 
-    if (gradeVal === 10 || gradeVal === 11) {
-        for (let c = nameColIdx + 1; c < headerRow.length; c++) {
-            const title = (headerRow[c] || '').toString().trim();
-            const lowerTitle = title.toLowerCase();
+        if (!subTitle) continue;
 
-            if (!title || ignoredHeaders.some(ignored => lowerTitle === ignored)) continue;
-
-            if (lowerTitle.includes('total')) {
-                totalVal = studentRow[c] || 'N/A';
-            } else if (lowerTitle.includes('average') || lowerTitle.includes('avg')) {
-                avgVal = studentRow[c] || 'N/A';
-            } else if (lowerTitle.includes('position') || lowerTitle.includes('rank') || lowerTitle.includes('place')) {
-                positionVal = studentRow[c] || 'N/A';
-            } else {
-                const mark = studentRow[c] !== undefined && studentRow[c] !== '' ? studentRow[c] : '-';
-                subjectsList.push({ name: title, mark: mark });
-            }
+        const lowerSub = subTitle.toLowerCase();
+        if (lowerSub.includes('total') || lowerSub.includes('එකතුව')) {
+            totalMarks = markVal;
+        } else if (lowerSub.includes('avg') || lowerSub.includes('average') || lowerSub.includes('සාමාන්‍ය')) {
+            avgMarks = markVal;
+        } else if (lowerSub.includes('position') || lowerSub.includes('rank') || lowerSub.includes('ස්ථානය')) {
+            rankPos = markVal;
+        } else {
+            markList.push({ subject: subTitle, mark: markVal });
         }
-    } else {
-        let totalCol = -1, avgCol = -1, posCol = -1;
-
-        for (let c = headerRow.length - 1; c > nameColIdx; c--) {
-            const title = (headerRow[c] || '').toString().toLowerCase();
-            if (title.includes('total') && totalCol === -1) totalCol = c;
-            if ((title.includes('avg') || title.includes('average')) && avgCol === -1) avgCol = c;
-            if ((title.includes('position') || title.includes('rank') || title.includes('place')) && posCol === -1) posCol = c;
-        }
-
-        const endSubjectCol = totalCol !== -1 ? totalCol : headerRow.length;
-
-        for (let c = nameColIdx + 1; c < endSubjectCol; c++) {
-            const title = (headerRow[c] || '').toString().trim();
-            if (!title) continue;
-            const mark = studentRow[c] !== undefined && studentRow[c] !== '' ? studentRow[c] : '-';
-            subjectsList.push({ name: title, mark: mark });
-        }
-
-        if (totalCol !== -1) totalVal = studentRow[totalCol] || 'N/A';
-        if (avgCol !== -1) avgVal = studentRow[avgCol] || 'N/A';
-        if (posCol !== -1) positionVal = studentRow[posCol] || 'N/A';
     }
 
-    renderEnglishA4Report({
-        year, term, grade: gradeStr, cls, stream, indexNum,
-        studentName, subjectsList, totalVal, avgVal, positionVal
-    });
-}
-
-// 6. UI Builder (100% English Output)
-function renderEnglishA4Report(data) {
-    $('rIndex').innerText = data.indexNum;
-    $('rClass').innerText = `Grade ${data.grade}-${data.cls}${data.stream ? ' (' + data.stream + ')' : ''}`;
-    $('rName').innerText = data.studentName;
+    // අලුත් term.html එකේ id වලට data දානවා
+    $('rIndex').innerText = indexNum;
+    $('rClass').innerText = `Grade ${grade} - ${cls}`;
+    $('rName').innerText = studentName;
     
-    const ordinalTerm = data.term === '1' ? '1st' : data.term === '2' ? '2nd' : '3rd';
-    $('a4TermTitle').innerText = `${data.year} - ${ordinalTerm} Term Evaluation Report`;
+    // Term Title එක format කරනවා
+    const termSuffix = term === "1" ? "1 වන" : (term === "2" ? "2 වන" : "3 වන");
+    $('a4TermTitle').innerText = `${year} - ${termSuffix} වාර පරීක්ෂණ වාර්තාව`;
 
-    const tableBody = $('rTableBody');
-    tableBody.innerHTML = '';
+    const tBody = $('rTableBody');
+    tBody.innerHTML = '';
 
-    data.subjectsList.forEach((sub, idx) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
+    markList.forEach((item, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
             <td>${idx + 1}</td>
-            <td style="text-align: left; font-weight: 600;">${sub.name}</td>
-            <td style="font-weight: 700;">${sub.mark}</td>
+            <td style="text-align: left; font-weight: 600;">${item.subject}</td>
+            <td style="font-weight: 700;">${item.mark}</td>
         `;
-        tableBody.appendChild(row);
+        tBody.appendChild(tr);
     });
 
-    $('rTotal').innerText = data.totalVal;
-    $('rAvg').innerText = data.avgVal;
-    $('rRank').innerText = data.positionVal;
+    $('rTotal').innerText = totalMarks;
+    $('rAvg').innerText = avgMarks;
+    $('rRank').innerText = rankPos;
 
+    showStatus('ප්‍රතිඵල සාර්ථකව සොයාගන්නා ලදී!', 'success');
     $('resultCardWrapper').style.display = 'block';
     
+    // Smooth scroll to results
     setTimeout(() => {
         $('resultCardWrapper').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
 }
-
-// 7. Dynamic Single Page PDF Downloader via html2pdf.js
-function initPDFGenerator() {
-    window.downloadResultPDF = function () {
-        const element = document.getElementById('a4Sheet');
-        const indexNum = $('rIndex')?.innerText || 'Result';
-
-        const opt = {
-            margin:       [10, 10, 10, 10],
-            filename:     `Student_Result_${indexNum}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak:    { mode: 'avoid-all' }
-        };
-
-        if (typeof html2pdf !== 'undefined') {
-            html2pdf().set(opt).from(element).save();
-        } else {
-            window.print();
-        }
-    };
-}
-
