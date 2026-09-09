@@ -90,6 +90,7 @@ async function getOrFetchSheetData(year, term, grade, cls, stream) {
     const cacheKey = `term_data_${year}_T${term}_G${grade}_C${cls}_${stream || 'none'}`;
     const cachedItem = localStorage.getItem(cacheKey);
 
+    // 1. Check Local Storage Cache first
     if (cachedItem) {
         try {
             const { timestamp, data } = JSON.parse(cachedItem);
@@ -102,44 +103,66 @@ async function getOrFetchSheetData(year, term, grade, cls, stream) {
         }
     }
 
-    // Query Firestore for Sheet Link
     console.log('🔥 Querying Firestore for term-test sheet URL...');
     
-    // Firestore Data Type mismatches (String vs Number) වැළැක්වීමට
-    const constraints = [
-        where('year', 'in', [year, parseInt(year)]),
-        where('term', 'in', [term, parseInt(term)]),
-        where('grade', 'in', [grade, parseInt(grade)]),
-        where('class', '==', cls)
-    ];
+    try {
+        // 2. Query Firestore by Grade ONLY (To avoid Composite Index errors)
+        const q = query(
+            collection(db, 'term-test-results'), 
+            where('grade', 'in', [grade, parseInt(grade), grade.toString()])
+        );
 
-    // Grade 12/13 සඳහා Stream filter එක එකතු කිරීම
-    if (parseInt(grade) >= 12 && stream) {
-        constraints.push(where('stream', '==', stream));
+        const querySnap = await getDocs(q);
+        
+        if (querySnap.empty) {
+            throw new Error(`Grade ${grade} සඳහා මාර්ගගත Sheet සබැඳියක් Firestore හි හමුනොවුණි.`);
+        }
+
+        let matchedDocData = null;
+
+        // 3. Client-side filtering for Year, Term, Class, and Stream
+        for (const doc of querySnap.docs) {
+            const data = doc.data();
+
+            const matchYear = data.year && (data.year.toString() === year.toString());
+            const matchTerm = data.term && (data.term.toString() === term.toString());
+            const matchClass = data.class && (data.class.toString().trim().toLowerCase() === cls.trim().toLowerCase());
+            
+            let matchStream = true;
+            if (parseInt(grade) >= 12 && stream) {
+                matchStream = data.stream && (data.stream.toString().trim().toLowerCase() === stream.trim().toLowerCase());
+            }
+
+            // If all matched, grab this document
+            if (matchYear && matchTerm && matchClass && matchStream) {
+                matchedDocData = data;
+                break;
+            }
+        }
+
+        if (!matchedDocData) {
+            throw new Error(`Grade ${grade}-${cls} (Year: ${year}, Term: ${term}) සඳහා අදාළ දත්ත Firestore හි ඇතුලත් කර නැත.`);
+        }
+
+        const rawSheetUrl = matchedDocData.sheetUrl;
+
+        if (!rawSheetUrl) throw new Error('Firestore හි Sheet URL එක හිස්ව පවතී.');
+
+        // 4. Fetch and Parse Google Sheet
+        const sheetData = await fetchGoogleSheetCSV(rawSheetUrl);
+
+        // Save to Cache for 1 Week
+        localStorage.setItem(cacheKey, JSON.stringify({
+            timestamp: Date.now(),
+            data: sheetData
+        }));
+
+        return sheetData;
+
+    } catch (error) {
+        console.error("Firestore Query Error: ", error);
+        throw error; // Passes the error up to the UI
     }
-
-    const q = query(collection(db, 'term-test-results'), ...constraints);
-
-    const querySnap = await getDocs(q);
-    if (querySnap.empty) {
-        throw new Error(`Grade ${grade}-${cls} සඳහා මාර්ගගත Sheet සබැඳියක් Firestore හි හමුනොවුණි.`);
-    }
-
-    const docData = querySnap.docs[0].data();
-    const rawSheetUrl = docData.sheetUrl;
-
-    if (!rawSheetUrl) throw new Error('Sheet URL එක හිස්ව පවතී.');
-
-    // Fetch and Parse Google Sheet
-    const sheetData = await fetchGoogleSheetCSV(rawSheetUrl);
-
-    // Save to Cache for 1 Week
-    localStorage.setItem(cacheKey, JSON.stringify({
-        timestamp: Date.now(),
-        data: sheetData
-    }));
-
-    return sheetData;
 }
 
 /**
@@ -204,6 +227,7 @@ function renderStudentResult(rows, indexNum, grade, cls, year, term) {
     const numGrade = parseInt(grade);
     let subjectRowIndex, dataStartRowIndex, indexCol, nameCol, firstSubjectCol;
 
+    // මෙම පේළි අංක ඔබේ Google Sheet එකේ ආකෘතියට ගැලපෙන බව තහවුරු කරගන්න
     if (numGrade >= 10 && numGrade <= 11) {
         subjectRowIndex = 6;
         dataStartRowIndex = 7;
