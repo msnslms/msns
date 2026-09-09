@@ -84,18 +84,18 @@ function initSearchForm() {
 }
 
 /**
- * Fetch Firestore URL or Load Cached Sheet Data (1-Week Local Cache)
+ * Fetch Firestore URL or Load Cached Sheet Data
  */
 async function getOrFetchSheetData(year, term, grade, cls, stream) {
     const cacheKey = `term_data_${year}_T${term}_G${grade}_C${cls}_${stream || 'none'}`;
     const cachedItem = localStorage.getItem(cacheKey);
 
-    // 1. Check Local Storage Cache first
+    // 1. Local Storage Cache
     if (cachedItem) {
         try {
             const { timestamp, data } = JSON.parse(cachedItem);
             if (Date.now() - timestamp < ONE_WEEK_MS) {
-                console.log('⚡ Loading sheet data from 7-day LocalCache...');
+                console.log('⚡ Loading sheet data from LocalCache...');
                 return data;
             }
         } catch (e) {
@@ -106,7 +106,6 @@ async function getOrFetchSheetData(year, term, grade, cls, stream) {
     console.log('🔥 Querying Firestore for term-test sheet URL...');
     
     try {
-        // 2. Query Firestore by Grade ONLY (To avoid Composite Index errors)
         const q = query(
             collection(db, 'term-test-results'), 
             where('grade', 'in', [grade, parseInt(grade), grade.toString()])
@@ -120,20 +119,32 @@ async function getOrFetchSheetData(year, term, grade, cls, stream) {
 
         let matchedDocData = null;
 
-        // 3. Client-side filtering for Year, Term, Class, and Stream
+        // 2. Database Filter (Flexible Matching)
         for (const doc of querySnap.docs) {
             const data = doc.data();
 
-            const matchYear = data.year && (data.year.toString() === year.toString());
-            const matchTerm = data.term && (data.term.toString() === term.toString());
-            const matchClass = data.class && (data.class.toString().trim().toLowerCase() === cls.trim().toLowerCase());
-            
+            // Match Year
+            const matchYear = data.year && (data.year.toString().trim() === year.toString().trim());
+
+            // Match Term ("2nd term" / "2" / "2nd" match කිරීමට)
+            const dbTermNum = data.term ? data.term.toString().replace(/\D/g, '') : '';
+            const inputTermNum = term.toString().replace(/\D/g, '');
+            const matchTerm = (dbTermNum && inputTermNum && dbTermNum === inputTermNum) || 
+                              (data.term && data.term.toString().toLowerCase().includes(term.toString().toLowerCase()));
+
+            // Match Class ("Class G" සහ "G" match කිරීමට)
+            const dbClassClean = data.class ? data.class.toString().replace(/class/gi, '').trim().toLowerCase() : '';
+            const inputClassClean = cls.toString().replace(/class/gi, '').trim().toLowerCase();
+            const matchClass = (dbClassClean === inputClassClean) || 
+                               (data.class && data.class.toString().trim().toLowerCase() === cls.trim().toLowerCase());
+
+            // Match Stream
             let matchStream = true;
             if (parseInt(grade) >= 12 && stream) {
-                matchStream = data.stream && (data.stream.toString().trim().toLowerCase() === stream.trim().toLowerCase());
+                const dbStream = data.stream ? data.stream.toString().trim().toLowerCase() : '';
+                matchStream = dbStream === stream.trim().toLowerCase();
             }
 
-            // If all matched, grab this document
             if (matchYear && matchTerm && matchClass && matchStream) {
                 matchedDocData = data;
                 break;
@@ -145,13 +156,11 @@ async function getOrFetchSheetData(year, term, grade, cls, stream) {
         }
 
         const rawSheetUrl = matchedDocData.sheetUrl;
-
         if (!rawSheetUrl) throw new Error('Firestore හි Sheet URL එක හිස්ව පවතී.');
 
-        // 4. Fetch and Parse Google Sheet
         const sheetData = await fetchGoogleSheetCSV(rawSheetUrl);
 
-        // Save to Cache for 1 Week
+        // Save Cache
         localStorage.setItem(cacheKey, JSON.stringify({
             timestamp: Date.now(),
             data: sheetData
@@ -161,12 +170,12 @@ async function getOrFetchSheetData(year, term, grade, cls, stream) {
 
     } catch (error) {
         console.error("Firestore Query Error: ", error);
-        throw error; // Passes the error up to the UI
+        throw error;
     }
 }
 
 /**
- * Handles both Standard Google Sheets and Google Drive Excel (.xlsx) Links
+ * Fetch Google Sheet CSV
  */
 async function fetchGoogleSheetCSV(url) {
     const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
@@ -181,20 +190,18 @@ async function fetchGoogleSheetCSV(url) {
         let response = await fetch(csvExportUrl);
 
         if (!response.ok) {
-            console.log("Standard export failed. Trying alternative export method for Drive file...");
             const altExportUrl = `https://docs.google.com/spreadsheets/u/0/d/${sheetId}/export?format=csv`;
             response = await fetch(altExportUrl);
         }
 
         if (!response.ok) {
-            throw new Error(`Google Sheet එක ලබාගැනීමට අපොහොසත් විය. (Status: ${response.status}). Sheet එක "Anyone with the link can view" ලෙස සකසා ඇත්දැයි පරීක්ෂා කරන්න.`);
+            throw new Error(`Google Sheet එක ලබාගැනීමට අපොහොසත් විය. Sheet එක "Anyone with the link can view" ලෙස සකසා ඇත්දැයි පරීක්ෂා කරන්න.`);
         }
 
         const csvText = await response.text();
         
-        // HTML error page අල්ලා ගැනීම
         if (csvText.trim().startsWith('<html') || csvText.trim().startsWith('<!DOCTYPE')) {
-            throw new Error('Sheet එක ලබාගැනීමට නොහැක. කරුණාකර එය Public/Viewer (Anyone with the link) ලෙස Share කර ඇති බව තහවුරු කරන්න.');
+            throw new Error('Sheet එක ලබාගැනීමට නොහැක. එය Public/Viewer ලෙස Share කර ඇත්දැයි තහවුරු කරන්න.');
         }
 
         return parseCSVText(csvText);
@@ -206,28 +213,43 @@ async function fetchGoogleSheetCSV(url) {
 }
 
 /**
- * Simple CSV Parser
+ * Robust CSV Parser
  */
 function parseCSVText(csvText) {
     const lines = csvText.split(/\r\n|\n/);
     const result = [];
+    
     for (let i = 0; i < lines.length; i++) {
-        if (!lines[i].trim()) continue;
-        const row = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
-        const cleanedRow = row.map(cell => cell ? cell.replace(/^"(.*)"$/, '$1').trim() : '');
-        result.push(cleanedRow);
+        const line = lines[i];
+        if (!line.trim()) continue;
+        
+        const row = [];
+        let insideQuotes = false;
+        let entry = '';
+
+        for (let char of line) {
+            if (char === '"') {
+                insideQuotes = !insideQuotes;
+            } else if (char === ',' && !insideQuotes) {
+                row.push(entry.trim().replace(/^"(.*)"$/, '$1'));
+                entry = '';
+            } else {
+                entry += char;
+            }
+        }
+        row.push(entry.trim().replace(/^"(.*)"$/, '$1'));
+        result.push(row);
     }
     return result;
 }
 
 /**
- * Locate Student Index & Extract Results Based on Grade Structure
+ * Render Results
  */
 function renderStudentResult(rows, indexNum, grade, cls, year, term) {
     const numGrade = parseInt(grade);
     let subjectRowIndex, dataStartRowIndex, indexCol, nameCol, firstSubjectCol;
 
-    // මෙම පේළි අංක ඔබේ Google Sheet එකේ ආකෘතියට ගැලපෙන බව තහවුරු කරගන්න
     if (numGrade >= 10 && numGrade <= 11) {
         subjectRowIndex = 6;
         dataStartRowIndex = 7;
