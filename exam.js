@@ -1,23 +1,3 @@
-// Import Firebase ES Modules
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { 
-    getFirestore, collection, query, where, getDocs 
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-// Firebase Configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDgg7n1LwcrRiV2kjgSM5E3XX27twweMg8",
-  authDomain: "msns-79.firebaseapp.com",
-  projectId: "msns-79",
-  storageBucket: "msns-79.firebasestorage.app",
-  messagingSenderId: "108137376740",
-  appId: "1:108137376740:web:78ed2f442c035a072f75f1",
-  measurementId: "G-3GTFJKTS7D"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
 // DOM Elements
 const $ = (id) => document.getElementById(id);
 
@@ -61,36 +41,36 @@ function initSearchForm() {
         const stream = (parseInt(grade) >= 12) ? $('searchStream').value : '';
 
         if (!grade || !cls || !indexNum) {
-            showStatus('කරුණාකර සියලු විස්තර සම්පූර්ණ කරන්න.', 'error');
+            showStatus('Please complete all details.', 'error');
             return;
         }
 
         $('resultCardWrapper').style.display = 'none';
-        showStatus('දත්ත ලබා ගනිමින් පවතී... කරුණාකර රැඳී සිටින්න.', 'info');
+        showStatus('Data is being retrieved... please wait.', 'info');
 
         try {
             const parsedSheetData = await getOrFetchSheetData(year, term, grade, cls, stream);
             if (!parsedSheetData || parsedSheetData.length === 0) {
-                showStatus('මෙම පන්තියට අදාළ Google Sheet ලේඛනය හමුනොවුණි.', 'error');
+                showStatus('No documents were found for this class. , 'error');
                 return;
             }
 
             renderStudentResult(parsedSheetData, indexNum, grade, cls, year, term);
         } catch (err) {
             console.error(err);
-            showStatus('ප්‍රතිඵල ලබාගැනීමේදී දෝෂයක් සිදුවිය: ' + err.message, 'error');
+            showStatus('An error occurred while retrieving results: ' + err.message, 'error');
         }
     });
 }
 
 /**
- * Fetch Firestore URL or Load Cached Sheet Data
+ * Fetch Sheet URL from Local data.json file
  */
 async function getOrFetchSheetData(year, term, grade, cls, stream) {
     const cacheKey = `term_data_${year}_T${term}_G${grade}_C${cls}_${stream || 'none'}`;
     const cachedItem = localStorage.getItem(cacheKey);
 
-    // 1. Local Storage Cache
+    // 1. Check Local Cache
     if (cachedItem) {
         try {
             const { timestamp, data } = JSON.parse(cachedItem);
@@ -103,62 +83,49 @@ async function getOrFetchSheetData(year, term, grade, cls, stream) {
         }
     }
 
-    console.log('🔥 Querying Firestore for term-test sheet URL...');
+    console.log('📂 Reading sheet URL from data.json...');
     
     try {
-        const q = query(
-            collection(db, 'term-test-results'), 
-            where('grade', 'in', [grade, parseInt(grade), grade.toString()])
-        );
-
-        const querySnap = await getDocs(q);
-        
-        if (querySnap.empty) {
-            throw new Error(`Grade ${grade} සඳහා මාර්ගගත Sheet සබැඳියක් Firestore හි හමුනොවුණි.`);
+        // 2. Load Local JSON File
+        const jsonResponse = await fetch('data.json');
+        if (!jsonResponse.ok) {
+            throw new Error('The data file could not be found. ');
         }
 
-        let matchedDocData = null;
+        const dataList = await jsonResponse.json();
 
-        // 2. Database Filter (Flexible Matching)
-        for (const doc of querySnap.docs) {
-            const data = doc.data();
+        // 3. Search for matching record
+        const matched = dataList.find(item => {
+            const matchYear = item.year && item.year.toString().trim() === year.toString().trim();
+            
+            // Term Check (e.g. "2" or "2nd term")
+            const itemTermNum = item.term ? item.term.toString().replace(/\D/g, '') : '';
+            const searchTermNum = term.toString().replace(/\D/g, '');
+            const matchTerm = (itemTermNum && searchTermNum && itemTermNum === searchTermNum) ||
+                              (item.term && item.term.toString().toLowerCase().includes(term.toString().toLowerCase()));
 
-            // Match Year
-            const matchYear = data.year && (data.year.toString().trim() === year.toString().trim());
+            const matchGrade = item.grade && item.grade.toString().trim() === grade.toString().trim();
 
-            // Match Term ("2nd term" / "2" / "2nd" match කිරීමට)
-            const dbTermNum = data.term ? data.term.toString().replace(/\D/g, '') : '';
-            const inputTermNum = term.toString().replace(/\D/g, '');
-            const matchTerm = (dbTermNum && inputTermNum && dbTermNum === inputTermNum) || 
-                              (data.term && data.term.toString().toLowerCase().includes(term.toString().toLowerCase()));
+            // Class Check (e.g. "A" or "Class A")
+            const itemClass = item.class ? item.class.toString().replace(/class/gi, '').trim().toLowerCase() : '';
+            const searchClass = cls.toString().replace(/class/gi, '').trim().toLowerCase();
+            const matchClass = itemClass === searchClass;
 
-            // Match Class ("Class G" සහ "G" match කිරීමට)
-            const dbClassClean = data.class ? data.class.toString().replace(/class/gi, '').trim().toLowerCase() : '';
-            const inputClassClean = cls.toString().replace(/class/gi, '').trim().toLowerCase();
-            const matchClass = (dbClassClean === inputClassClean) || 
-                               (data.class && data.class.toString().trim().toLowerCase() === cls.trim().toLowerCase());
-
-            // Match Stream
+            // Stream Check
             let matchStream = true;
             if (parseInt(grade) >= 12 && stream) {
-                const dbStream = data.stream ? data.stream.toString().trim().toLowerCase() : '';
-                matchStream = dbStream === stream.trim().toLowerCase();
+                matchStream = item.stream && item.stream.toString().trim().toLowerCase() === stream.trim().toLowerCase();
             }
 
-            if (matchYear && matchTerm && matchClass && matchStream) {
-                matchedDocData = data;
-                break;
-            }
+            return matchYear && matchTerm && matchGrade && matchClass && matchStream;
+        });
+
+        if (!matched || !matched.sheetUrl) {
+            throw new Error(`Grade ${grade}-${cls} (Year: ${year}, Term: ${term}) The link for is not included in data.`);
         }
 
-        if (!matchedDocData) {
-            throw new Error(`Grade ${grade}-${cls} (Year: ${year}, Term: ${term}) සඳහා අදාළ දත්ත Firestore හි ඇතුලත් කර නැත.`);
-        }
-
-        const rawSheetUrl = matchedDocData.sheetUrl;
-        if (!rawSheetUrl) throw new Error('Firestore හි Sheet URL එක හිස්ව පවතී.');
-
-        const sheetData = await fetchGoogleSheetCSV(rawSheetUrl);
+        // 4. Fetch Google Sheet CSV
+        const sheetData = await fetchGoogleSheetCSV(matched.sheetUrl);
 
         // Save Cache
         localStorage.setItem(cacheKey, JSON.stringify({
@@ -169,41 +136,31 @@ async function getOrFetchSheetData(year, term, grade, cls, stream) {
         return sheetData;
 
     } catch (error) {
-        console.error("Firestore Query Error: ", error);
+        console.error("Data Search Error: ", error);
         throw error;
     }
 }
 
 /**
- * Fetch Google Sheet CSV
+ * Fetch Google Sheet via GViz API (Prevents CORS Errors)
  */
 async function fetchGoogleSheetCSV(url) {
     const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
     if (!match || !match[1]) {
-        throw new Error('වලංගු නැති Google Sheet හෝ Drive URL එකකි.');
+        throw new Error('වලංගු නැති Google Sheet URL එකකි.');
     }
 
     const sheetId = match[1];
 
     try {
-        const csvExportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
-        let response = await fetch(csvExportUrl);
+        const gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+        const response = await fetch(gvizUrl);
 
         if (!response.ok) {
-            const altExportUrl = `https://docs.google.com/spreadsheets/u/0/d/${sheetId}/export?format=csv`;
-            response = await fetch(altExportUrl);
-        }
-
-        if (!response.ok) {
-            throw new Error(`Google Sheet එක ලබාගැනීමට අපොහොසත් විය. Sheet එක "Anyone with the link can view" ලෙස සකසා ඇත්දැයි පරීක්ෂා කරන්න.`);
+            throw new Error('The sheet could not be retrieved. Check if the sheet is set to Public ("Anyone with link").');
         }
 
         const csvText = await response.text();
-        
-        if (csvText.trim().startsWith('<html') || csvText.trim().startsWith('<!DOCTYPE')) {
-            throw new Error('Sheet එක ලබාගැනීමට නොහැක. එය Public/Viewer ලෙස Share කර ඇත්දැයි තහවුරු කරන්න.');
-        }
-
         return parseCSVText(csvText);
 
     } catch (error) {
@@ -213,7 +170,7 @@ async function fetchGoogleSheetCSV(url) {
 }
 
 /**
- * Robust CSV Parser
+ * Parse CSV Data
  */
 function parseCSVText(csvText) {
     const lines = csvText.split(/\r\n|\n/);
@@ -244,7 +201,7 @@ function parseCSVText(csvText) {
 }
 
 /**
- * Render Results
+ * Render Student Results
  */
 function renderStudentResult(rows, indexNum, grade, cls, year, term) {
     const numGrade = parseInt(grade);
@@ -265,7 +222,7 @@ function renderStudentResult(rows, indexNum, grade, cls, year, term) {
     }
 
     if (rows.length <= dataStartRowIndex) {
-        showStatus('Sheet එකේ දත්ත ප්‍රමාණවත් නොවේ.', 'error');
+        showStatus('There is not enough data in the sheet.', 'error');
         return;
     }
 
@@ -281,7 +238,7 @@ function renderStudentResult(rows, indexNum, grade, cls, year, term) {
     }
 
     if (!targetStudentRow) {
-        showStatus(`විභාග අංක ${indexNum} සඳහා ප්‍රතිඵල හමුනොවුණි.`, 'error');
+        showStatus(`Exam number ${indexNum} No results found for.`, 'error');
         return;
     }
 
@@ -298,11 +255,11 @@ function renderStudentResult(rows, indexNum, grade, cls, year, term) {
         if (!subTitle) continue;
 
         const lowerSub = subTitle.toLowerCase();
-        if (lowerSub.includes('total') || lowerSub.includes('එකතුව')) {
+        if (lowerSub.includes('total') || lowerSub.includes('Total')) {
             totalMarks = markVal;
-        } else if (lowerSub.includes('avg') || lowerSub.includes('average') || lowerSub.includes('සාමාන්‍ය')) {
+        } else if (lowerSub.includes('avg') || lowerSub.includes('average') || lowerSub.includes('Average')) {
             avgMarks = markVal;
-        } else if (lowerSub.includes('position') || lowerSub.includes('rank') || lowerSub.includes('ස්ථානය')) {
+        } else if (lowerSub.includes('position') || lowerSub.includes('rank') || lowerSub.includes('Place')) {
             rankPos = markVal;
         } else {
             markList.push({ subject: subTitle, mark: markVal });
@@ -312,7 +269,7 @@ function renderStudentResult(rows, indexNum, grade, cls, year, term) {
     $('rIndex').innerText = indexNum;
     $('rClass').innerText = `Grade ${grade} - ${cls}`;
     $('rName').innerText = studentName;
-    $('a4TermTitle').innerText = `${year} - ${term} වන වාර පරීක්ෂණ වාර්තාව`;
+    $('a4TermTitle').innerText = `${year} - ${term} Forest inspection report`;
 
     const tBody = $('rTableBody');
     tBody.innerHTML = '';
