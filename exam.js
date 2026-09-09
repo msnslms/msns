@@ -1,14 +1,44 @@
-// DOM Elements
-const $ = (id) => document.getElementById(id);
-
-// Caching Duration: 1 Week in Milliseconds
+// Global Configuration & Cache
+const NPOINT_API_URL = 'https://api.npoint.io/14e592b7888053bb471b';
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+let npointManifestCache = null;
+let preloadedSheetMatrix = null;
+let currentPreloadKey = '';
+
+// Helper function
+const $ = (id) => document.getElementById(id);
 
 document.addEventListener('DOMContentLoaded', () => {
     initGradeChangeListener();
+    initPreloadListeners();
     initSearchForm();
+    initPDFGenerator();
+    preloadNpointManifest(); // Start initial background fetch
 });
 
+// UI Helper
+function showStatus(msg, type = 'info') {
+    const box = $('statusMessage');
+    if (!box) return;
+    box.className = `status-msg ${type}`;
+    box.innerText = msg;
+}
+
+// 1. Initial Manifest Preload
+async function preloadNpointManifest() {
+    try {
+        const res = await fetch(NPOINT_API_URL);
+        if (res.ok) {
+            npointManifestCache = await res.json();
+            console.log('⚡ NPoint Manifest successfully preloaded.');
+        }
+    } catch (err) {
+        console.warn('Manifest preload issue:', err);
+    }
+}
+
+// Stream Selection Listener (Triggered for Grade 12 & 13)
 function initGradeChangeListener() {
     const gradeSelect = $('searchGrade');
     const streamBox = $('streamSelectBox');
@@ -21,13 +51,120 @@ function initGradeChangeListener() {
     });
 }
 
-function showStatus(msg, type = 'info') {
-    const box = $('statusMessage');
-    if (!box) return;
-    box.className = `status-msg ${type}`;
-    box.innerText = msg;
+// 2. High-Speed Background Pre-fetching on Selection
+function initPreloadListeners() {
+    const triggerElements = ['searchYear', 'searchTerm', 'searchGrade', 'searchClass', 'searchStream'];
+    
+    triggerElements.forEach(id => {
+        $(id)?.addEventListener('change', async () => {
+            const year = $('searchYear')?.value;
+            const term = $('searchTerm')?.value;
+            const grade = $('searchGrade')?.value;
+            const cls = $('searchClass')?.value;
+            const stream = (parseInt(grade) >= 12) ? $('searchStream')?.value : '';
+
+            if (year && term && grade && cls) {
+                const fetchKey = `${year}_T${term}_G${grade}_C${cls}_${stream}`;
+                if (currentPreloadKey !== fetchKey) {
+                    currentPreloadKey = fetchKey;
+                    console.log('🚀 Pre-fetching sheet data in background...');
+                    try {
+                        preloadedSheetMatrix = await getOrFetchSheetData(year, term, grade, cls, stream);
+                    } catch (e) {
+                        preloadedSheetMatrix = null;
+                    }
+                }
+            }
+        });
+    });
 }
 
+// 3. Fetch Google Sheet Link and Parse to 2D Array Matrix
+async function getOrFetchSheetData(year, term, grade, cls, stream) {
+    const cacheKey = `sheet_data_${year}_T${term}_G${grade}_C${cls}_${stream || 'none'}`;
+    const cachedItem = localStorage.getItem(cacheKey);
+
+    if (cachedItem) {
+        try {
+            const { timestamp, data } = JSON.parse(cachedItem);
+            if (Date.now() - timestamp < ONE_WEEK_MS) {
+                return data;
+            }
+        } catch (e) {
+            localStorage.removeItem(cacheKey);
+        }
+    }
+
+    if (!npointManifestCache) {
+        await preloadNpointManifest();
+    }
+
+    if (!npointManifestCache || !Array.isArray(npointManifestCache)) {
+        throw new Error('Could not fetch configuration data.');
+    }
+
+    // Match Record from NPoint API JSON
+    const matched = npointManifestCache.find(item => {
+        const matchYear = item.year && item.year.toString().trim() === year.toString().trim();
+        
+        const itemTermNum = item.term ? item.term.toString().replace(/\D/g, '') : '';
+        const searchTermNum = term.toString().replace(/\D/g, '');
+        const matchTerm = (itemTermNum && searchTermNum && itemTermNum === searchTermNum) ||
+                          (item.term && item.term.toString().toLowerCase().includes(term.toString().toLowerCase()));
+
+        const matchGrade = item.grade && item.grade.toString().trim() === grade.toString().trim();
+        const matchClass = item.class && item.class.toString().trim().toLowerCase() === cls.toString().trim().toLowerCase();
+        
+        let matchStream = true;
+        if (parseInt(grade) >= 12 && stream) {
+            matchStream = item.stream && item.stream.toString().trim().toLowerCase() === stream.toString().trim().toLowerCase();
+        }
+
+        return matchYear && matchTerm && matchGrade && matchClass && matchStream;
+    });
+
+    if (!matched || (!matched.sheetUrl && !matched.link && !matched.url)) {
+        throw new Error('Result sheet URL for this selection was not found.');
+    }
+
+    const rawUrl = matched.sheetUrl || matched.link || matched.url;
+    const matrix = await fetchGoogleSheetAsMatrix(rawUrl);
+
+    try {
+        localStorage.setItem(cacheKey, JSON.stringify({ timestamp: Date.now(), data: matrix }));
+    } catch(e) {}
+
+    return matrix;
+}
+
+// Google Sheets GViz Fetcher
+async function fetchGoogleSheetAsMatrix(sheetUrl) {
+    const sheetIdMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+    if (!sheetIdMatch) throw new Error('Invalid Google Sheet URL format.');
+    
+    const spreadsheetId = sheetIdMatch[1];
+    
+    // Extract gid if available
+    let gidMatch = sheetUrl.match(/gid=([0-9]+)/);
+    let gidParam = gidMatch ? `&gid=${gidMatch[1]}` : '';
+
+    const gvizUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json${gidParam}`;
+
+    const res = await fetch(gvizUrl);
+    if (!res.ok) throw new Error('Failed to download Google Sheet data.');
+
+    const text = await res.text();
+    const jsonString = text.replace(/^/*O_o*\/[^\(]*\(/, '').replace(/\);?\s*$/, '');
+    const json = JSON.parse(jsonString);
+
+    const rows = json.table.rows;
+    return rows.map(r => {
+        if (!r.c) return [];
+        return r.c.map(cell => cell ? (cell.v !== null && cell.v !== undefined ? cell.v.toString().trim() : '') : '');
+    });
+}
+
+// 4. Form Submit & Result Processor
 function initSearchForm() {
     const form = $('resultSearchForm');
     form?.addEventListener('submit', async (e) => {
@@ -41,254 +178,204 @@ function initSearchForm() {
         const stream = (parseInt(grade) >= 12) ? $('searchStream').value : '';
 
         if (!grade || !cls || !indexNum) {
-            showStatus('Please complete all details.', 'error');
+            showStatus('Please enter all required details.', 'error');
             return;
         }
 
         $('resultCardWrapper').style.display = 'none';
-        showStatus('Data is being retrieved... please wait.', 'info');
+        showStatus('Fetching results, please wait...', 'info');
 
         try {
-            const parsedSheetData = await getOrFetchSheetData(year, term, grade, cls, stream);
-            if (!parsedSheetData || parsedSheetData.length === 0) {
-                showStatus('No documents were found for this class. , 'error');
+            const fetchKey = `${year}_T${term}_G${grade}_C${cls}_${stream}`;
+            let sheetMatrix = (currentPreloadKey === fetchKey && preloadedSheetMatrix) 
+                                ? preloadedSheetMatrix 
+                                : await getOrFetchSheetData(year, term, grade, cls, stream);
+
+            if (!sheetMatrix || sheetMatrix.length === 0) {
+                showStatus('No documents were found for this selection.', 'error');
                 return;
             }
 
-            renderStudentResult(parsedSheetData, indexNum, grade, cls, year, term);
+            processAndRenderResults(sheetMatrix, indexNum, grade, cls, year, term, stream);
+            showStatus('', 'info');
         } catch (err) {
             console.error(err);
-            showStatus('An error occurred while retrieving results: ' + err.message, 'error');
+            showStatus(err.message || 'An error occurred while fetching results.', 'error');
         }
     });
 }
 
-/**
- * Fetch Sheet URL from Local data.json file
- */
-async function getOrFetchSheetData(year, term, grade, cls, stream) {
-    const cacheKey = `term_data_${year}_T${term}_G${grade}_C${cls}_${stream || 'none'}`;
-    const cachedItem = localStorage.getItem(cacheKey);
-
-    // 1. Check Local Cache
-    if (cachedItem) {
-        try {
-            const { timestamp, data } = JSON.parse(cachedItem);
-            if (Date.now() - timestamp < ONE_WEEK_MS) {
-                console.log('⚡ Loading sheet data from LocalCache...');
-                return data;
-            }
-        } catch (e) {
-            localStorage.removeItem(cacheKey);
-        }
-    }
-
-    console.log('📂 Reading sheet URL from data.json...');
+// 5. Dynamic Parsing Logic for All Grades
+function processAndRenderResults(matrix, indexNum, gradeStr, cls, year, term, stream) {
+    const gradeVal = parseInt(gradeStr);
     
-    try {
-        // 2. Load Local JSON File
-        const jsonResponse = await fetch('data.json');
-        if (!jsonResponse.ok) {
-            throw new Error('The data file could not be found. ');
-        }
+    // Header Row Detection (Row 6 to 9)
+    let headerRowIdx = -1;
+    let indexColIdx = -1;
+    let nameColIdx = -1;
 
-        const dataList = await jsonResponse.json();
-
-        // 3. Search for matching record
-        const matched = dataList.find(item => {
-            const matchYear = item.year && item.year.toString().trim() === year.toString().trim();
-            
-            // Term Check (e.g. "2" or "2nd term")
-            const itemTermNum = item.term ? item.term.toString().replace(/\D/g, '') : '';
-            const searchTermNum = term.toString().replace(/\D/g, '');
-            const matchTerm = (itemTermNum && searchTermNum && itemTermNum === searchTermNum) ||
-                              (item.term && item.term.toString().toLowerCase().includes(term.toString().toLowerCase()));
-
-            const matchGrade = item.grade && item.grade.toString().trim() === grade.toString().trim();
-
-            // Class Check (e.g. "A" or "Class A")
-            const itemClass = item.class ? item.class.toString().replace(/class/gi, '').trim().toLowerCase() : '';
-            const searchClass = cls.toString().replace(/class/gi, '').trim().toLowerCase();
-            const matchClass = itemClass === searchClass;
-
-            // Stream Check
-            let matchStream = true;
-            if (parseInt(grade) >= 12 && stream) {
-                matchStream = item.stream && item.stream.toString().trim().toLowerCase() === stream.trim().toLowerCase();
+    for (let r = 0; r < Math.min(matrix.length, 12); r++) {
+        const row = matrix[r];
+        for (let c = 0; c < row.length; c++) {
+            const val = row[c].toLowerCase();
+            if (val.includes('index') || val === 'index no' || val === 'index_no') {
+                headerRowIdx = r;
+                indexColIdx = c;
             }
-
-            return matchYear && matchTerm && matchGrade && matchClass && matchStream;
-        });
-
-        if (!matched || !matched.sheetUrl) {
-            throw new Error(`Grade ${grade}-${cls} (Year: ${year}, Term: ${term}) The link for is not included in data.`);
-        }
-
-        // 4. Fetch Google Sheet CSV
-        const sheetData = await fetchGoogleSheetCSV(matched.sheetUrl);
-
-        // Save Cache
-        localStorage.setItem(cacheKey, JSON.stringify({
-            timestamp: Date.now(),
-            data: sheetData
-        }));
-
-        return sheetData;
-
-    } catch (error) {
-        console.error("Data Search Error: ", error);
-        throw error;
-    }
-}
-
-/**
- * Fetch Google Sheet via GViz API (Prevents CORS Errors)
- */
-async function fetchGoogleSheetCSV(url) {
-    const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-    if (!match || !match[1]) {
-        throw new Error('වලංගු නැති Google Sheet URL එකකි.');
-    }
-
-    const sheetId = match[1];
-
-    try {
-        const gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
-        const response = await fetch(gvizUrl);
-
-        if (!response.ok) {
-            throw new Error('The sheet could not be retrieved. Check if the sheet is set to Public ("Anyone with link").');
-        }
-
-        const csvText = await response.text();
-        return parseCSVText(csvText);
-
-    } catch (error) {
-         console.error("Fetch Error:", error);
-         throw new Error('Sheet එක කියවීමේදී දෝෂයක්: ' + error.message);
-    }
-}
-
-/**
- * Parse CSV Data
- */
-function parseCSVText(csvText) {
-    const lines = csvText.split(/\r\n|\n/);
-    const result = [];
-    
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        if (!line.trim()) continue;
-        
-        const row = [];
-        let insideQuotes = false;
-        let entry = '';
-
-        for (let char of line) {
-            if (char === '"') {
-                insideQuotes = !insideQuotes;
-            } else if (char === ',' && !insideQuotes) {
-                row.push(entry.trim().replace(/^"(.*)"$/, '$1'));
-                entry = '';
-            } else {
-                entry += char;
+            if (val.includes('name')) {
+                nameColIdx = c;
             }
         }
-        row.push(entry.trim().replace(/^"(.*)"$/, '$1'));
-        result.push(row);
-    }
-    return result;
-}
-
-/**
- * Render Student Results
- */
-function renderStudentResult(rows, indexNum, grade, cls, year, term) {
-    const numGrade = parseInt(grade);
-    let subjectRowIndex, dataStartRowIndex, indexCol, nameCol, firstSubjectCol;
-
-    if (numGrade >= 10 && numGrade <= 11) {
-        subjectRowIndex = 6;
-        dataStartRowIndex = 7;
-        indexCol = 1;
-        nameCol = 2;
-        firstSubjectCol = 3;
-    } else {
-        subjectRowIndex = 7;
-        dataStartRowIndex = 8;
-        indexCol = 1;
-        nameCol = 2;
-        firstSubjectCol = 3;
+        if (headerRowIdx !== -1 && nameColIdx !== -1) break;
     }
 
-    if (rows.length <= dataStartRowIndex) {
-        showStatus('There is not enough data in the sheet.', 'error');
-        return;
-    }
+    // Fallbacks
+    if (headerRowIdx === -1) headerRowIdx = (gradeVal === 10 || gradeVal === 11) ? 6 : 7;
+    if (indexColIdx === -1) indexColIdx = 1; // B Column
+    if (nameColIdx === -1) nameColIdx = 2;  // C Column
 
-    const subjectsRow = rows[subjectRowIndex] || [];
-    let targetStudentRow = null;
+    const headerRow = matrix[headerRowIdx] || [];
 
-    for (let r = dataStartRowIndex; r < rows.length; r++) {
-        const row = rows[r];
-        if (row[indexCol] && row[indexCol].toString().trim().toLowerCase() === indexNum.toLowerCase()) {
-            targetStudentRow = row;
+    // Find Student Row
+    let studentRow = null;
+    for (let r = headerRowIdx + 1; r < matrix.length; r++) {
+        const rowVal = matrix[r][indexColIdx];
+        if (rowVal && rowVal.toString().trim().toLowerCase() === indexNum.toLowerCase()) {
+            studentRow = matrix[r];
             break;
         }
     }
 
-    if (!targetStudentRow) {
-        showStatus(`Exam number ${indexNum} No results found for.`, 'error');
+    if (!studentRow) {
+        showStatus(`Index number "${indexNum}" was not found in this sheet.`, 'error');
         return;
     }
 
-    const studentName = targetStudentRow[nameCol] || 'N/A';
-    const markList = [];
-    let totalMarks = '-';
-    let avgMarks = '-';
-    let rankPos = '-';
+    const studentName = studentRow[nameColIdx] || 'N/A';
+    let subjectsList = [];
+    let totalVal = 'N/A', avgVal = 'N/A', positionVal = 'N/A';
 
-    for (let c = firstSubjectCol; c < subjectsRow.length; c++) {
-        const subTitle = subjectsRow[c]?.trim();
-        const markVal = targetStudentRow[c]?.trim() || '-';
+    // Blacklisted column titles for Bucket/Category Headers
+    const ignoredHeaders = [
+        'main subjects', 'bucket 1', 'bucket 2', 'bucket 3', 
+        'bucket i', 'bucket ii', 'bucket iii', 'group 1', 'group 2', 'group 3',
+        'index', 'index no', 'index_no', 'name', 'student name'
+    ];
 
-        if (!subTitle) continue;
+    if (gradeVal === 10 || gradeVal === 11) {
+        // Grades 10 - 11 Dynamic Processing
+        for (let c = nameColIdx + 1; c < headerRow.length; c++) {
+            const title = (headerRow[c] || '').toString().trim();
+            const lowerTitle = title.toLowerCase();
 
-        const lowerSub = subTitle.toLowerCase();
-        if (lowerSub.includes('total') || lowerSub.includes('Total')) {
-            totalMarks = markVal;
-        } else if (lowerSub.includes('avg') || lowerSub.includes('average') || lowerSub.includes('Average')) {
-            avgMarks = markVal;
-        } else if (lowerSub.includes('position') || lowerSub.includes('rank') || lowerSub.includes('Place')) {
-            rankPos = markVal;
-        } else {
-            markList.push({ subject: subTitle, mark: markVal });
+            if (!title || ignoredHeaders.some(ignored => lowerTitle === ignored)) continue;
+
+            if (lowerTitle.includes('total')) {
+                totalVal = studentRow[c] || 'N/A';
+            } else if (lowerTitle.includes('average') || lowerTitle.includes('avg')) {
+                avgVal = studentRow[c] || 'N/A';
+            } else if (lowerTitle.includes('position') || lowerTitle.includes('rank') || lowerTitle.includes('place')) {
+                positionVal = studentRow[c] || 'N/A';
+            } else {
+                // Actual Subject
+                const mark = studentRow[c] !== undefined && studentRow[c] !== '' ? studentRow[c] : '-';
+                subjectsList.push({ name: title, mark: mark });
+            }
         }
+    } else {
+        // Grades 6-9 & 12-13 Dynamic Processing
+        let totalCol = -1, avgCol = -1, posCol = -1;
+
+        for (let c = headerRow.length - 1; c > nameColIdx; c--) {
+            const title = (headerRow[c] || '').toString().toLowerCase();
+            if (title.includes('total') && totalCol === -1) totalCol = c;
+            if ((title.includes('avg') || title.includes('average')) && avgCol === -1) avgCol = c;
+            if ((title.includes('position') || title.includes('rank') || title.includes('place')) && posCol === -1) posCol = c;
+        }
+
+        const endSubjectCol = totalCol !== -1 ? totalCol : headerRow.length;
+
+        for (let c = nameColIdx + 1; c < endSubjectCol; c++) {
+            const title = (headerRow[c] || '').toString().trim();
+            if (!title) continue;
+            const mark = studentRow[c] !== undefined && studentRow[c] !== '' ? studentRow[c] : '-';
+            subjectsList.push({ name: title, mark: mark });
+        }
+
+        if (totalCol !== -1) totalVal = studentRow[totalCol] || 'N/A';
+        if (avgCol !== -1) avgVal = studentRow[avgCol] || 'N/A';
+        if (posCol !== -1) positionVal = studentRow[posCol] || 'N/A';
     }
 
-    $('rIndex').innerText = indexNum;
-    $('rClass').innerText = `Grade ${grade} - ${cls}`;
-    $('rName').innerText = studentName;
-    $('a4TermTitle').innerText = `${year} - ${term} Forest inspection report`;
+    // Render Clean English Template
+    renderEnglishA4Report({
+        year,
+        term,
+        grade: gradeStr,
+        cls,
+        stream,
+        indexNum,
+        studentName,
+        subjectsList,
+        totalVal,
+        avgVal,
+        positionVal
+    });
+}
 
-    const tBody = $('rTableBody');
-    tBody.innerHTML = '';
+// 6. UI Builder (100% English Output)
+function renderEnglishA4Report(data) {
+    $('rIndex').innerText = data.indexNum;
+    $('rClass').innerText = `Grade ${data.grade}-${data.cls}${data.stream ? ' (' + data.stream + ')' : ''}`;
+    $('rName').innerText = data.studentName;
+    
+    // Exam Header Title
+    const ordinalTerm = data.term === '1' ? '1st' : data.term === '2' ? '2nd' : '3rd';
+    $('a4TermTitle').innerText = `${data.year} - ${ordinalTerm} Term Evaluation Report`;
 
-    markList.forEach((item, idx) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
+    // Populate Subjects Table
+    const tableBody = $('rTableBody');
+    tableBody.innerHTML = '';
+
+    data.subjectsList.forEach((sub, idx) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
             <td>${idx + 1}</td>
-            <td style="text-align: left; font-weight: 600;">${item.subject}</td>
-            <td style="font-weight: 700;">${item.mark}</td>
+            <td style="text-align: left; font-weight: 600;">${sub.name}</td>
+            <td style="font-weight: 700;">${sub.mark}</td>
         `;
-        tBody.appendChild(tr);
+        tableBody.appendChild(row);
     });
 
-    $('rTotal').innerText = totalMarks;
-    $('rAvg').innerText = avgMarks;
-    $('rRank').innerText = rankPos;
+    // Inject Total, Average, Position inside summary card & table bottom
+    $('rTotal').innerText = data.totalVal;
+    $('rAvg').innerText = data.avgVal;
+    $('rRank').innerText = data.positionVal;
 
-    showStatus('ප්‍රතිඵල සාර්ථකව සොයාගන්නා ලදී!', 'success');
     $('resultCardWrapper').style.display = 'block';
     $('resultCardWrapper').scrollIntoView({ behavior: 'smooth' });
 }
+
+// 7. Dynamic Single Page PDF Downloader via html2pdf.js
+function initPDFGenerator() {
+    window.downloadResultPDF = function () {
+        const element = document.getElementById('a4Sheet');
+        const indexNum = $('rIndex')?.innerText || 'Result';
+
+        const opt = {
+            margin:       [10, 10, 10, 10],
+            filename:     `Student_Result_${indexNum}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak:    { mode: 'avoid-all' }
+        };
+
+        if (typeof html2pdf !== 'undefined') {
+            html2pdf().set(opt).from(element).save();
+        } else {
+            window.print();
+        }
+    };
+}
+
