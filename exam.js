@@ -1,5 +1,5 @@
-// Global Configuration & Cache
-const NPOINT_API_URL = 'https://api.npoint.io/14e592b7888053bb471b';
+// Global Configuration & Cache (NPoint වෙනුවට Local data.json යොදා ඇත)
+const MANIFEST_JSON_URL = 'data.json';
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 let npointManifestCache = null;
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initPreloadListeners();
     initSearchForm();
     initPDFGenerator();
-    preloadNpointManifest(); // Start initial background fetch
+    preloadNpointManifest(); // Start initial background fetch from data.json
 });
 
 // UI Helper
@@ -25,7 +25,7 @@ function showStatus(msg, type = 'info') {
     box.innerText = msg;
 }
 
-// UI Helper (Button Loading State)
+// UI Helper (Button Loading State) - කොළ පාටින් (Green) පෙන්වන කොටස
 function toggleButtonLoading(isLoading) {
     const form = $('resultSearchForm');
     if (!form) return;
@@ -36,32 +36,34 @@ function toggleButtonLoading(isLoading) {
     if (!loaderText) {
         loaderText = document.createElement('div');
         loaderText.id = 'btnLoaderText';
-        loaderText.style.cssText = 'color: #ff8c00; font-weight: bold; margin-top: 15px; text-align: center; font-size: 15px; display: none; animation: pulse 1.5s infinite;';
+        loaderText.style.cssText = 'color: #198754; font-weight: bold; margin-top: 15px; text-align: center; font-size: 16px; display: none; animation: pulse 1.5s infinite;';
         form.appendChild(loaderText);
         
         const style = document.createElement('style');
-        style.innerHTML = `@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }`;
+        style.innerHTML = `@keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }`;
         document.head.appendChild(style);
     }
 
     if (isLoading) {
-        loaderText.innerHTML = '⏳ Loading result... කරුණාකර රැඳී සිටින්න...';
+        loaderText.innerHTML = '⏳ ලෝඩ් වෙමින් පවතී... (Loading...) කරුණාකර රැඳී සිටින්න...';
         loaderText.style.display = 'block';
     } else {
         loaderText.style.display = 'none';
     }
 }
 
-// 1. Initial Manifest Preload
+// 1. Initial Manifest Preload (Local data.json එකෙන් Load කරයි)
 async function preloadNpointManifest() {
     try {
-        const res = await fetch(NPOINT_API_URL);
+        const res = await fetch(MANIFEST_JSON_URL);
         if (res.ok) {
             npointManifestCache = await res.json();
-            console.log('⚡ NPoint Manifest successfully preloaded.');
+            console.log('⚡ data.json Manifest successfully preloaded.');
+        } else {
+            console.warn('data.json file not found or HTTP error.');
         }
     } catch (err) {
-        console.warn('Manifest preload issue:', err);
+        console.warn('data.json fetch issue:', err);
     }
 }
 
@@ -128,34 +130,10 @@ async function getOrFetchSheetData(year, term, grade, cls, stream) {
     }
 
     if (!npointManifestCache || !Array.isArray(npointManifestCache)) {
-        throw new Error('Could not fetch configuration data. Please check connection.');
+        throw new Error('data.json ගොනුව සොයාගත නොහැකි විය. කරුණාකර data.json ගොනුව පරීක්ෂා කරන්න.');
     }
 
-// 3. Fetch Google Sheet Link and Parse to 2D Array Matrix
-async function getOrFetchSheetData(year, term, grade, cls, stream) {
-    const cacheKey = `sheet_data_${year}_T${term}_G${grade}_C${cls}_${stream || 'none'}`;
-    const cachedItem = localStorage.getItem(cacheKey);
-
-    if (cachedItem) {
-        try {
-            const { timestamp, data } = JSON.parse(cachedItem);
-            if (Date.now() - timestamp < ONE_WEEK_MS) {
-                return data;
-            }
-        } catch (e) {
-            localStorage.removeItem(cacheKey);
-        }
-    }
-
-    if (!npointManifestCache) {
-        await preloadNpointManifest();
-    }
-
-    if (!npointManifestCache || !Array.isArray(npointManifestCache)) {
-        throw new Error('Could not fetch configuration data. Please check connection.');
-    }
-
-    // ===== මෙන්න මේ කොටස තමයි වෙනස් කළේ =====
+    // Match Record from JSON Manifest (Case-Insensitive Match)
     const matched = npointManifestCache.find(item => {
         const itemYear = (item.year || item.Year || '').toString().trim();
         const itemTerm = (item.term || item.Term || '').toString().trim().replace(/\D/g, '');
@@ -176,10 +154,9 @@ async function getOrFetchSheetData(year, term, grade, cls, stream) {
 
         return matchYear && matchTerm && matchGrade && matchClass && matchStream;
     });
-    // ==========================================
 
     if (!matched || (!matched.sheetUrl && !matched.link && !matched.url)) {
-        throw new Error('Result sheet URL for this selection was not found.');
+        throw new Error('තෝරාගත් වසර/ශ්‍රේණිය සඳහා Sheet Link එක data.json හි හමු නොවීය.');
     }
 
     const rawUrl = matched.sheetUrl || matched.link || matched.url;
@@ -195,7 +172,7 @@ async function getOrFetchSheetData(year, term, grade, cls, stream) {
 // Google Sheets GViz Fetcher (Robust Parsing)
 async function fetchGoogleSheetAsMatrix(sheetUrl) {
     const sheetIdMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-    if (!sheetIdMatch) throw new Error('Invalid Google Sheet URL format.');
+    if (!sheetIdMatch) throw new Error('Invalid Google Sheet URL format in data.json.');
     
     const spreadsheetId = sheetIdMatch[1];
     
@@ -205,7 +182,7 @@ async function fetchGoogleSheetAsMatrix(sheetUrl) {
     const gvizUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json${gidParam}`;
 
     const res = await fetch(gvizUrl);
-    if (!res.ok) throw new Error('Failed to download Google Sheet data.');
+    if (!res.ok) throw new Error('Google Sheet Data ලබා ගැනීමට නොහැකි විය. Sheet එක Public View ලබා දී තිබේදැයි බලන්න.');
 
     const text = await res.text();
     
@@ -220,7 +197,7 @@ async function fetchGoogleSheetAsMatrix(sheetUrl) {
     const json = JSON.parse(jsonString);
 
     if (!json.table || !json.table.rows) {
-        throw new Error('No data found in Google Sheet.');
+        throw new Error('Google Sheet හි Data කිසිවක් හමු නොවීය.');
     }
 
     const rows = json.table.rows;
@@ -439,4 +416,4 @@ function initPDFGenerator() {
             window.print();
         }
     };
-                           }
+}
