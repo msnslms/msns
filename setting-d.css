@@ -1,9 +1,4 @@
 /* Dark Mode Core & Setting Overrides */
-body {
-    background-color: #0d0f12 !important;
-    color: #e2e8f0 !important;
-}
-
 .content-wrapper {
     max-width: 800px;
     margin: 0 auto;
