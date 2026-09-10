@@ -665,9 +665,8 @@ function renderAlStreamsForm() {
         });
     });
 }
-
 // ==========================================
-// 5. ADVANCED TERM TEST RESULT MODULE (Batch Fast Upload Fix)
+// 5. ADVANCED TERM TEST RESULT MODULE (Batch Fast Upload Fix & Smart Parsing)
 // ==========================================
 let parsedSheetStudents = [];
 let currentMeta = {};
@@ -725,7 +724,7 @@ function initTermTestModule() {
 
         const uploadBtn = $('btnUploadToFirestore');
         uploadBtn.disabled = true;
-        uploadBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Saving 1000+ Records...`;
+        uploadBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Saving ${parsedSheetStudents.length} Records...`;
 
         try {
             // 1. Master Record in 'term-test-results'
@@ -754,7 +753,10 @@ function initTermTestModule() {
                     stream: currentMeta.stream,
                     indexNumber: student.indexNumber,
                     name: student.name,
-                    results: student.results,
+                    total: student.total,       // NEW: Total Added
+                    average: student.average,   // NEW: Average Added
+                    position: student.position, // NEW: Position Added
+                    results: student.results,   // Only contains subjects with marks/AB
                     createdAt: new Date().toISOString()
                 });
 
@@ -797,7 +799,6 @@ function initTermTestModule() {
 
 // GOOGLE SHEET CSV FETCH & FIXED PARSER
 async function fetchAndParseGoogleSheet(sheetUrl) {
-    // Spreadsheet ID extraction regex fix
     const matches = sheetUrl.match(/\/d\/([a-zA-Z0-9\-_]+)/i);
     if (!matches || !matches[1]) {
         throw new Error('අවලංගු Google Sheet Link එකකි!');
@@ -815,73 +816,120 @@ async function fetchAndParseGoogleSheet(sheetUrl) {
 }
 
 function parseCSVToStudentResults(csvText) {
-    const lines = csvText.split(/\r\n|\n/).map(l => parseCSVLine(l)).filter(row => row.some(cell => cell.trim() !== ''));
+    const lines = csvText.split(/\r\n|\n/).map(l => parseCSVLine(l));
 
     if (lines.length < 2) {
         throw new Error('Sheet එකේ දත්ත නොමැත!');
     }
 
-    let headerIndex = -1;
-    let indexColIdx = -1;
-    let nameColIdx = -1;
+    let headerRowIdx = -1;
+    let colMap = {
+        index: -1,
+        name: -1,
+        total: -1,
+        average: -1,
+        position: -1,
+        subjects: []
+    };
 
-    for (let i = 0; i < Math.min(lines.length, 10); i++) {
+    // 1. Find the Main Header Row dynamically (Checking first 15 rows)
+    for (let i = 0; i < Math.min(lines.length, 15); i++) {
         const row = lines[i].map(c => c.toLowerCase().trim());
-        const foundIndex = row.findIndex(c => c.includes('index') || c.includes('විභාග අංකය') || c.includes('අංකය'));
-        const foundName = row.findIndex(c => c.includes('name') || c.includes('නම') || c.includes('student name'));
+        
+        const hasIndex = row.some(c => c === 'index no' || c === 'index' || c.includes('විභාග අංකය') || c.includes('අංකය'));
+        const hasName = row.some(c => c === 'name' || c.includes('නම') || c.includes('student name'));
 
-        if (foundIndex !== -1 && foundName !== -1) {
-            headerIndex = i;
-            indexColIdx = foundIndex;
-            nameColIdx = foundName;
+        if (hasIndex && hasName) {
+            headerRowIdx = i;
             break;
         }
     }
 
-    if (headerIndex === -1) {
-        headerIndex = 0;
-        indexColIdx = 0;
-        nameColIdx = 1;
+    if (headerRowIdx === -1) {
+        throw new Error('Index No හෝ Name තීරු (Columns) සොයා ගැනීමට නොහැකි විය. Sheet එක නිවැරදි දැයි බලන්න.');
     }
 
-    const headers = lines[headerIndex];
-    const subjectColumns = [];
-    const ignoredHeaderKeywords = ['main subject', 'bucket 1', 'bucket 2', 'bucket 3', 'bucket', 'total', 'average', 'rank', 'place', 'එකතුව', 'සාමාන්‍යය', 'ස්ථානය'];
+    // 2. Identify Columns intelligently (Handles Grade 6-9 Single row & Grade 10-11 Double rows)
+    const headerRow1 = lines[headerRowIdx];
+    const headerRow2 = (headerRowIdx + 1 < lines.length) ? lines[headerRowIdx + 1] : [];
 
-    headers.forEach((colName, idx) => {
-        if (idx !== indexColIdx && idx !== nameColIdx) {
-            const cleanCol = colName.trim();
-            const lowerCol = cleanCol.toLowerCase();
+    headerRow1.forEach((col1, idx) => {
+        // Look at row 1 and row 2. If row 2 has text (like a sub-subject name), prioritize it. 
+        // Otherwise, use row 1. This fixes the Grade 10/11 double row issue!
+        let rawColName = (headerRow2[idx] && headerRow2[idx].trim() !== '') ? headerRow2[idx].trim() : col1.trim();
+        let lowerCol = rawColName.toLowerCase();
 
-            const isIgnored = ignoredHeaderKeywords.some(key => lowerCol.includes(key));
-            if (cleanCol !== '' && !isIgnored) {
-                subjectColumns.push({ index: idx, name: cleanCol });
+        if (!rawColName) return; // Skip completely empty columns
+
+        // Identify Main Columns
+        if (lowerCol === 'index no' || lowerCol === 'index' || lowerCol.includes('විභාග අංකය') || lowerCol.includes('අංකය')) {
+            colMap.index = idx;
+        } else if (lowerCol === 'name' || lowerCol.includes('නම') || lowerCol.includes('student name')) {
+            colMap.name = idx;
+        } else if (lowerCol === 'total' || lowerCol.includes('එකතුව')) {
+            colMap.total = idx;
+        } else if (lowerCol === 'average' || lowerCol === 'avg' || lowerCol.includes('සාමාන්‍යය')) {
+            colMap.average = idx;
+        } else if (lowerCol === 'position' || lowerCol === 'rank' || lowerCol === 'place' || lowerCol.includes('ස්ථානය')) {
+            colMap.position = idx;
+        } 
+        // Anything else is a Subject
+        else {
+            // Ignore buckets/main categories if they accidentally get caught
+            const ignoredKeywords = ['bucket', 'main subject', 'optional'];
+            const isIgnored = ignoredKeywords.some(key => lowerCol.includes(key));
+            if (!isIgnored) {
+                colMap.subjects.push({ index: idx, name: rawColName });
             }
         }
     });
 
     const students = [];
 
-    for (let i = headerIndex + 1; i < lines.length; i++) {
+    // 3. Extract Student Data starting from the row below the headers
+    // If we used row 2 for headers, start from row 3
+    let dataStartRow = headerRowIdx + 1;
+    if (headerRow2.length > 0 && headerRow2.some(c => c.trim() !== '')) {
+        dataStartRow = headerRowIdx + 2; 
+    }
+
+    for (let i = dataStartRow; i < lines.length; i++) {
         const row = lines[i];
-        const indexNum = row[indexColIdx] ? row[indexColIdx].trim() : '';
-        const name = row[nameColIdx] ? row[nameColIdx].trim() : '';
+        if (!row || row.length === 0) continue;
 
-        if (indexNum || name) {
-            const results = {};
-            subjectColumns.forEach(sub => {
-                const mark = row[sub.index] ? row[sub.index].trim() : '-';
-                if (mark !== '') {
-                    results[sub.name] = mark;
-                }
-            });
+        const indexNum = colMap.index !== -1 && row[colMap.index] ? row[colMap.index].trim() : '';
+        const name = colMap.name !== -1 && row[colMap.name] ? row[colMap.name].trim() : '';
 
-            students.push({
-                indexNumber: indexNum,
-                name: name,
-                results: results
-            });
+        // STRICT CHECK: Skip entirely if Index No is missing (Fixes the blank N/A rows issue)
+        if (!indexNum || indexNum === '') {
+            continue; 
         }
+
+        const results = {};
+        
+        // Loop through subjects and get marks
+        colMap.subjects.forEach(sub => {
+            const mark = row[sub.index] ? row[sub.index].trim() : '';
+            
+            // Skip empty marks, dashes, or blanks (Student doesn't do this subject)
+            if (mark !== '' && mark !== '-') {
+                results[sub.name] = mark; // Will save numbers and "AB" / "ab"
+            }
+        });
+
+        // Get Total, Average, Position
+        const total = colMap.total !== -1 && row[colMap.total] ? row[colMap.total].trim() : '';
+        const average = colMap.average !== -1 && row[colMap.average] ? row[colMap.average].trim() : '';
+        const position = colMap.position !== -1 && row[colMap.position] ? row[colMap.position].trim() : '';
+
+        students.push({
+            indexNumber: indexNum,
+            name: name,
+            total: total,
+            average: average,
+            position: position,
+            results: results
+        });
     }
 
     return students;
@@ -926,14 +974,26 @@ function renderSheetPreview(students) {
 
         let resultsHTML = '<div class="results-tag-box">';
         for (const [sub, mark] of Object.entries(s.results)) {
-            resultsHTML += `<div class="sub-tag">${sub}: <span>${mark}</span></div>`;
+            // Highlight AB in red in UI
+            const isAB = mark.toLowerCase() === 'ab';
+            resultsHTML += `<div class="sub-tag" ${isAB ? 'style="color:red; border-color:red;"' : ''}>${sub}: <span>${mark}</span></div>`;
         }
         resultsHTML += '</div>';
 
+        // Add Total, Average, Position tags at the end
+        let statsHTML = '<div style="margin-top: 5px; font-size: 0.85rem; color: #10b981;">';
+        if (s.total) statsHTML += `<strong>Total:</strong> ${s.total} &nbsp; `;
+        if (s.average) statsHTML += `<strong>Avg:</strong> ${s.average} &nbsp; `;
+        if (s.position) statsHTML += `<strong>Rank:</strong> ${s.position}`;
+        statsHTML += '</div>';
+
         tr.innerHTML = `
-            <td style="font-weight: 800; color: #60a5fa;">${s.indexNumber || 'N/A'}</td>
+            <td style="font-weight: 800; color: #60a5fa;">${s.indexNumber}</td>
             <td style="font-weight: 600;">${s.name || 'N/A'}</td>
-            <td>${resultsHTML}</td>
+            <td>
+                ${resultsHTML}
+                ${statsHTML}
+            </td>
             <td class="status-cell" style="text-align: center;">
                 <span class="status-pill">Pending</span>
             </td>
