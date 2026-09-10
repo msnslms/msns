@@ -666,7 +666,7 @@ function renderAlStreamsForm() {
     });
 }
 // ==========================================
-// 5. ADVANCED TERM TEST RESULT MODULE (Batch Fast Upload Fix & Smart Parsing)
+// 5. ADVANCED TERM TEST RESULT MODULE (Batch Fast Upload & Smart Parsing)
 // ==========================================
 let parsedSheetStudents = [];
 let currentMeta = {};
@@ -753,10 +753,10 @@ function initTermTestModule() {
                     stream: currentMeta.stream,
                     indexNumber: student.indexNumber,
                     name: student.name,
-                    total: student.total,       // NEW: Total Added
-                    average: student.average,   // NEW: Average Added
-                    position: student.position, // NEW: Position Added
-                    results: student.results,   // Only contains subjects with marks/AB
+                    total: student.total,       
+                    average: student.average,   
+                    position: student.position, 
+                    results: student.results,   
                     createdAt: new Date().toISOString()
                 });
 
@@ -816,28 +816,20 @@ async function fetchAndParseGoogleSheet(sheetUrl) {
 }
 
 function parseCSVToStudentResults(csvText) {
-    const lines = csvText.split(/\r\n|\n/).map(l => parseCSVLine(l));
+    // හිස් පේලි සම්පූර්ණයෙන්ම ඉවත් කරමු (Filter out completely blank rows)
+    const lines = csvText.split(/\r\n|\n/).map(l => parseCSVLine(l)).filter(row => row.some(cell => cell.trim() !== ''));
 
     if (lines.length < 2) {
         throw new Error('Sheet එකේ දත්ත නොමැත!');
     }
 
     let headerRowIdx = -1;
-    let colMap = {
-        index: -1,
-        name: -1,
-        total: -1,
-        average: -1,
-        position: -1,
-        subjects: []
-    };
 
-    // 1. Find the Main Header Row dynamically (Checking first 15 rows)
+    // 1. කලින් විදිහටම .includes() භාවිතයෙන් Main Header Row එක හොයාගැනීම (100% වැඩ කරන ක්‍රමය)
     for (let i = 0; i < Math.min(lines.length, 15); i++) {
         const row = lines[i].map(c => c.toLowerCase().trim());
-        
-        const hasIndex = row.some(c => c === 'index no' || c === 'index' || c.includes('විභාග අංකය') || c.includes('අංකය'));
-        const hasName = row.some(c => c === 'name' || c.includes('නම') || c.includes('student name'));
+        const hasIndex = row.some(c => c.includes('index') || c.includes('විභාග අංකය') || c.includes('අංකය'));
+        const hasName = row.some(c => c.includes('name') || c.includes('නම') || c.includes('student name'));
 
         if (hasIndex && hasName) {
             headerRowIdx = i;
@@ -849,49 +841,58 @@ function parseCSVToStudentResults(csvText) {
         throw new Error('Index No හෝ Name තීරු (Columns) සොයා ගැනීමට නොහැකි විය. Sheet එක නිවැරදි දැයි බලන්න.');
     }
 
-    // 2. Identify Columns intelligently (Handles Grade 6-9 Single row & Grade 10-11 Double rows)
-    const headerRow1 = lines[headerRowIdx];
-    const headerRow2 = (headerRowIdx + 1 < lines.length) ? lines[headerRowIdx + 1] : [];
+    // 2. Grade 10-11 වගේ merged කරපු පේලි (Row 6 සහ 7) තිබුණොත් ඒක හඳුනාගැනීම
+    const row1 = lines[headerRowIdx];
+    const row2 = (headerRowIdx + 1 < lines.length) ? lines[headerRowIdx + 1] : [];
 
-    headerRow1.forEach((col1, idx) => {
-        // Look at row 1 and row 2. If row 2 has text (like a sub-subject name), prioritize it. 
-        // Otherwise, use row 1. This fixes the Grade 10/11 double row issue!
-        let rawColName = (headerRow2[idx] && headerRow2[idx].trim() !== '') ? headerRow2[idx].trim() : col1.trim();
-        let lowerCol = rawColName.toLowerCase();
+    let indexColIdx = row1.findIndex(c => c.toLowerCase().includes('index') || c.toLowerCase().includes('විභාග අංකය') || c.toLowerCase().includes('අංකය'));
+    if (indexColIdx === -1) indexColIdx = row2.findIndex(c => c.toLowerCase().includes('index') || c.toLowerCase().includes('විභාග අංකය') || c.toLowerCase().includes('අංකය'));
 
-        if (!rawColName) return; // Skip completely empty columns
+    let isRow2Header = false;
+    // Row 2 එකේ Index Number තියෙන කොටුව හිස් නම්, ඒක අනිවාර්යයෙන්ම Merged Header එකේ යට කොටසයි
+    if (indexColIdx !== -1 && row2[indexColIdx] && row2[indexColIdx].trim() === '') {
+        isRow2Header = true; 
+    }
 
-        // Identify Main Columns
-        if (lowerCol === 'index no' || lowerCol === 'index' || lowerCol.includes('විභාග අංකය') || lowerCol.includes('අංකය')) {
-            colMap.index = idx;
-        } else if (lowerCol === 'name' || lowerCol.includes('නම') || lowerCol.includes('student name')) {
-            colMap.name = idx;
-        } else if (lowerCol === 'total' || lowerCol.includes('එකතුව')) {
-            colMap.total = idx;
-        } else if (lowerCol === 'average' || lowerCol === 'avg' || lowerCol.includes('සාමාන්‍යය')) {
-            colMap.average = idx;
-        } else if (lowerCol === 'position' || lowerCol === 'rank' || lowerCol === 'place' || lowerCol.includes('ස්ථානය')) {
-            colMap.position = idx;
-        } 
-        // Anything else is a Subject
-        else {
-            // Ignore buckets/main categories if they accidentally get caught
+    let colMap = { index: -1, name: -1, total: -1, average: -1, position: -1, subjects: [] };
+    const maxCols = Math.max(row1.length, isRow2Header ? row2.length : 0);
+
+    for (let i = 0; i < maxCols; i++) {
+        let val1 = row1[i] ? row1[i].trim() : '';
+        let val2 = (isRow2Header && row2[i]) ? row2[i].trim() : '';
+        
+        // Subject Name එක යට පේලියේ තියෙනවා නම් ඒක ගන්නවා (උදා: "Bucket 1" වෙනුවට "History" ගන්න)
+        let colName = val1;
+        if (val2 !== '') { colName = val2; } 
+
+        let lowerCol = colName.toLowerCase();
+        if (!colName) continue;
+
+        // Columns වල Indexes හරියටම වෙන් කරගැනීම (.includes() භාවිතා කර ඇත)
+        if (lowerCol.includes('index') || lowerCol.includes('විභාග අංකය') || lowerCol.includes('අංකය')) {
+            colMap.index = i;
+        } else if (lowerCol.includes('name') || lowerCol.includes('නම') || lowerCol.includes('student name')) {
+            colMap.name = i;
+        } else if (lowerCol.includes('total') || lowerCol.includes('එකතුව')) {
+            colMap.total = i;
+        } else if (lowerCol.includes('average') || lowerCol.includes('avg') || lowerCol.includes('සාමාන්‍යය')) {
+            colMap.average = i;
+        } else if (lowerCol.includes('position') || lowerCol.includes('rank') || lowerCol.includes('place') || lowerCol.includes('ස්ථානය')) {
+            colMap.position = i;
+        } else {
+            // අනවශ්‍ය දේවල් අයින් කර Subjects ටික වෙන් කරගැනීම
             const ignoredKeywords = ['bucket', 'main subject', 'optional'];
             const isIgnored = ignoredKeywords.some(key => lowerCol.includes(key));
-            if (!isIgnored) {
-                colMap.subjects.push({ index: idx, name: rawColName });
+            
+            if (!isIgnored && i !== colMap.index && i !== colMap.name) {
+                colMap.subjects.push({ index: i, name: colName });
             }
         }
-    });
+    }
 
     const students = [];
-
-    // 3. Extract Student Data starting from the row below the headers
-    // If we used row 2 for headers, start from row 3
-    let dataStartRow = headerRowIdx + 1;
-    if (headerRow2.length > 0 && headerRow2.some(c => c.trim() !== '')) {
-        dataStartRow = headerRowIdx + 2; 
-    }
+    // Data පටන් ගන්න පේලිය තීරණය කිරීම
+    let dataStartRow = isRow2Header ? headerRowIdx + 2 : headerRowIdx + 1;
 
     for (let i = dataStartRow; i < lines.length; i++) {
         const row = lines[i];
@@ -900,24 +901,21 @@ function parseCSVToStudentResults(csvText) {
         const indexNum = colMap.index !== -1 && row[colMap.index] ? row[colMap.index].trim() : '';
         const name = colMap.name !== -1 && row[colMap.name] ? row[colMap.name].trim() : '';
 
-        // STRICT CHECK: Skip entirely if Index No is missing (Fixes the blank N/A rows issue)
-        if (!indexNum || indexNum === '') {
+        // නියමය 1: Index No නැති / හිස් පේලි සම්පූර්ණයෙන්ම අයින් වෙනවා (N/A වෙන්නේ නෑ)
+        if (!indexNum || indexNum === '' || indexNum.toLowerCase().includes('index')) {
             continue; 
         }
 
         const results = {};
-        
-        // Loop through subjects and get marks
         colMap.subjects.forEach(sub => {
             const mark = row[sub.index] ? row[sub.index].trim() : '';
             
-            // Skip empty marks, dashes, or blanks (Student doesn't do this subject)
+            // නියමය 2 සහ 3: ලකුණු තියෙනවා නම් හෝ AB නම් විතරක් ඇතුලත් වෙනවා. හිස් හෝ '-' නම් අයින් වෙනවා.
             if (mark !== '' && mark !== '-') {
-                results[sub.name] = mark; // Will save numbers and "AB" / "ab"
+                results[sub.name] = mark; 
             }
         });
 
-        // Get Total, Average, Position
         const total = colMap.total !== -1 && row[colMap.total] ? row[colMap.total].trim() : '';
         const average = colMap.average !== -1 && row[colMap.average] ? row[colMap.average].trim() : '';
         const position = colMap.position !== -1 && row[colMap.position] ? row[colMap.position].trim() : '';
@@ -941,11 +939,7 @@ function parseCSVLine(text) {
     for (let i = 0; i < text.length; i++) {
         c = text[i];
         if (c === '"') {
-            if (q && text[i + 1] === '"') {
-                p += '"'; i++;
-            } else {
-                q = !q;
-            }
+            if (q && text[i + 1] === '"') { p += '"'; i++; } else { q = !q; }
         } else if (c === ',' && !q) {
             r.push(p); p = '';
         } else {
@@ -974,13 +968,13 @@ function renderSheetPreview(students) {
 
         let resultsHTML = '<div class="results-tag-box">';
         for (const [sub, mark] of Object.entries(s.results)) {
-            // Highlight AB in red in UI
+            // AB කියන එක රතු පාටින් ලස්සනට පෙන්නන්න
             const isAB = mark.toLowerCase() === 'ab';
             resultsHTML += `<div class="sub-tag" ${isAB ? 'style="color:red; border-color:red;"' : ''}>${sub}: <span>${mark}</span></div>`;
         }
         resultsHTML += '</div>';
 
-        // Add Total, Average, Position tags at the end
+        // Total, Average, Position UI එකේ පෙන්නන්න
         let statsHTML = '<div style="margin-top: 5px; font-size: 0.85rem; color: #10b981;">';
         if (s.total) statsHTML += `<strong>Total:</strong> ${s.total} &nbsp; `;
         if (s.average) statsHTML += `<strong>Avg:</strong> ${s.average} &nbsp; `;
@@ -1069,6 +1063,7 @@ async function loadTermTestList() {
         console.error(err);
     }
 }
+
 
 // ==========================================
 // 6. DOCUMENTS MODULE
@@ -1170,3 +1165,4 @@ async function loadGeminiKeys() {
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('a-sw.js').catch(() => {});
 }
+
