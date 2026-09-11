@@ -1,0 +1,7 @@
+/* App එක ඇතුළේදී Footer එක hide කිරීමට */
+@media display-mode: standalone {
+  footer, .copyright-section {
+    display: none !important;
+  }
+}
+  
