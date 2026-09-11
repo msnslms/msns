@@ -1,9 +1,0 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "io.github.msnslms.twa",
-        "sha256_cert_fingerprints": ["29:90:6E:57:29:C2:31:CE:CD:1E:94:42:45:43:08:9F:3B:D0:2D:59:E9:5D:B2:A4:62:67:70:A3:6C:78:33:D8"]
-      }
-    }]
-
