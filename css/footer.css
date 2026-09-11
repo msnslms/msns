@@ -1,7 +1,4 @@
-/* App එක ඇතුළේදී Footer එක hide කිරීමට */
-@media display-mode: standalone {
-  footer, .copyright-section {
-    display: none !important;
-  }
+.pwa-standalone footer,
+.pwa-standalone .copyright-section {
+  display: none !important;
 }
-  
