@@ -3,7 +3,9 @@
    File: about.css (Red & Gold Theme)
    ========================================== */
 
-/* Data Grid Layout for Students and Teachers */
+/* ==========================================================
+   1. DATA GRID LAYOUT (Students & Teachers Cards)
+   ========================================================== */
 .msns-data-grid {
     display: grid !important;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
@@ -80,21 +82,10 @@
 }
 
 /* Specific Values Coloring */
-.girls-color {
-    color: #db2777 !important;
-}
-
-.boys-color {
-    color: #b91c1c !important;
-}
-
-.total-color {
-    color: #16a34a !important;
-}
-
-.avg-color {
-    color: #d97706 !important;
-}
+.girls-color { color: #db2777 !important; }
+.boys-color  { color: #b91c1c !important; }
+.total-color { color: #16a34a !important; }
+.avg-color   { color: #d97706 !important; }
 
 .total-row {
     margin-top: 6px !important;
@@ -107,29 +98,58 @@
     font-weight: 600 !important;
 }
 
-/* PDF Download Button Styling */
-.pdf-btn-wrapper {
+/* ==========================================================
+   2. PDF BUTTONS (Fixed & Clickable)
+   ========================================================== */
+
+/* PDF Button Wrapper — Center align (Back-to-Top සමඟ ගැටෙන්නෙ නැති විදියට) */
+.pdf-btn-wrapper,
+.full-pdf-wrapper {
     display: flex !important;
     justify-content: center !important;
-    margin: 15px 0 35px 0 !important;
+    align-items: center !important;
     width: 100% !important;
+    position: relative !important;
+    z-index: 10 !important;
+    box-sizing: border-box !important;
+    /* Padding එකෙන් දෙපැත්තෙන් space දෙනවා Back-to-Top එකට ගැටෙන්නෙ නැති විදියට */
+    padding: 0 70px !important;
 }
 
+.pdf-btn-wrapper {
+    margin: 15px 0 35px 0 !important;
+}
+
+.full-pdf-wrapper {
+    margin-top: 25px !important;
+    margin-bottom: 25px !important;
+}
+
+/* Common PDF Button Base */
 .pdf-download-btn {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     gap: 10px !important;
-    background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
-    color: #ffffff !important;
     padding: 12px 28px !important;
     border-radius: 30px !important;
     text-decoration: none !important;
     font-weight: 600 !important;
     font-size: 0.95rem !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 20 !important;
+    box-sizing: border-box !important;
+    transition: all 0.3s ease !important;
+    /* Red gradient (school theme) */
+    background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+    color: #ffffff !important;
+    /* Gold accent border */
     border: 1px solid rgba(234, 179, 8, 0.35) !important;
     box-shadow: 0 6px 20px rgba(185, 28, 28, 0.4) !important;
-    transition: all 0.3s ease !important;
+    white-space: nowrap !important;
+    max-width: 100% !important;
 }
 
 .pdf-download-btn:hover {
@@ -137,29 +157,34 @@
     background: linear-gradient(135deg, #ef4444, #dc2626) !important;
     box-shadow: 0 10px 25px rgba(185, 28, 28, 0.55) !important;
     color: #ffffff !important;
+    border-color: rgba(234, 179, 8, 0.6) !important;
+}
+
+.pdf-download-btn:active {
+    transform: translateY(-1px) scale(1) !important;
 }
 
 .pdf-download-btn svg {
+    width: 20px !important;
+    height: 20px !important;
     stroke: #ffffff !important;
+    flex-shrink: 0 !important;
+    fill: none !important;
 }
 
-/* Full PDF Special Styling */
-.full-pdf-wrapper {
-    margin-top: 25px !important;
-    margin-bottom: 25px !important;
-}
-
+/* Full PDF Special Styling (Gold theme) */
 .full-pdf-btn {
     background: linear-gradient(135deg, #d97706, #f59e0b) !important;
     box-shadow: 0 6px 20px rgba(217, 119, 6, 0.4) !important;
     padding: 14px 34px !important;
     font-size: 1.05rem !important;
-    border: 1px solid rgba(185, 28, 28, 0.3) !important;
+    border: 1px solid rgba(185, 28, 28, 0.4) !important;
 }
 
 .full-pdf-btn:hover {
     background: linear-gradient(135deg, #f59e0b, #fbbf24) !important;
     box-shadow: 0 10px 25px rgba(217, 119, 6, 0.55) !important;
+    border-color: rgba(185, 28, 28, 0.6) !important;
 }
 
 /* Loading & Fallback Text */
@@ -172,10 +197,9 @@
     font-size: 0.95rem !important;
 }
 
-/* ==========================================
-   Quick Access / Fast Open Tabs Styling (Fixed)
-   ========================================== */
-
+/* ==========================================================
+   3. QUICK ACCESS / FAST OPEN TABS
+   ========================================================== */
 #quick-access {
     margin-bottom: 30px !important;
     width: 100% !important;
@@ -272,11 +296,9 @@
     stroke: #52525b !important;
 }
 
-/* ==========================================
-   MSNS AI Floating Widget Styling & Animation
-   (Red & Gold Theme)
-   ========================================== */
-
+/* ==========================================================
+   4. MSNS AI FLOATING WIDGET (Red & Gold Theme)
+   ========================================================== */
 .msns-ai-widget {
     position: fixed;
     right: 0;
@@ -290,7 +312,7 @@
     border-right: none;
     border-radius: 35px 0 0 35px;
     padding: 8px 12px 8px 14px;
-    box-shadow: -6px 12px 30px rgba(185, 28, 28, 0.35), 
+    box-shadow: -6px 12px 30px rgba(185, 28, 28, 0.35),
                 inset 0 1px 1px rgba(255, 255, 255, 0.35);
     color: #ffffff;
     font-family: 'Poppins', sans-serif;
@@ -298,4 +320,28 @@
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     user-select: none;
+}
+
+/* ==========================================================
+   5. RESPONSIVE — Mobile එකට PDF Button හරියට පෙන්නන්න
+   ========================================================== */
+@media (max-width: 480px) {
+    /* Mobile එකේ Back-to-Top button එකට space එක අඩු නිසා padding එක අඩු කරනවා */
+    .pdf-btn-wrapper,
+    .full-pdf-wrapper {
+        padding: 0 15px !important;
+    }
+
+    .pdf-download-btn,
+    .full-pdf-btn {
+        padding: 12px 22px !important;
+        font-size: 0.9rem !important;
+        width: auto !important;
+        max-width: 100% !important;
+    }
+
+    .full-pdf-btn {
+        padding: 13px 26px !important;
+        font-size: 0.95rem !important;
+    }
 }
