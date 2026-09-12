@@ -70,26 +70,25 @@
         <div class="admin-badge" id="adminRoleBadge">Owner</div>
     </header>
 
-<div class="login-modal-overlay active" id="loginModal">
-    <div class="modal-card login-card">
-        <div class="login-header">
-            <h2>MSNS.ADMIN</h2>
-            <p>Enter Username(Email) and Password.</p>
+    <div class="login-modal-overlay active" id="loginModal">
+        <div class="modal-card login-card">
+            <div class="login-header">
+                <h2>MSNS.ADMIN</h2>
+                <p>Enter administrative credentials to continue</p>
+            </div>
+            <form id="loginForm">
+                <div class="field">
+                    <label>Username</label>
+                    <input type="text" id="loginUsername" class="custom-input" placeholder="e.g. owner, media-unit" required />
+                </div>
+                <div class="field">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" class="custom-input" placeholder="••••••••" required />
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Login to Panel</button>
+            </form>
         </div>
-        <form id="loginForm">
-            <div class="field">
-                <label>Username(Email)</label>
-                <input type="text" id="loginUsername" class="custom-input" placeholder="admin / media-unit / ict-unit" required />
-            </div>
-            <div class="field">
-                <label>Password</label>
-                <input type="password" id="loginPassword" class="custom-input" placeholder="••••••••" required />
-            </div>
-            <button type="submit" class="btn btn-primary btn-block">Login to Panel</button>
-        </form>
     </div>
-</div>
-
     <main class="content-wrapper">
 
         <section id="usersSection" class="admin-section active">
