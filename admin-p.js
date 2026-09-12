@@ -3,9 +3,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { 
     getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, where, serverTimestamp, writeBatch 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-// අලුතින් එකතු කළ Firebase Auth Imports
 import { 
-    getAuth, signInWithEmailAndPassword, signOut 
+    getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"; 
 
 // Firebase Configuration
@@ -22,7 +21,7 @@ const firebaseConfig = {
 // Initialize Firebase & Firestore & Auth
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app); 
+const auth = getAuth(app);
 
 // Global States
 let currentAdminRole = null;
@@ -59,14 +58,34 @@ function showToast(msg, type = 'ok') {
 }
 
 function initAuth() {
-    const savedRole = sessionStorage.getItem('adminRole');
-    if (savedRole) {
-        currentAdminRole = savedRole;
-        applyRolePermissions();
-        $('loginModal')?.classList.remove('active');
-    } else {
-        $('loginModal')?.classList.add('active');
-    }
+    // Firebase Auth state listener to persist login session across page reloads
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            const email = user.email || '';
+            const uname = email.split('@')[0].toLowerCase();
+            
+            let detectedRole = sessionStorage.getItem('adminRole') || 'admin';
+            try {
+                let adminDocRef = doc(db, 'admin-users', uname);
+                let adminSnap = await getDoc(adminDocRef);
+                if (adminSnap.exists()) {
+                    detectedRole = adminSnap.data().role || 'admin';
+                }
+            } catch (err) {
+                console.error("Role fetch error:", err);
+            }
+
+            currentAdminRole = detectedRole.toLowerCase();
+            sessionStorage.setItem('adminRole', currentAdminRole);
+            $('loginModal')?.classList.remove('active');
+            applyRolePermissions();
+        } else {
+            const savedRole = sessionStorage.getItem('adminRole');
+            if (!savedRole) {
+                $('loginModal')?.classList.add('active');
+            }
+        }
+    });
 
     $('loginForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -83,8 +102,10 @@ function initAuth() {
         if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ලොග් වෙමින්...';
 
         try {
+            // 1. Firebase Auth Sign in
             await signInWithEmailAndPassword(auth, email, pwd);
 
+            // 2. Fetch role from Firestore
             let detectedRole = 'admin';
             let adminDocRef = doc(db, 'admin-users', uname);
             let adminSnap = await getDoc(adminDocRef);
@@ -112,6 +133,7 @@ function initAuth() {
             await signOut(auth); 
         } catch (e) { console.error(e); }
         sessionStorage.removeItem('adminRole');
+        $('loginModal')?.classList.add('active');
         location.reload();
     });
 }
@@ -497,7 +519,7 @@ async function loadNewsList() {
 }
 
 // ==========================================
-// 4. EXAM RESULTS MODULE
+// 4. EXAM RESULTS MODULE (O/L & A/L)
 // ==========================================
 function initExamsModule() {
     const calcOl = () => {
@@ -665,7 +687,7 @@ function renderAlStreamsForm() {
 }
 
 // ==========================================
-// 5. ADVANCED TERM TEST RESULT MODULE 
+// 5. ADVANCED TERM TEST RESULT MODULE (Batch Fast Upload & Smart Parsing)
 // ==========================================
 let parsedSheetStudents = [];
 let currentMeta = {};
@@ -791,7 +813,6 @@ function initTermTestModule() {
     loadTermTestList();
 }
 
-// GOOGLE SHEET CSV FETCH & FIXED PARSER
 async function fetchAndParseGoogleSheet(sheetUrl) {
     const matches = sheetUrl.match(/\/d\/([a-zA-Z0-9\-_]+)/i);
     if (!matches || !matches[1]) {
@@ -830,7 +851,7 @@ function parseCSVToStudentResults(csvText) {
     }
 
     if (headerRowIdx === -1) {
-        throw new Error('Index No හෝ Name තීරු (Columns) සොයා ගැනීමට නොහැකි විය. Sheet එක නිවැරදි දැයි බලන්න.');
+        throw new Error('Index No හෝ Name තීරු (Columns) සොයා ගැනීමට නොහැකි විය.');
     }
 
     const row1 = lines[headerRowIdx];
@@ -1056,38 +1077,92 @@ function initDocumentsModule() {
         { label: 'Edit Text Book', url: 'https://docs.google.com/spreadsheets/d/1WZ13wzcv_Ca7u3ohBZnLgEUrs7h7wgQBo83-A-n4Ne0/edit?usp=drivesdk', icon: 'fa-book' },
         { label: "Edit Teacher's Guide", url: 'https://docs.google.com/spreadsheets/d/1eOlkqUHWBo_PT9rc9IdwPaQtBWcBQ_pK2Z3g7XTqRXM/edit?usp=drivesdk', icon: 'fa-chalkboard-user' },
         { label: 'Edit Short Notes', url: 'https://docs.google.com/spreadsheets/d/1FuK5JY1SP33OOrACsoFxC5WyZYqbyj_Q4-K4C54TEv4/edit?usp=drivesdk', icon: 'fa-note-sticky' },
-        { label: 'Edit Application', url: 'https://docs.google.com/spreadsheets/d/19zyl4ZulZc8iTbodIEosWa/edit?usp=drivesdk', icon: 'fa-file-lines' }
+        { label: 'Edit Application', url: 'https://docs.google.com/spreadsheets/d/19zyl4ZulZc8iTbodIEosWaJlZgFLn3SVqIomV_9tP5o/edit?usp=drivesdk', icon: 'fa-file-lines' }
     ];
 
-    docButtonsContainer.innerHTML = '';
-    
-    links.forEach(link => {
-        const btn = document.createElement('a');
-        btn.href = link.url;
-        btn.target = '_blank';
-        btn.className = 'btn btn-ghost'; 
-        btn.style.display = 'flex';
-        btn.style.alignItems = 'center';
-        btn.style.gap = '8px';
-        btn.style.padding = '10px 15px';
-        btn.style.marginBottom = '8px';
-        btn.style.border = '1px solid var(--border-color)';
-        btn.style.borderRadius = '8px';
-        btn.style.textDecoration = 'none';
-        btn.style.color = 'inherit';
-        btn.innerHTML = `<i class="fa-solid ${link.icon}"></i> ${link.label}`;
-        docButtonsContainer.appendChild(btn);
-    });
+    docButtonsContainer.innerHTML = links.map(item => `
+        <a href="${item.url}" target="_blank" class="btn btn-primary" style="display:flex; align-items:center; gap:10px; padding:12px 20px; font-weight:bold; font-size:15px; text-decoration:none; margin-bottom:12px; border-radius:8px;">
+            <i class="fa-solid ${item.icon}"></i> ${item.label}
+        </a>
+    `).join('');
 }
 
 // ==========================================
-// 7. GEMINI MODULE
+// 7. GEMINI API MODULE
 // ==========================================
 function initGeminiModule() {
-    // Gemini Module සඳහා අවශ්‍ය පසුබිම් කේතය (ඔබේ UI එකට අදාළව මෙය සකස් කරගත හැක)
-    const geminiContainer = $('geminiContainer');
-    if (geminiContainer) {
-        console.log("Gemini Module Initialized.");
+    $('geminiKeyForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const keyVal = $('geminiKeyInput').value.trim();
+        if (!keyVal) return;
+
+        try {
+            await addDoc(collection(db, 'api'), {
+                apiKey: keyVal,
+                createdAt: new Date().toISOString()
+            });
+            showToast('Gemini API Key එක සාර්ථකව Save විය!', 'ok');
+            $('geminiKeyInput').value = '';
+            loadGeminiKeys();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    });
+
+    loadGeminiKeys();
+}
+
+async function loadGeminiKeys() {
+    const container = $('geminiKeysContainer');
+    if (!container) return;
+    try {
+        const snap = await getDocs(collection(db, 'api'));
+        container.innerHTML = '';
+        
+        const fragment = document.createDocumentFragment();
+
+        snap.forEach(docSnap => {
+            const d = docSnap.data();
+            const keyMasked = d.apiKey ? `${d.apiKey.substring(0, 8)}••••••••••••` : 'API Key';
+            const card = document.createElement('div');
+            card.className = 'contact-item';
+            card.style.display = 'flex';
+            card.style.alignItems.center;
+            card.style.justifyContent.space-between;
+            card.style.marginBottom = '10px';
+            card.style.padding = '10px';
+            card.style.border = '1px solid var(--border-color)';
+            card.style.borderRadius = '6px';
+
+            card.innerHTML = `
+                <div>
+                    <i class="fa-solid fa-key" style="color:#ffd966; margin-right:8px;"></i>
+                    <span>${keyMasked}</span>
+                </div>
+                <button class="btn btn-danger btn-delete-key" data-id="${docSnap.id}" style="padding:4px 10px;">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            `;
+            fragment.appendChild(card);
+        });
+
+        container.appendChild(fragment);
+
+        container.querySelectorAll('.btn-delete-key').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (confirm('මෙම API Key එක Delete කිරීමට තහවුරු කරන්න?')) {
+                    await deleteDoc(doc(db, 'api', btn.dataset.id));
+                    showToast('Key එක Delete විය', 'ok');
+                    loadGeminiKeys();
+                }
+            });
+        });
+    } catch (err) {
+        console.error(err);
     }
 }
 
+/* Service worker registration */
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('a-sw.js').catch(() => {});
+}
