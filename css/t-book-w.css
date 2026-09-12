@@ -1,0 +1,520 @@
+/* ==========================================================================
+   Text Book Light Theme Components (t-book.css) — Red & Gold Theme
+   ========================================================================== */
+
+/* Language Switcher Section */
+.lang-selection-section {
+    margin: 30px 0 20px 0;
+    text-align: center;
+}
+
+.section-title {
+    color: #b91c1c;
+    font-size: 0.9rem;
+    letter-spacing: 1.5px;
+    margin-bottom: 12px;
+}
+
+.lang-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.lang-tab-btn {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #52525b;
+    padding: 12px 35px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(8px);
+}
+
+.lang-tab-btn:hover {
+    background: rgba(234, 179, 8, 0.15);
+    border-color: rgba(234, 179, 8, 0.45);
+    color: #b45309;
+}
+
+.lang-tab-btn.active {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 4px 20px rgba(185, 28, 28, 0.4);
+}
+
+/* Grade Pills Selector (Red & Gold Light Scheme) */
+.grade-selector {
+    background: rgba(255, 255, 255, 0.75);
+    border-radius: 18px;
+    padding: 20px 24px;
+    margin-bottom: 28px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    animation: fadeIn 0.4s ease;
+}
+
+.grade-selector-label {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #0f172a;
+    letter-spacing: 0.3px;
+}
+
+.grade-pills {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.grade-pill {
+    padding: 9px 20px;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 0.88rem;
+    background: rgba(0, 0, 0, 0.03);
+    color: #52525b;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    user-select: none;
+}
+
+.grade-pill:hover {
+    background: rgba(234, 179, 8, 0.15);
+    border-color: rgba(234, 179, 8, 0.45);
+    color: #b45309;
+    transform: translateY(-2px);
+}
+
+.grade-pill.active {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 4px 16px rgba(185, 28, 28, 0.35);
+}
+
+/* Subject List & Cards */
+.subject-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 40px;
+}
+
+.subject-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 14px 20px;
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    transition: all 0.25s ease;
+    flex-wrap: wrap;
+    gap: 12px;
+    animation: slideUp 0.3s ease;
+}
+
+.subject-item:hover {
+    border-color: rgba(185, 28, 28, 0.3);
+    box-shadow: 0 8px 24px rgba(185, 28, 28, 0.1);
+    transform: translateY(-2px);
+}
+
+.subject-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.subject-icon {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(234, 179, 8, 0.15);
+    border-radius: 10px;
+    color: #b45309;
+    flex-shrink: 0;
+}
+
+.subject-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+}
+
+.subject-name {
+    font-weight: 600;
+    font-size: 0.98rem;
+    color: #0f172a;
+}
+
+.subject-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Action Buttons */
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.25s ease;
+}
+
+.action-btn.preview {
+    background: rgba(234, 179, 8, 0.12);
+    color: #b45309;
+    border: 1px solid rgba(234, 179, 8, 0.35);
+}
+
+.action-btn.preview:hover {
+    background: rgba(234, 179, 8, 0.25);
+    color: #92400e;
+    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.25);
+}
+
+.action-btn.download {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(185, 28, 28, 0.35);
+}
+
+.action-btn.download:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(185, 28, 28, 0.5);
+}
+
+.action-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.no-file {
+    color: #71717a;
+    font-size: 0.82rem;
+    font-style: italic;
+}
+
+/* Empty State / Not Found Card */
+.no-docs {
+    text-align: center;
+    padding: 45px 20px;
+    color: #71717a;
+    font-weight: 500;
+    font-size: 0.98rem;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 18px;
+    border: 1px dashed rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.no-docs-icon {
+    font-size: 2.2rem;
+    margin-bottom: 4px;
+}
+
+/* PDF Preview Modal Overlay */
+.preview-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(10px);
+    z-index: 99999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.preview-overlay.active {
+    display: flex;
+    animation: fadeIn 0.3s ease;
+}
+
+.preview-modal {
+    background: #ffffff;
+    border-radius: 20px;
+    max-width: 1000px;
+    width: 100%;
+    height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+}
+
+.preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(254, 252, 232, 0.9);
+}
+
+.preview-header h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.preview-close {
+    background: rgba(220, 38, 38, 0.15);
+    color: #dc2626;
+    border: 1px solid rgba(220, 38, 38, 0.4);
+    font-size: 20px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.preview-close:hover {
+    background: #dc2626;
+    color: #ffffff;
+    transform: scale(1.08);
+}
+
+.preview-body {
+    flex: 1;
+    background: #f8fafc;
+}
+
+.preview-body iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* Keyframe Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 768px) {
+    .grade-selector {
+        padding: 16px;
+    }
+    .grade-pill {
+        padding: 7px 14px;
+        font-size: 0.8rem;
+    }
+    .subject-item {
+        padding: 12px 16px;
+    }
+    .subject-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+/* UI Enhancements for Cards & Preview Buttons */
+.subject-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 20px;
+}
+
+.subject-card {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.subject-card:hover {
+    border-color: rgba(185, 28, 28, 0.3);
+    box-shadow: 0 8px 24px rgba(185, 28, 28, 0.1);
+}
+
+.subject-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.subject-icon-red {
+    color: #dc2626;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.subject-title {
+    color: #0f172a;
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.subject-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.btn-preview {
+    background: rgba(234, 179, 8, 0.12);
+    color: #b45309;
+    border: 1px solid rgba(234, 179, 8, 0.35);
+}
+
+.btn-preview:hover {
+    background: rgba(234, 179, 8, 0.25);
+    color: #92400e;
+    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.25);
+}
+
+.btn-download {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(185, 28, 28, 0.35);
+}
+
+.btn-download:hover {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    box-shadow: 0 6px 18px rgba(185, 28, 28, 0.5);
+}
+
+/* Fullscreen PDF Preview Modal Styling */
+.pdf-preview-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(5px);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+}
+
+.pdf-preview-overlay.active {
+    display: flex;
+}
+
+.pdf-preview-box {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    height: 88vh;
+    background: #ffffff;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+}
+
+.pdf-preview-box iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.close-pdf-circle {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 38px;
+    height: 38px;
+    background: #dc2626;
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: bold;
+    z-index: 10;
+    border: 2px solid #ffffff;
+    box-shadow: 0 4px 12px rgba(185, 28, 28, 0.35);
+    transition: transform 0.2s ease;
+}
+
+.close-pdf-circle:hover {
+    transform: scale(1.1);
+    background: #b91c1c;
+}
+
+.no-docs-card {
+    background: #ffffff;
+    border: 1px dashed rgba(0, 0, 0, 0.15);
+    border-radius: 16px;
+    padding: 40px 20px;
+    text-align: center;
+    color: #71717a;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.no-docs-card svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+    opacity: 0.7;
+    color: #b45309;
+}
