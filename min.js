@@ -191,99 +191,93 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 });
+    // DOM එක සම්පූර්ණයෙන්ම Load වූ පසු පටන් ගන්න
+    document.addEventListener('DOMContentLoaded', () => {
+        
+        // Animate විය යුතු Class නාමයන්
+        const revealSelectors = [
+            '.section-title',
+            '.info-card',
+            '.feature-box',
+            '.people-card',
+            '.governing-slider',
+            '.news-banner',
+            '.main-news-card',
+            '.news-grid-item',
+            '.news-card',
+            '.profile-container',
+            '.bio-card',
+            '.skill-card',
+            '.chart-card',
+            '.stat-card',
+            '.achiever-card',
+            '.contact-item',
+            '.yt',
+            '.iframe-container',
+            '.glass-card',
+            '.history-card',
+            '.map-frame',
+            '.hero-caption',
+            '.pdf-download-wrapper',
+            '.download-btn-wrap',
+            '.ex',
+            '.quick-tab-card',
+            '.table-wrap',
+            '.stats-overview-grid',
+            '.achievers-grid'
+        ];
 
-    // ==========================================
-    // Premium Scroll Reveal Animation
-    // ==========================================
-    
-    // Animate කරන්න ඕන elements (header + footer හැර අනිත් හැම එකම)
-    const revealSelectors = [
-        '.section-title',
-        '.info-card',
-        '.feature-box',
-        '.people-card',
-        '.governing-slider',
-        '.news-banner',
-        '.main-news-card',
-        '.news-grid-item',
-        '.news-card',
-        '.profile-container',
-        '.bio-card',
-        '.skill-card',
-        '.chart-card',
-        '.stat-card',
-        '.achiever-card',
-        '.contact-item',
-        '.yt',
-        '.iframe-container',
-        '.glass-card',
-        '.history-card',
-        '.map-frame',
-        '.hero-caption',
-        '.pdf-download-wrapper',
-        '.download-btn-wrap',
-        '.ex',
-        '.quick-tab-card',
-        '.table-wrap',
-        '.stats-overview-grid',
-        '.achievers-grid'
-    ];
+        const groupSelectors = [
+            '.info-card',
+            '.feature-box',
+            '.news-grid-item',
+            '.skill-card',
+            '.contact-item',
+            '.quick-tab-card',
+            '.stat-card',
+            '.achiever-card',
+            '.news-card'
+        ];
 
-    const revealElements = document.querySelectorAll(revealSelectors.join(', '));
+        const revealElements = document.querySelectorAll(revealSelectors.join(', '));
 
-    // Grid/List ඇතුලේ තියෙන ඒවට stagger delay දාන්න
-    const groupSelectors = [
-        '.info-card',
-        '.feature-box',
-        '.news-grid-item',
-        '.skill-card',
-        '.contact-item',
-        '.quick-tab-card',
-        '.stat-card',
-        '.achiever-card',
-        '.news-card'
-    ];
+        revealElements.forEach((el) => {
+            el.classList.add('reveal');
 
-    revealElements.forEach((el) => {
-        el.classList.add('reveal');
-
-        // Stagger delay — parent එකේ siblings අනුව
-        const shouldStagger = groupSelectors.some(sel => el.matches(sel));
-        if (shouldStagger && el.parentElement) {
-            const siblings = Array.from(el.parentElement.children);
-            const index = siblings.indexOf(el);
-            const delayClass = 'delay-' + Math.min(index + 1, 8);
-            el.classList.add(delayClass);
-        }
-    });
-
-    // Intersection Observer — scroll කරාම ලස්සනට පෙන්නන්න
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('active');
-                // එක වරක් විතරක් animate වෙන්න (unobserve)
-                observer.unobserve(entry.target);
+            // Stagger delay එකතු කිරීම
+            const shouldStagger = groupSelectors.some(sel => el.matches(sel));
+            if (shouldStagger && el.parentElement) {
+                const siblings = Array.from(el.parentElement.children);
+                const index = siblings.indexOf(el);
+                const delayClass = 'delay-' + Math.min(index + 1, 8);
+                el.classList.add(delayClass);
             }
         });
-    }, {
-        threshold: 0.08,
-        rootMargin: '0px 0px -80px 0px'  // ටිකක් උඩට එනකොටම trigger වෙන්න
-    });
 
-    revealElements.forEach(el => observer.observe(el));
+        // Intersection Observer — Scroll කරද්දී Trigger වන ආකාරය
+        const observerOptions = {
+            threshold: 0.1, // Element එකෙන් 10% ක් Screen එකට ආපු ගමන් Animate වේ
+            rootMargin: '0px 0px -40px 0px' // පහසුවෙන් Trigger වීම සඳහා Margin එක අඩු කරන ලදී
+        };
 
-    // ==========================================
-    // Page load වෙද්දීම උඩ තියෙන ඒව animate කරන්න
-    // ==========================================
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            document.querySelectorAll('.reveal').forEach(el => {
-                const rect = el.getBoundingClientRect();
-                if (rect.top < window.innerHeight * 0.9 && rect.bottom > 0) {
-                    el.classList.add('active');
-                    observer.unobserve(el);
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    // එක පාරක් විතරක් animate වෙන්න ඕන නම් පහත පේළිය තියන්න.
+                    // උඩ-යට Scroll කරද්දී හැමපාරම animate වෙන්න ඕන නම් පහත පේළිය Remove/Comment කරන්න:
+                    observer.unobserve(entry.target);
                 }
             });
-        }, 100);
+        }, observerOptions);
+
+        revealElements.forEach(el => observer.observe(el));
+
+        // Page එක Load වෙද්දීම Screen එක ඇතුලේ තියෙන Elements එකපාර Animate කිරීම
+        revealElements.forEach(el => {
+            const rect = el.getBoundingClientRect();
+            if (rect.top < window.innerHeight && rect.bottom > 0) {
+                el.classList.add('active');
+            }
+        });
     });
