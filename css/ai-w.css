@@ -40,10 +40,13 @@
    MSNS.AI Clean Professional Light Theme (Red & Gold Accents)
    ======================================================= */
 
-* {
+*, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+}
+
+body, input, button, textarea, select {
     font-family: 'Plus Jakarta Sans', 'Noto Sans Sinhala', sans-serif;
 }
 
@@ -427,15 +430,13 @@ body {
 }
 
 /* Video Player Container - Modern & Responsive */
-/* Parent Chat Bubble එක පිටතට පැනීම වැළැක්වීම */
 .chat-msg {
     max-width: 88% !important;
     box-sizing: border-box !important;
     word-break: break-word;
-    overflow-x: hidden !important; /* පැත්තට පැනීම වළක්වයි */
+    overflow-x: hidden !important;
 }
 
-/* Video container එක bubble එක ඇතුලට සීමා කිරීම */
 .video-container {
     width: 100% !important;
     max-width: 100% !important;
@@ -660,16 +661,13 @@ body {
     color: #ffffff;
 }
 
-
 /* =======================================================
-   RESPONSIVE MEDIA QUERIES (මෙතැන් සිට පහළ කොටස අලුතින් එකතු කළ කොටසයි)
+   RESPONSIVE MEDIA QUERIES
    ======================================================= */
 
-/* Tablets and Medium Screens */
 @media screen and (max-width: 768px) {
     .ai-app-container {
         padding: 10px 12px 12px 12px;
-        /* Mobile browser වල address bar ප්‍රශ්නය මගහරවා ගැනීමට */
         height: calc(100dvh - 60px); 
     }
 
@@ -682,14 +680,12 @@ body {
     }
 }
 
-/* Mobile Phones (ඔබගේ Screenshots වල පෙනෙන ආකාරයටම සකස් කිරීම) */
 @media screen and (max-width: 480px) {
     .ai-app-container {
         padding: 8px 10px 10px 10px;
         height: calc(100dvh - 55px);
     }
 
-    /* Profile Pill එක screen එකෙන් එලියට පැනීම වැළැක්වීම */
     .user-profile {
         padding: 5px 12px 5px 5px;
         max-width: 100%;
@@ -710,7 +706,6 @@ body {
         font-size: 10px;
     }
 
-    /* Hero Text එක phone එකට ගැලපෙන ලෙස කුඩා කිරීම */
     .hero-title {
         font-size: 28px;
     }
@@ -719,14 +714,12 @@ body {
         font-size: 13px;
     }
 
-    /* Chat බබල්ස් mobile එකේ පැහැදිලිව පෙනීමට */
     .chat-msg {
         max-width: 92%;
         padding: 10px 14px;
         font-size: 13.5px;
     }
 
-    /* Input area එක සහ Button එක එකිනෙක හැප්පීම වැළැක්වීම */
     .input-box {
         padding: 5px 5px 5px 16px;
     }
@@ -746,7 +739,6 @@ body {
         font-size: 12.5px;
     }
 
-    /* User Dropdown menu එක mobile screen එකට ගැලපෙන ලෙස හැදීම */
     .user-dropdown {
         width: calc(100vw - 20px);
         max-width: 310px;
@@ -754,7 +746,6 @@ body {
     }
 }
 
-/* කුඩා උසක් ඇති screens (Landscape mode ආදියට) */
 @media screen and (max-height: 600px) {
     .hero-greeting {
         padding: 15px 10px;
@@ -764,7 +755,7 @@ body {
         font-size: 24px;
     }
 }
-/* Chat එකේ පින්තූර මත Pointer / Hover Effect එක */
+
 .chat-media-img {
     cursor: pointer;
     transition: transform 0.2s ease, opacity 0.2s ease;
@@ -797,7 +788,6 @@ body {
     opacity: 1;
 }
 
-/* Modal එක ඇතුළත Content Wrapper */
 .modal-content-wrap {
     position: relative;
     max-width: 90%;
@@ -816,7 +806,6 @@ body {
     object-fit: contain;
 }
 
-/* Close (X) Button */
 .modal-close {
     position: absolute;
     top: 20px;
@@ -834,7 +823,6 @@ body {
     color: #ff4d4d;
 }
 
-/* Download Button Styling */
 .modal-download-btn {
     display: inline-flex;
     align-items: center;
@@ -856,24 +844,20 @@ body {
     color: #ffffff;
 }
 
-/* =======================================================
-   FIX: Bottom gesture-bar overlap (added rule only —
-   nothing above this line was changed)
-   ======================================================= */
 .ai-app-container {
     padding-bottom: max(15px, env(safe-area-inset-bottom));
 }
-/* Home Button Hover Effect */
+
 #homeBtn:hover {
     background: rgba(0, 0, 0, 0.05) !important;
     border-color: rgba(185, 28, 28, 0.5) !important;
     transform: scale(1.05);
     color: #b91c1c !important;
 }
-/* ========== MSNS AI Message Action Buttons ========== */
+
 .msg-footer {
     display: flex;
-    justify-content: flex-start; /* Left align buttons */
+    justify-content: flex-start;
     gap: 8px;
     margin-top: 10px;
     flex-wrap: wrap;
@@ -916,10 +900,9 @@ body {
     border-color: rgba(22, 163, 74, 0.5);
     background: rgba(74, 222, 128, 0.12);
 }
+
 /* =======================================================
-   🔥 CRITICAL FIX #1: Font Awesome Icons Restoration
-   (style.css එකේ `*` font-family override එක නිසා icons 
-    නැති වුනා — මේකෙන් හරි ගස්සනවා)
+   🔥 FONT AWESOME ICONS FULL RESTORATION FIX
    ======================================================= */
 i.fa-solid, i.fas,
 i.fa-regular, i.far,
@@ -929,7 +912,7 @@ i.fa, i[class*="fa-"],
 .fa-regular, .far,
 .fa-brands, .fab,
 .fa {
-    font-family: "Font Awesome 6 Free" !important;
+    font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-style: normal;
@@ -939,28 +922,34 @@ i.fa, i[class*="fa-"],
     display: inline-block;
 }
 
-/* Solid icons → weight 900 */
+i.fa-solid::before, i.fas::before,
+i.fa-regular::before, i.far::before,
+i.fa-brands::before, i.fab::before,
+i.fa::before, i[class*="fa-"]::before,
+.fa-solid::before, .fas::before,
+.fa-regular::before, .far::before,
+.fa-brands::before, .fab::before,
+.fa::before {
+    font-family: inherit !important;
+}
+
+/* Solid icons */
 i.fa-solid, i.fas, .fa-solid, .fas {
     font-weight: 900 !important;
 }
 
-/* Regular icons → weight 400 */
+/* Regular icons */
 i.fa-regular, i.far, .fa-regular, .far {
     font-weight: 400 !important;
 }
 
-/* Brand icons → "Font Awesome 6 Brands" */
+/* Brand icons */
 i.fa-brands, i.fab, .fa-brands, .fab {
-    font-family: "Font Awesome 6 Brands" !important;
+    font-family: "Font Awesome 6 Brands", "FontAwesome" !important;
     font-weight: 400 !important;
 }
 
-
-/* =======================================================
-   🔥 CRITICAL FIX #2: Home Button (White Theme Fix)
-   HTML එකේ inline color:#fff තියෙන නිසා white bg එකේ 
-   invisible වුනා — මේකෙන් dark කරනවා
-   ======================================================= */
+/* Home Button Fix */
 #homeBtn {
     background: rgba(0, 0, 0, 0.05) !important;
     border: 1px solid rgba(0, 0, 0, 0.12) !important;
@@ -987,17 +976,7 @@ i.fa-brands, i.fab, .fa-brands, .fab {
     color: #b91c1c !important;
 }
 
-/* =======================================================
-   🔥 FIX #3: Message Action Buttons (Copy + PDF) Visibility
-   ======================================================= */
-.msg-footer {
-    display: flex;
-    justify-content: flex-start;
-    gap: 8px;
-    margin-top: 10px;
-    flex-wrap: wrap;
-}
-
+/* Actions Buttons Visibility */
 .copy-btn,
 .pdf-btn {
     background: #ffffff;
@@ -1020,7 +999,6 @@ i.fa-brands, i.fab, .fa-brands, .fab {
 .copy-btn .fa-copy,
 .copy-btn .fa-check {
     font-size: 10px;
-    font-family: "Font Awesome 6 Free" !important;
     font-weight: 900 !important;
     color: inherit;
 }
@@ -1040,7 +1018,6 @@ i.fa-brands, i.fab, .fa-brands, .fab {
 .pdf-btn i,
 .pdf-btn .fa-file-pdf {
     font-size: 10px;
-    font-family: "Font Awesome 6 Free" !important;
     font-weight: 900 !important;
     color: #b45309;
 }
@@ -1065,12 +1042,9 @@ i.fa-brands, i.fab, .fa-brands, .fab {
     color: #16a34a;
 }
 
-/* =======================================================
-   🔥 FIX #4: Ensure All Buttons in Header/Dropdown Icons Show
-   ======================================================= */
+/* Icon specific inheritance checks */
 .user-profile .chevron,
 .user-profile i.fa-chevron-down {
-    font-family: "Font Awesome 6 Free" !important;
     font-weight: 900 !important;
     font-size: 12px;
     color: #0f172a;
@@ -1081,21 +1055,18 @@ i.fa-brands, i.fab, .fa-brands, .fab {
 
 .new-chat-btn i,
 .dropdown-section-title i {
-    font-family: "Font Awesome 6 Free" !important;
     font-weight: 900 !important;
     font-size: 11px;
     color: inherit;
 }
 
 .logout-btn i {
-    font-family: "Font Awesome 6 Free" !important;
     font-weight: 900 !important;
     font-size: 12px;
     color: inherit;
 }
 
 .history-action-btn i {
-    font-family: "Font Awesome 6 Free" !important;
     font-weight: 900 !important;
     font-size: 10px;
     color: inherit;
@@ -1104,28 +1075,24 @@ i.fa-brands, i.fab, .fa-brands, .fab {
 
 .send-btn i,
 .send-btn .fa-paper-plane {
-    font-family: "Font Awesome 6 Free" !important;
     font-weight: 900 !important;
     font-size: 16px;
     color: #ffffff;
 }
 
 .modal-download-btn i {
-    font-family: "Font Awesome 6 Free" !important;
     font-weight: 900 !important;
     font-size: 13px;
     color: #ffffff;
 }
 
 .maintenance-banner i {
-    font-family: "Font Awesome 6 Free" !important;
     font-weight: 900 !important;
     color: #b91c1c;
 }
 
 .pdf-download-btn i,
 .pdf-header .pdf-icon {
-    font-family: "Font Awesome 6 Free" !important;
     font-weight: 900 !important;
     color: inherit;
 }
