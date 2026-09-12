@@ -108,7 +108,9 @@ const urlsToCache = [
   'ai.js',
   'sim.css',
   'js/hide-f.js',
-  'css/footer.css'
+  'css/footer.css',
+  'css/style-w.css',
+  'css/sim-w.css'
 ];
 
 // Install කරද්දි cache කරනවා
