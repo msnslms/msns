@@ -3,9 +3,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { 
     getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, where, serverTimestamp, writeBatch 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { 
-    getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged 
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"; 
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -18,10 +15,9 @@ const firebaseConfig = {
   measurementId: "G-3GTFJKTS7D"
 };
 
-// Initialize Firebase & Firestore & Auth
+// Initialize Firebase & Firestore
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
 
 // Global States
 let currentAdminRole = null;
@@ -58,34 +54,14 @@ function showToast(msg, type = 'ok') {
 }
 
 function initAuth() {
-    // Firebase Auth state listener to persist login session across page reloads
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            const email = user.email || '';
-            const uname = email.split('@')[0].toLowerCase();
-            
-            let detectedRole = sessionStorage.getItem('adminRole') || 'admin';
-            try {
-                let adminDocRef = doc(db, 'admin-users', uname);
-                let adminSnap = await getDoc(adminDocRef);
-                if (adminSnap.exists()) {
-                    detectedRole = adminSnap.data().role || 'admin';
-                }
-            } catch (err) {
-                console.error("Role fetch error:", err);
-            }
-
-            currentAdminRole = detectedRole.toLowerCase();
-            sessionStorage.setItem('adminRole', currentAdminRole);
-            $('loginModal')?.classList.remove('active');
-            applyRolePermissions();
-        } else {
-            const savedRole = sessionStorage.getItem('adminRole');
-            if (!savedRole) {
-                $('loginModal')?.classList.add('active');
-            }
-        }
-    });
+    const savedRole = sessionStorage.getItem('adminRole');
+    if (savedRole) {
+        currentAdminRole = savedRole;
+        applyRolePermissions();
+        $('loginModal')?.classList.remove('active');
+    } else {
+        $('loginModal')?.classList.add('active');
+    }
 
     $('loginForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -96,44 +72,46 @@ function initAuth() {
 
         const uname = unameInput.value.trim().toLowerCase();
         const pwd = pwdInput.value.trim();
-        const email = uname + "@admin.com"; 
-
-        const btn = e.target.querySelector('button');
-        if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ලොග් වෙමින්...';
 
         try {
-            // 1. Firebase Auth Sign in
-            await signInWithEmailAndPassword(auth, email, pwd);
+            let userData = null;
+            let detectedRole = null;
 
-            // 2. Fetch role from Firestore
-            let detectedRole = 'admin';
+            // 1. Check direct doc ID match
             let adminDocRef = doc(db, 'admin-users', uname);
             let adminSnap = await getDoc(adminDocRef);
 
             if (adminSnap.exists()) {
-                detectedRole = adminSnap.data().role || 'admin';
+                userData = adminSnap.data();
+                detectedRole = userData.role || adminSnap.id;
+            } else {
+                // 2. Query by 'username' field
+                const q = query(collection(db, 'admin-users'), where('username', '==', uname));
+                const querySnap = await getDocs(q);
+                if (!querySnap.empty) {
+                    const matchedDoc = querySnap.docs[0];
+                    userData = matchedDoc.data();
+                    detectedRole = userData.role || matchedDoc.id;
+                }
             }
 
-            currentAdminRole = detectedRole.toLowerCase();
-            sessionStorage.setItem('adminRole', currentAdminRole);
-            $('loginModal')?.classList.remove('active');
-            applyRolePermissions();
-            showToast('සාර්ථකව Login විය!', 'ok');
-
+            if (userData && (userData.password === pwd || userData.pwd === pwd)) {
+                currentAdminRole = (detectedRole || 'admin').toLowerCase();
+                sessionStorage.setItem('adminRole', currentAdminRole);
+                $('loginModal')?.classList.remove('active');
+                applyRolePermissions();
+                showToast('සාර්ථකව Login විය!', 'ok');
+            } else {
+                showToast('Username හෝ Password වැරදිය!', 'error');
+            }
         } catch (err) {
             console.error('Login Error:', err);
-            showToast('Username හෝ Password වැරදිය!', 'error');
-        } finally {
-            if (btn) btn.innerHTML = 'Login to Panel';
+            showToast('Login දෝෂයක්: ' + err.message, 'error');
         }
     });
 
-    $('btnLogout')?.addEventListener('click', async () => {
-        try {
-            await signOut(auth); 
-        } catch (e) { console.error(e); }
+    $('btnLogout')?.addEventListener('click', () => {
         sessionStorage.removeItem('adminRole');
-        $('loginModal')?.classList.add('active');
         location.reload();
     });
 }
@@ -204,7 +182,7 @@ function switchSection(sectionId) {
 }
 
 // ==========================================
-// 2. USERS MANAGEMENT MODULE 
+// 2. USERS MANAGEMENT MODULE (Optimized)
 // ==========================================
 async function loadUsersData() {
     try {
@@ -241,6 +219,7 @@ function renderUsersList() {
         return;
     }
 
+    // Fast rendering for 1000+ elements using DocumentFragment
     const fragment = document.createDocumentFragment();
 
     filtered.forEach(user => {
@@ -320,6 +299,7 @@ async function deleteUserAccount(userId) {
         const aiQuery = query(collection(db, 'ai'), where('userId', '==', userId));
         const aiSnap = await getDocs(aiQuery);
         
+        // Batch delete associated AI documents
         if (!aiSnap.empty) {
             let batch = writeBatch(db);
             let count = 0;
@@ -685,7 +665,6 @@ function renderAlStreamsForm() {
         });
     });
 }
-
 // ==========================================
 // 5. ADVANCED TERM TEST RESULT MODULE (Batch Fast Upload & Smart Parsing)
 // ==========================================
@@ -736,6 +715,7 @@ function initTermTestModule() {
         }
     });
 
+    // Highly Optimized Batch Upload Strategy for 1000+ Records
     $('btnUploadToFirestore')?.addEventListener('click', async () => {
         if (!parsedSheetStudents || parsedSheetStudents.length === 0) {
             showToast('Upload කිරීමට Data හමු නොවුණි!', 'error');
@@ -747,12 +727,14 @@ function initTermTestModule() {
         uploadBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Saving ${parsedSheetStudents.length} Records...`;
 
         try {
+            // 1. Master Record in 'term-test-results'
             const sheetRef = await addDoc(collection(db, 'term-test-results'), {
                 ...currentMeta,
                 studentCount: parsedSheetStudents.length,
                 createdAt: new Date().toISOString()
             });
 
+            // 2. Batch Upload (Groups of 400 - fast & safe for Firestore)
             const BATCH_SIZE = 400;
             let batch = writeBatch(db);
             let countInBatch = 0;
@@ -781,12 +763,14 @@ function initTermTestModule() {
                 countInBatch++;
                 totalSaved++;
 
+                // Trigger batch commit every 400 items or at the end
                 if (countInBatch === BATCH_SIZE || i === parsedSheetStudents.length - 1) {
                     await batch.commit();
                     batch = writeBatch(db);
                     countInBatch = 0;
                 }
 
+                // Update UI Row Indicator
                 const tr = document.getElementById(`tr-student-${i}`);
                 if (tr) {
                     tr.classList.add('uploaded-row');
@@ -813,6 +797,7 @@ function initTermTestModule() {
     loadTermTestList();
 }
 
+// GOOGLE SHEET CSV FETCH & FIXED PARSER
 async function fetchAndParseGoogleSheet(sheetUrl) {
     const matches = sheetUrl.match(/\/d\/([a-zA-Z0-9\-_]+)/i);
     if (!matches || !matches[1]) {
@@ -831,6 +816,7 @@ async function fetchAndParseGoogleSheet(sheetUrl) {
 }
 
 function parseCSVToStudentResults(csvText) {
+    // හිස් පේලි සම්පූර්ණයෙන්ම ඉවත් කරමු (Filter out completely blank rows)
     const lines = csvText.split(/\r\n|\n/).map(l => parseCSVLine(l)).filter(row => row.some(cell => cell.trim() !== ''));
 
     if (lines.length < 2) {
@@ -839,6 +825,7 @@ function parseCSVToStudentResults(csvText) {
 
     let headerRowIdx = -1;
 
+    // 1. කලින් විදිහටම .includes() භාවිතයෙන් Main Header Row එක හොයාගැනීම (100% වැඩ කරන ක්‍රමය)
     for (let i = 0; i < Math.min(lines.length, 15); i++) {
         const row = lines[i].map(c => c.toLowerCase().trim());
         const hasIndex = row.some(c => c.includes('index') || c.includes('විභාග අංකය') || c.includes('අංකය'));
@@ -851,9 +838,10 @@ function parseCSVToStudentResults(csvText) {
     }
 
     if (headerRowIdx === -1) {
-        throw new Error('Index No හෝ Name තීරු (Columns) සොයා ගැනීමට නොහැකි විය.');
+        throw new Error('Index No හෝ Name තීරු (Columns) සොයා ගැනීමට නොහැකි විය. Sheet එක නිවැරදි දැයි බලන්න.');
     }
 
+    // 2. Grade 10-11 වගේ merged කරපු පේලි (Row 6 සහ 7) තිබුණොත් ඒක හඳුනාගැනීම
     const row1 = lines[headerRowIdx];
     const row2 = (headerRowIdx + 1 < lines.length) ? lines[headerRowIdx + 1] : [];
 
@@ -861,6 +849,7 @@ function parseCSVToStudentResults(csvText) {
     if (indexColIdx === -1) indexColIdx = row2.findIndex(c => c.toLowerCase().includes('index') || c.toLowerCase().includes('විභාග අංකය') || c.toLowerCase().includes('අංකය'));
 
     let isRow2Header = false;
+    // Row 2 එකේ Index Number තියෙන කොටුව හිස් නම්, ඒක අනිවාර්යයෙන්ම Merged Header එකේ යට කොටසයි
     if (indexColIdx !== -1 && row2[indexColIdx] && row2[indexColIdx].trim() === '') {
         isRow2Header = true; 
     }
@@ -872,12 +861,14 @@ function parseCSVToStudentResults(csvText) {
         let val1 = row1[i] ? row1[i].trim() : '';
         let val2 = (isRow2Header && row2[i]) ? row2[i].trim() : '';
         
+        // Subject Name එක යට පේලියේ තියෙනවා නම් ඒක ගන්නවා (උදා: "Bucket 1" වෙනුවට "History" ගන්න)
         let colName = val1;
         if (val2 !== '') { colName = val2; } 
 
         let lowerCol = colName.toLowerCase();
         if (!colName) continue;
 
+        // Columns වල Indexes හරියටම වෙන් කරගැනීම (.includes() භාවිතා කර ඇත)
         if (lowerCol.includes('index') || lowerCol.includes('විභාග අංකය') || lowerCol.includes('අංකය')) {
             colMap.index = i;
         } else if (lowerCol.includes('name') || lowerCol.includes('නම') || lowerCol.includes('student name')) {
@@ -889,6 +880,7 @@ function parseCSVToStudentResults(csvText) {
         } else if (lowerCol.includes('position') || lowerCol.includes('rank') || lowerCol.includes('place') || lowerCol.includes('ස්ථානය')) {
             colMap.position = i;
         } else {
+            // අනවශ්‍ය දේවල් අයින් කර Subjects ටික වෙන් කරගැනීම
             const ignoredKeywords = ['bucket', 'main subject', 'optional'];
             const isIgnored = ignoredKeywords.some(key => lowerCol.includes(key));
             
@@ -899,6 +891,7 @@ function parseCSVToStudentResults(csvText) {
     }
 
     const students = [];
+    // Data පටන් ගන්න පේලිය තීරණය කිරීම
     let dataStartRow = isRow2Header ? headerRowIdx + 2 : headerRowIdx + 1;
 
     for (let i = dataStartRow; i < lines.length; i++) {
@@ -908,6 +901,7 @@ function parseCSVToStudentResults(csvText) {
         const indexNum = colMap.index !== -1 && row[colMap.index] ? row[colMap.index].trim() : '';
         const name = colMap.name !== -1 && row[colMap.name] ? row[colMap.name].trim() : '';
 
+        // නියමය 1: Index No නැති / හිස් පේලි සම්පූර්ණයෙන්ම අයින් වෙනවා (N/A වෙන්නේ නෑ)
         if (!indexNum || indexNum === '' || indexNum.toLowerCase().includes('index')) {
             continue; 
         }
@@ -915,6 +909,8 @@ function parseCSVToStudentResults(csvText) {
         const results = {};
         colMap.subjects.forEach(sub => {
             const mark = row[sub.index] ? row[sub.index].trim() : '';
+            
+            // නියමය 2 සහ 3: ලකුණු තියෙනවා නම් හෝ AB නම් විතරක් ඇතුලත් වෙනවා. හිස් හෝ '-' නම් අයින් වෙනවා.
             if (mark !== '' && mark !== '-') {
                 results[sub.name] = mark; 
             }
@@ -972,11 +968,13 @@ function renderSheetPreview(students) {
 
         let resultsHTML = '<div class="results-tag-box">';
         for (const [sub, mark] of Object.entries(s.results)) {
+            // AB කියන එක රතු පාටින් ලස්සනට පෙන්නන්න
             const isAB = mark.toLowerCase() === 'ab';
             resultsHTML += `<div class="sub-tag" ${isAB ? 'style="color:red; border-color:red;"' : ''}>${sub}: <span>${mark}</span></div>`;
         }
         resultsHTML += '</div>';
 
+        // Total, Average, Position UI එකේ පෙන්නන්න
         let statsHTML = '<div style="margin-top: 5px; font-size: 0.85rem; color: #10b981;">';
         if (s.total) statsHTML += `<strong>Total:</strong> ${s.total} &nbsp; `;
         if (s.average) statsHTML += `<strong>Avg:</strong> ${s.average} &nbsp; `;
@@ -1066,6 +1064,7 @@ async function loadTermTestList() {
     }
 }
 
+
 // ==========================================
 // 6. DOCUMENTS MODULE
 // ==========================================
@@ -1127,8 +1126,8 @@ async function loadGeminiKeys() {
             const card = document.createElement('div');
             card.className = 'contact-item';
             card.style.display = 'flex';
-            card.style.alignItems.center;
-            card.style.justifyContent.space-between;
+            card.style.alignItems = 'center';
+            card.style.justifyContent = 'space-between';
             card.style.marginBottom = '10px';
             card.style.padding = '10px';
             card.style.border = '1px solid var(--border-color)';
