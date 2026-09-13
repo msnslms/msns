@@ -23,46 +23,65 @@
     <!-- Overlay for Sidebar -->
     <div class="menu-overlay" id="menuOverlay"></div>
 
-    <!-- Sidebar Menu -->
+    <!-- Sidebar Menu (Same style as qz.html) -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <div class="sidebar-title">MSNS</div>
-            <button class="close-icon" id="closeMenu" aria-label="Close Menu">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+            <div class="sidebar-title">MSNS Portal</div>
+            <div class="close-icon" id="closeMenu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </div>
         </div>
         
         <nav class="sidebar-menu">
             <a href="index.html" class="menu-item">
-                <i class="fa-solid fa-house"></i> Home
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                Home
             </a>
-            <a href="term.html" class="menu-item active-link">
-                <i class="fa-solid fa-square-poll-vertical"></i> Term Test Results
+            <a href="index.html#about" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                About Us
             </a>
             <a href="Past.html" class="menu-item">
-                <i class="fa-solid fa-book-open"></i> Past Papers & Documents
-            </a>
-            <a href="msns-ai.html" class="menu-item">
-                <i class="fa-solid fa-robot"></i> MSNS.AI Assistant
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                Past Papers & Documents
             </a>
             <a href="news.html" class="menu-item">
-                <i class="fa-solid fa-newspaper"></i> News
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path><path d="M18 14h-8"></path><path d="M15 18h-5"></path><path d="M10 6h8v4h-8V6Z"></path></svg>
+                News
+            </a>
+            <a href="term.html" class="menu-item active-link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+                Term Test Results
+            </a>
+            <a href="msns-ai.html" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                MSNS.AI Assistant
             </a>
             <a href="u.html" class="menu-item">
-                <i class="fa-solid fa-user"></i> My Profile
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                My Profile
             </a>
             <a href="ab.html" class="menu-item">
-                <i class="fa-solid fa-code"></i> About Developer
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                About Developer
             </a>
         </nav>
     </aside>
 
-    <!-- Header -->
+    <!-- Header (Same style as qz.html) -->
     <header id="top">
         <div class="header-title">MSNS</div>
-        <button class="nav-icon" id="menuToggle" aria-label="Open Menu">
-            <i class="fa-solid fa-bars" style="font-size:20px;"></i>
-        </button>
+        <div class="nav-icon" id="menuToggle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="3" y="3" width="5" height="8" rx="2.5" />
+                <rect x="10" y="3" width="11" height="8" rx="4" />
+                <rect x="3" y="13" width="5" height="8" rx="2.5" />
+                <rect x="10" y="13" width="11" height="8" rx="3" />
+            </svg>
+        </div>
     </header>
 
     <!-- Main Content -->
@@ -367,6 +386,9 @@
     </script>
 
     <!-- Exam Logic -->
-    <script type="module" src="js/exam.js?v=3"></script>
+    <script type="module" src="exam.js?v=3"></script>
+
+    <!-- PWA Footer Hide -->
+    <script src="js/hide-f.js?v=2"></script>
 </body>
 </html>
