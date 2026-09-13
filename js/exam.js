@@ -85,6 +85,16 @@ function showState(stateName) {
     }
 }
 
+/* ---------- Helper: Get Valid Subjects Only ---------- */
+function getValidSubjectEntries(resultsObj) {
+    if (!resultsObj) return [];
+    // 'Grade / Class' වගේ subject නොවන දේවල් chart එකටයි table එකටයි එන එක මෙතනින් නවත්වනවා
+    return Object.entries(resultsObj).filter(([subject]) => {
+        const s = subject.toLowerCase().trim();
+        return !s.includes('grade') && !s.includes('class') && !s.includes('stream');
+    });
+}
+
 /* ---------- Auth Check ---------- */
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
@@ -230,7 +240,9 @@ function renderAnalysis(data) {
     const tbody = $('subjectTableBody');
     tbody.innerHTML = '';
 
-    const subjectEntries = Object.entries(results);
+    // මෙතනදී අනවශ්‍ය දේවල් අයින් කරපු subjectEntries පාවිච්චි කරනවා
+    const subjectEntries = getValidSubjectEntries(results);
+    
     subjectEntries.forEach(([subject, marks], idx) => {
         const grade = calculateGrade(marks);
         const tr = document.createElement('tr');
@@ -404,7 +416,10 @@ function renderReportCard(data) {
     const tbody = $('rTableBody');
     tbody.innerHTML = '';
 
-    Object.entries(results).forEach(([subject, marks], idx) => {
+    // මෙතනත් අනවශ්‍ය දේවල් අයින් කරපු subjectEntries පාවිච්චි කරනවා
+    const subjectEntries = getValidSubjectEntries(results);
+
+    subjectEntries.forEach(([subject, marks], idx) => {
         const grade = calculateGrade(marks);
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -456,7 +471,8 @@ $('btnDownloadPDF')?.addEventListener('click', async () => {
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
         };
 
-        await html2pdf().set(opt).from(sheet).save();
+        // Module එකක් ඇතුලේ window.html2pdf() කියලා දුන්නම හරියටම වැඩ කරනවා
+        await window.html2pdf().set(opt).from(sheet).save();
 
     } catch (err) {
         console.error('PDF generation error:', err);
@@ -482,7 +498,7 @@ document.querySelectorAll('.exam-tab').forEach(tab => {
             $('tabAnalysis')?.classList.add('active');
             // Re-render charts (they may be hidden initially)
             if (currentResultData) {
-                const subjectEntries = Object.entries(currentResultData.results || {});
+                const subjectEntries = getValidSubjectEntries(currentResultData.results || {});
                 setTimeout(() => {
                     renderSubjectBarChart(subjectEntries);
                     renderGradeChart(subjectEntries);
