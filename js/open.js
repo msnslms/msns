@@ -1,55 +1,99 @@
 /* ==========================================================
-   js/opdn.js — Welcome Splash Page Logic
-   • 3-language cycle: Sinhala → English → Tamil
-     (each language shows BOTH "Welcome" + school name)
-   • After cycle: English typewriter
-   • Auto-redirect to index.html
+   js/opdn.js — Apple-Inspired Welcome Splash Logic
    ========================================================== */
 
 (function () {
     'use strict';
 
-    /* ---------- Configuration ---------- */
+    /* ==========================================================
+       ⚙️ TIMING CONFIGURATION (Apple Precision Easing)
+       ========================================================== */
     const CONFIG = {
-        langShowTime: 2000,      // Each language shows 2s (Welcome + school name together)
-        langFadeTime: 700,       // Fade transition time
-        startTypingDelay: 6800,  // After 3 languages × ~2s = ~6s + padding
-        typingSpeed: 45,         // ms per character
-        redirectDelay: 1600,     // After typing finishes
+        // ---------- Language Cycle Timing ----------
+        langCycleStart: 800,        // Start 0.8s after badge animation begins
+        langShowTime: 1800,         // Duration per language: 1.8s
+        langFadeTime: 600,          // Smooth transition interval: 0.6s
+
+        // ---------- Typewriter Timing ----------
+        typingSpeed: 45,            // Speed per character (ms)
+        cursorFadeDelay: 300,       // Fade out cursor after completion
+        redirectDelay: 1200,        // Redirect pause after typing finishes
+
+        // ---------- Redirect Destination ----------
         redirectUrl: 'index.html?visited=true',
-        safetyTimeout: 15000     // Force redirect after 15s
+
+        // ---------- Safety Net ----------
+        safetyTimeout: 12000        // Force redirect after 12 seconds maximum
     };
 
-    /* ---------- DOM Elements ---------- */
+    /* ==========================================================
+       📌 DOM ELEMENTS
+       ========================================================== */
     const langSlides = document.querySelectorAll('.lang-slide');
+    const langSlider = document.querySelector('.lang-slider');
     const typewriterWrap = document.getElementById('typewriterWrap');
     const typedTextElement = document.getElementById('typed-text');
     const cursorElement = document.getElementById('cursor');
 
+    let isRedirecting = false;
+    const timeouts = [];
+
+    function safeTimeout(fn, delay) {
+        const id = setTimeout(fn, delay);
+        timeouts.push(id);
+        return id;
+    }
+
+    function clearAllTimeouts() {
+        timeouts.forEach(id => clearTimeout(id));
+        timeouts.length = 0;
+    }
+
     /* ==========================================================
-       1️⃣ MULTI-LANGUAGE CYCLE
-       (Sinhala + school name → English + school name → Tamil + school name)
+       🎯 SMOOTH REDIRECT HANDLER
+       ========================================================== */
+    function redirectToIndex() {
+        if (isRedirecting) return;
+        isRedirecting = true;
+
+        clearAllTimeouts();
+
+        try {
+            sessionStorage.setItem('welcomeShown', 'true');
+        } catch (e) {
+            // Silence storage errors
+        }
+
+        // Apple-style fade out before redirecting
+        document.body.style.transition = 'opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+        document.body.style.opacity = '0';
+
+        setTimeout(() => {
+            window.location.href = CONFIG.redirectUrl;
+        }, 500);
+    }
+
+    /* ==========================================================
+       1️⃣ LANGUAGE SLIDER LOGIC
        ========================================================== */
     let currentIndex = 0;
 
     function showSlide(index) {
-        // Exit previous slides
-        langSlides.forEach(slide => {
+        langSlides.forEach((slide) => {
             if (slide.classList.contains('active')) {
                 slide.classList.remove('active');
                 slide.classList.add('exit');
             }
         });
 
-        // Activate current slide
         const current = langSlides[index];
-        if (current) {
-            current.classList.remove('exit');
-            // Small delay to allow exit animation to start
-            setTimeout(() => {
-                current.classList.add('active');
-            }, 80);
-        }
+        if (!current) return;
+
+        current.classList.remove('exit');
+        
+        safeTimeout(() => {
+            current.classList.add('active');
+        }, 50);
     }
 
     function cycleLanguages() {
@@ -57,79 +101,92 @@
         currentIndex++;
 
         if (currentIndex < langSlides.length) {
-            setTimeout(cycleLanguages, CONFIG.langShowTime);
+            safeTimeout(cycleLanguages, CONFIG.langShowTime);
         } else {
-            // All languages done — show typewriter
-            setTimeout(() => {
-                // Hide the language slider
-                const slider = document.querySelector('.lang-slider');
-                if (slider) {
-                    slider.style.transition = 'opacity 0.6s ease, transform 0.6s ease, height 0.6s ease, min-height 0.6s ease';
-                    slider.style.opacity = '0';
-                    slider.style.transform = 'translateY(-20px)';
-                    slider.style.minHeight = '0';
-                    slider.style.height = '0';
-                    slider.style.overflow = 'hidden';
-                }
-
-                // Show typewriter
-                if (typewriterWrap) {
-                    typewriterWrap.classList.add('show');
-                }
-            }, CONFIG.langFadeTime + 100);
+            // Finish language cycle -> Transition to Typewriter
+            safeTimeout(() => {
+                collapseSlider();
+                safeTimeout(revealTypewriter, 500);
+            }, CONFIG.langFadeTime);
         }
     }
 
-    // Start the cycle after badge pop-in
-    setTimeout(cycleLanguages, 900);
+    function collapseSlider() {
+        if (!langSlider) return;
+
+        langSlider.style.transition = 'opacity 0.5s ease, transform 0.5s ease, height 0.5s ease, min-height 0.5s ease';
+        langSlider.style.opacity = '0';
+        langSlider.style.transform = 'translateY(-15px) scale(0.98)';
+        langSlider.style.minHeight = '0';
+        langSlider.style.height = '0';
+        langSlider.style.overflow = 'hidden';
+        langSlider.style.marginBottom = '0';
+    }
+
+    function revealTypewriter() {
+        if (typewriterWrap) {
+            typewriterWrap.classList.add('show');
+            safeTimeout(startTypewriter, 200);
+        }
+    }
+
+    // Start cycle
+    safeTimeout(cycleLanguages, CONFIG.langCycleStart);
 
     /* ==========================================================
-       2️⃣ TYPEWRITER ANIMATION (English School Name)
+       2️⃣ TYPEWRITER LOGIC
        ========================================================== */
     const textToType = 'A/MAITHRIPALA SENANAYAKA CENTRAL COLLEGE';
     let typeIndex = 0;
 
-    function typeWriter() {
+    function startTypewriter() {
+        if (!typedTextElement) return;
+
         if (typeIndex < textToType.length) {
-            // Insert line break before "CENTRAL"
             const remaining = textToType.substring(typeIndex);
             if (remaining.startsWith('CENTRAL')) {
                 typedTextElement.innerHTML += '<br>';
             }
+
             typedTextElement.innerHTML += textToType.charAt(typeIndex);
             typeIndex++;
-            setTimeout(typeWriter, CONFIG.typingSpeed);
-        } else {
-            // Typing complete
-            setTimeout(() => {
-                if (cursorElement) cursorElement.style.opacity = '0';
-            }, 400);
 
-            // Auto-redirect
-            setTimeout(() => {
-                sessionStorage.setItem('welcomeShown', 'true');
-                window.location.href = CONFIG.redirectUrl;
-            }, CONFIG.redirectDelay);
+            safeTimeout(startTypewriter, CONFIG.typingSpeed);
+        } else {
+            // Typing Complete -> Cursor Fade -> Redirect
+            safeTimeout(() => {
+                if (cursorElement) {
+                    cursorElement.style.transition = 'opacity 0.4s ease';
+                    cursorElement.style.opacity = '0';
+                }
+            }, CONFIG.cursorFadeDelay);
+
+            safeTimeout(redirectToIndex, CONFIG.cursorFadeDelay + CONFIG.redirectDelay);
         }
     }
 
-    // Start typing after all languages cycle
-    setTimeout(typeWriter, CONFIG.startTypingDelay);
-
     /* ==========================================================
-       3️⃣ SKIP ON CLICK / TAP
+       3️⃣ INTERACTION & ACCESSIBILITY
        ========================================================== */
-    document.body.addEventListener('click', () => {
-        sessionStorage.setItem('welcomeShown', 'true');
-        window.location.href = CONFIG.redirectUrl;
+    // Click or tap anywhere to skip splash immediately
+    document.body.addEventListener('click', redirectToIndex);
+    document.body.addEventListener('touchstart', redirectToIndex, { passive: true });
+
+    // Safety timeout fallback
+    safeTimeout(redirectToIndex, CONFIG.safetyTimeout);
+
+    // Reduced motion check
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (prefersReducedMotion.matches) {
+        clearAllTimeouts();
+        safeTimeout(redirectToIndex, 800);
+    }
+
+    // Page unload cleanup
+    window.addEventListener('beforeunload', () => {
+        isRedirecting = true;
+        clearAllTimeouts();
     });
 
-    /* ==========================================================
-       4️⃣ SAFETY: Force redirect after 15s
-       ========================================================== */
-    setTimeout(() => {
-        sessionStorage.setItem('welcomeShown', 'true');
-        window.location.href = CONFIG.redirectUrl;
-    }, CONFIG.safetyTimeout);
-
 })();
+
