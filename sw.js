@@ -107,11 +107,20 @@ const urlsToCache = [
   'u.js',
   'ai.js',
   'sim.css',
-  'js/hide-f.js',
-  'css/footer.css',
-  'css/style-w.css',
-  'css/sim-w.css',
-  'css/ai-w.css',
+'js/exam.js',
+'js/hide-f.js',
+'js/scroll-reveal.js',
+'css/about-w.css',
+'css/ai-w.css',
+'css/animetion.css',
+'css/app-w.css',
+'css/exam.css',
+'css/footer.css',
+'css/past-w.css',
+'css/sim-w.css',
+'css/style-w.css',
+'css/t-book-w.css',
+'css/user-w.css'
 ];
 
 // Install කරද්දි cache කරනවා
