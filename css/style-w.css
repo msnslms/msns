@@ -1921,3 +1921,144 @@ body, p, span, input, button {
 body {
     overflow-x: hidden;
 }
+/* ==========================================================
+   🎯 FONT AWESOME UNIVERSAL FIX
+   (මේ block එක style.css එකට දැම්මාම හැම page එකේම
+    icons වැඩ කරයි — වෙන CSS file එකකට දාන්න ඕන නෑ!)
+   
+   🔴 හේතුව: Global `* { font-family: X !important }` rule එක
+   Font Awesome font එකත් override කරන නිසා icons නැති වෙනවා.
+   මේ block එකෙන් Font Awesome font එකට priority දෙනවා.
+   ========================================================== */
+
+/* ---------- 1. Solid Icons (fa-solid / fas) ---------- */
+i.fa-solid,
+i.fas,
+.fa-solid,
+.fas,
+i[class*="fa-solid"] {
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 900 !important;
+    font-style: normal !important;
+    font-variant: normal !important;
+    text-rendering: auto !important;
+    line-height: 1 !important;
+    display: inline-block !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* ---------- 2. Regular Icons (fa-regular / far) ---------- */
+i.fa-regular,
+i.far,
+.fa-regular,
+.far,
+i[class*="fa-regular"] {
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 400 !important;
+    font-style: normal !important;
+    font-variant: normal !important;
+    text-rendering: auto !important;
+    line-height: 1 !important;
+    display: inline-block !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* ---------- 3. Brand Icons (fa-brands / fab) ---------- */
+i.fa-brands,
+i.fab,
+.fa-brands,
+.fab,
+i[class*="fa-brands"] {
+    font-family: "Font Awesome 6 Brands" !important;
+    font-weight: 400 !important;
+    font-style: normal !important;
+    font-variant: normal !important;
+    text-rendering: auto !important;
+    line-height: 1 !important;
+    display: inline-block !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* ---------- 4. Base `fa` class (any "fa-*" element) ---------- */
+i.fa,
+.fa,
+i[class^="fa-"],
+i[class*=" fa-"] {
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 900 !important;
+    font-style: normal !important;
+    font-variant: normal !important;
+    text-rendering: auto !important;
+    line-height: 1 !important;
+    display: inline-block !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* ---------- 5. Icons inside containers (buttons, links, etc.) ---------- */
+/* මේකෙන් specific තැන්වල icons වලට බලපාන CSS override එකත් හදනවා */
+button i[class*="fa-"],
+a i[class*="fa-"],
+.btn i[class*="fa-"],
+.menu-item i[class*="fa-"],
+.nav-icon i[class*="fa-"],
+.close-icon i[class*="fa-"],
+.qz-tab i[class*="fa-"],
+.qz-toolbar i[class*="fa-"],
+.qz-modal-close i[class*="fa-"],
+.qz-card-actions i[class*="fa-"],
+.qz-empty-state i[class*="fa-"],
+.state-card i[class*="fa-"],
+.qz-icon i[class*="fa-"] {
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 900 !important;
+    font-style: normal !important;
+    display: inline-block !important;
+    line-height: 1 !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Brands inside buttons/links (facebook, whatsapp, youtube, etc.) */
+button i.fa-brands,
+a i.fa-brands,
+.btn i.fa-brands,
+button i.fab,
+a i.fab,
+.btn i.fab {
+    font-family: "Font Awesome 6 Brands" !important;
+    font-weight: 400 !important;
+}
+
+/* ---------- 6. Size utility classes (fa-lg, fa-2x, etc.) ---------- */
+.fa-xs  { font-size: 0.75em !important; }
+.fa-sm  { font-size: 0.875em !important; }
+.fa-lg  { font-size: 1.33em !important; line-height: 0.75em !important; vertical-align: -15% !important; }
+.fa-xl  { font-size: 1.5em !important; line-height: 0.04167em !important; vertical-align: -0.125em !important; }
+.fa-2x  { font-size: 2em !important; line-height: 0.5em !important; vertical-align: -0.25em !important; }
+.fa-3x  { font-size: 3em !important; line-height: 0.33333em !important; vertical-align: -0.375em !important; }
+.fa-4x  { font-size: 4em !important; line-height: 0.25em !important; vertical-align: -0.5em !important; }
+.fa-5x  { font-size: 5em !important; line-height: 0.2em !important; vertical-align: -0.625em !important; }
+
+/* ---------- 7. Animation (fa-spin) ---------- */
+.fa-spin {
+    animation: fa-spin 2s linear infinite !important;
+}
+
+.fa-pulse {
+    animation: fa-spin 1s steps(8) infinite !important;
+}
+
+@keyframes fa-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ---------- 8. Color inheritance for icons ---------- */
+i[class*="fa-"] {
+    color: inherit;
+    vertical-align: middle;
+}
