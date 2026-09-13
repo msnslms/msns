@@ -1,0 +1,792 @@
+/* ==========================================
+   EXAM & TERM TEST RESULTS MODULE
+   Red & Gold School Theme (Responsive)
+   ========================================== */
+
+/* ===== Global Page Wrap ===== */
+.content-wrapper {
+    padding: 20px 16px 40px;
+}
+
+/* ===== State Card ===== */
+.exam-state-card {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 20px;
+    padding: 50px 24px;
+    text-align: center;
+    max-width: 500px;
+    margin: 40px auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.exam-state-card i {
+    font-size: 2.8rem;
+    color: #b91c1c;
+    margin-bottom: 16px;
+}
+
+.exam-state-card h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+.spin {
+    animation: exam-spin 1s linear infinite;
+}
+
+@keyframes exam-spin {
+    100% { transform: rotate(360deg); }
+}
+
+/* ===== Page Header ===== */
+.exam-page-header {
+    text-align: center;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 20px;
+    padding: 28px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.exam-header-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.12), rgba(234, 179, 8, 0.15));
+    border: 1px solid rgba(185, 28, 28, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px;
+    color: #b91c1c;
+    font-size: 30px;
+}
+
+.exam-header-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 4px;
+    letter-spacing: -0.3px;
+}
+
+.exam-header-subtitle {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #b91c1c;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin: 0;
+}
+
+/* ===== Search Form Card ===== */
+.exam-search-card {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 20px;
+    padding: 26px 22px;
+    margin-bottom: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.exam-form .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #52525b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-group label i {
+    color: #b91c1c;
+    font-size: 0.85rem;
+}
+
+.form-group label .lock-hint {
+    margin-left: auto;
+    color: #b45309;
+    font-size: 0.75rem;
+    background: rgba(234, 179, 8, 0.15);
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.custom-select,
+.custom-input {
+    width: 100%;
+    padding: 12px 14px;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 10px;
+    color: #0f172a;
+    font-size: 0.92rem;
+    font-weight: 600;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.custom-select option {
+    background: #ffffff;
+    color: #0f172a;
+}
+
+.custom-select:focus,
+.custom-input:focus {
+    border-color: #b91c1c;
+    box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.12);
+}
+
+.custom-input[readonly] {
+    background: rgba(254, 252, 232, 0.6);
+    border-color: rgba(234, 179, 8, 0.35);
+    color: #b45309;
+    cursor: not-allowed;
+    font-weight: 700;
+}
+
+/* Submit Button */
+.btn-search-result {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    border: 1px solid rgba(234, 179, 8, 0.4);
+    border-radius: 12px;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 0.98rem;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.25s ease;
+    box-shadow: 0 6px 18px rgba(185, 28, 28, 0.3);
+}
+
+.btn-search-result:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(185, 28, 28, 0.45);
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.btn-search-result:active {
+    transform: translateY(0);
+}
+
+/* Status Message */
+.status-msg {
+    margin-top: 14px;
+    font-size: 0.88rem;
+    text-align: center;
+    min-height: 20px;
+    font-weight: 600;
+}
+
+.status-msg.error { color: #dc2626; }
+.status-msg.info { color: #0284c7; }
+.status-msg.success { color: #16a34a; }
+
+/* ===== Tabs ===== */
+.exam-tabs {
+    display: flex;
+    gap: 8px;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    padding: 8px;
+    margin-bottom: 22px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.exam-tab {
+    flex: 1;
+    padding: 14px 18px;
+    border: none;
+    background: transparent;
+    color: #71717a;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-family: inherit;
+}
+
+.exam-tab:hover {
+    color: #b91c1c;
+    background: rgba(185, 28, 28, 0.06);
+}
+
+.exam-tab.active {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #ffffff;
+    box-shadow: 0 6px 18px rgba(185, 28, 28, 0.35);
+    border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.exam-tab-content {
+    display: none;
+    animation: examFadeIn 0.35s ease-out;
+}
+
+.exam-tab-content.active {
+    display: block;
+}
+
+@keyframes examFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Analysis Summary Cards ===== */
+.analysis-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.summary-stat-card {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 18px;
+    padding: 22px 18px;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.summary-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #dc2626, #f59e0b);
+}
+
+.summary-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 30px rgba(185, 28, 28, 0.12);
+}
+
+.stat-icon-wrap {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: rgba(185, 28, 28, 0.1);
+    border: 1px solid rgba(185, 28, 28, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+    color: #b91c1c;
+    font-size: 1.2rem;
+}
+
+.stat-avg .stat-icon-wrap {
+    background: rgba(234, 179, 8, 0.15);
+    border-color: rgba(234, 179, 8, 0.3);
+    color: #b45309;
+}
+
+.stat-pos .stat-icon-wrap {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #059669;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.75rem;
+    color: #71717a;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.65rem;
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: -0.5px;
+}
+
+/* ===== Charts Grid ===== */
+.charts-grid-exam {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 22px;
+}
+
+.exam-chart-card {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 18px;
+    padding: 22px 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.chart-card-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chart-card-title i {
+    color: #b91c1c;
+    font-size: 1rem;
+}
+
+.chart-wrapper-exam {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* ===== Subject Table ===== */
+.exam-table-card {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 18px;
+    padding: 22px 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    margin-bottom: 22px;
+}
+
+.exam-table-wrap {
+    overflow-x: auto;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.exam-results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    min-width: 400px;
+}
+
+.exam-results-table thead {
+    background: rgba(254, 252, 232, 0.8);
+}
+
+.exam-results-table th {
+    padding: 14px 16px;
+    text-align: center;
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: #b45309;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    white-space: nowrap;
+}
+
+.exam-results-table td {
+    padding: 13px 16px;
+    text-align: center;
+    color: #0f172a;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.exam-results-table tr:last-child td {
+    border-bottom: none;
+}
+
+.exam-results-table tr:hover td {
+    background: rgba(185, 28, 28, 0.03);
+}
+
+.exam-results-table td:nth-child(2) {
+    text-align: left;
+    font-weight: 700;
+}
+
+/* Grade Badges */
+.grade-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-weight: 800;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+}
+
+.grade-A {
+    background: rgba(16, 185, 129, 0.15);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.grade-B {
+    background: rgba(59, 130, 246, 0.15);
+    color: #2563eb;
+    border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+.grade-C {
+    background: rgba(234, 179, 8, 0.15);
+    color: #b45309;
+    border: 1px solid rgba(234, 179, 8, 0.4);
+}
+
+.grade-S {
+    background: rgba(249, 115, 22, 0.15);
+    color: #c2410c;
+    border: 1px solid rgba(249, 115, 22, 0.35);
+}
+
+.grade-W {
+    background: rgba(185, 28, 28, 0.15);
+    color: #b91c1c;
+    border: 1px solid rgba(185, 28, 28, 0.4);
+}
+
+/* ===== Print Actions ===== */
+.print-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 16px;
+}
+
+.btn-print {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #ffffff;
+    border: 1px solid rgba(234, 179, 8, 0.4);
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.25s ease;
+    box-shadow: 0 6px 18px rgba(185, 28, 28, 0.3);
+    font-family: inherit;
+}
+
+.btn-print:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(185, 28, 28, 0.45);
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.btn-print:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ===== A4 Report Sheet ===== */
+.a4-sheet {
+    background: #ffffff !important;
+    color: #111827 !important;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 35px 40px;
+    border-radius: 12px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    box-sizing: border-box;
+}
+
+.a4-header {
+    text-align: center;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+}
+
+.a4-logo {
+    height: 80px;
+    width: auto;
+    margin-bottom: 10px;
+    object-fit: contain;
+}
+
+.a4-school-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #b91c1c;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.a4-school-subtitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4b5563;
+    margin: 4px 0 10px;
+}
+
+.a4-badge-tag {
+    display: inline-block;
+    padding: 5px 16px;
+    background: rgba(254, 252, 232, 0.9);
+    color: #b45309;
+    border: 1px solid rgba(234, 179, 8, 0.5);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.a4-student-info {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: #334155;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.info-row:last-child { margin-bottom: 0; }
+.info-row .full-width { width: 100%; }
+.info-row strong { color: #0f172a; font-weight: 700; }
+
+.a4-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 22px;
+}
+
+.a4-table th,
+.a4-table td {
+    border: 1px solid #cbd5e1;
+    padding: 9px 12px;
+    font-size: 13px;
+}
+
+.a4-table th {
+    background: #fefce8;
+    color: #b45309;
+    font-weight: 800;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-size: 11px;
+}
+
+.a4-table td {
+    text-align: center;
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.a4-table td:nth-child(2) {
+    text-align: left;
+    font-weight: 700;
+}
+
+.a4-table .a4-grade-A { color: #059669; font-weight: 800; }
+.a4-table .a4-grade-B { color: #2563eb; font-weight: 800; }
+.a4-table .a4-grade-C { color: #b45309; font-weight: 800; }
+.a4-table .a4-grade-S { color: #c2410c; font-weight: 800; }
+.a4-table .a4-grade-W { color: #b91c1c; font-weight: 800; }
+
+.a4-summary-box {
+    display: flex;
+    justify-content: space-around;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 40px;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+}
+
+.s-label {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.s-value {
+    font-size: 20px;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+.summary-item.highlight .s-value {
+    color: #b91c1c;
+}
+
+.a4-footer-signatures {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 50px;
+    padding: 0 20px;
+    gap: 20px;
+}
+
+.sig-block {
+    text-align: center;
+    flex: 1;
+    max-width: 220px;
+}
+
+.sig-line {
+    border-top: 1px dashed #64748b;
+    margin-bottom: 8px;
+}
+
+.sig-block p {
+    font-size: 12px;
+    color: #475569;
+    margin: 0;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 640px) {
+    .content-wrapper {
+        padding: 16px 12px 32px;
+    }
+
+    .exam-search-card,
+    .exam-page-header {
+        padding: 22px 18px;
+    }
+
+    .exam-header-title {
+        font-size: 1.35rem;
+    }
+
+    .exam-tab {
+        padding: 12px 12px;
+        font-size: 0.82rem;
+        gap: 6px;
+    }
+
+    .analysis-summary-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .summary-stat-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        text-align: left;
+        padding: 18px;
+    }
+
+    .stat-icon-wrap {
+        margin: 0;
+        flex-shrink: 0;
+    }
+
+    .stat-label { margin-bottom: 2px; }
+    .stat-value { font-size: 1.4rem; }
+
+    .charts-grid-exam {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .chart-wrapper-exam {
+        height: 260px;
+    }
+
+    .a4-sheet {
+        padding: 24px 18px;
+    }
+
+    .a4-school-title { font-size: 15px; }
+    .a4-school-subtitle { font-size: 12px; }
+    .a4-logo { height: 60px; }
+
+    .a4-table th,
+    .a4-table td {
+        padding: 7px 8px;
+        font-size: 11px;
+    }
+
+    .s-value { font-size: 16px; }
+
+    .btn-print {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .print-actions {
+        justify-content: stretch;
+    }
+}
+
+/* ===== Print Styles (also works for html2pdf) ===== */
+@media print {
+    body * { visibility: hidden; }
+    #a4Sheet, #a4Sheet * { visibility: visible; }
+    #a4Sheet {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        box-shadow: none !important;
+    }
+    .print-actions { display: none !important; }
+}
