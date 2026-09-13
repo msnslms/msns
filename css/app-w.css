@@ -201,3 +201,108 @@
 .ios-install-card {
     text-align: center;
 }
+/* ==========================================================
+   🔥 FIX: "How to Install" Section & All Remaining Text
+   (app.css එකේ තියෙන white text ඔක්කොම dark කරන්න)
+   ========================================================== */
+
+/* App section එකේ තියෙන හැම heading, paragraph, span වලට dark color */
+.app-section h1,
+.app-section h2,
+.app-section h3,
+.app-section h4,
+.app-section h5,
+.app-section h6,
+.app-section p,
+.app-section span,
+.app-section li,
+.app-section label,
+.app-section small,
+.app-section strong,
+.app-section em,
+.app-section b,
+.ios-install-card h1,
+.ios-install-card h2,
+.ios-install-card h3,
+.ios-install-card h4,
+.ios-install-card h5,
+.ios-install-card h6,
+.ios-install-card p,
+.ios-install-card span,
+.ios-install-card li,
+.ios-install-card label,
+.ios-install-card strong,
+.ios-install-card b {
+    color: #0f172a !important;
+}
+
+/* "HOW TO INSTALL" වගේ section headings — රතු පාට (school identity) */
+.app-section .section-heading,
+.app-section h2.section-heading,
+.app-section h3.section-heading,
+.how-to-install-heading,
+#howToInstall h2,
+#howToInstall h3 {
+    color: #b91c1c !important;
+    font-weight: 800 !important;
+    letter-spacing: 1.5px !important;
+    text-transform: uppercase !important;
+}
+
+/* Steps / numbered list text */
+.app-section ol li,
+.app-section ul li,
+.ios-install-card ol li,
+.ios-install-card ul li {
+    color: #0f172a !important;
+}
+
+/* Bold text inside steps (e.g. "Download APK Direct", "Downloads") */
+.app-section li strong,
+.app-section li b,
+.ios-install-card li strong,
+.ios-install-card li b,
+.app-section p strong,
+.app-section p b,
+.ios-install-card p strong,
+.ios-install-card p b {
+    color: #b91c1c !important;
+    font-weight: 700 !important;
+}
+
+/* Steps container card */
+.install-steps,
+.install-steps-card,
+.ios-install-steps,
+.ios-install-card .steps-wrapper {
+    background: rgba(255, 255, 255, 0.7) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    border-radius: 16px !important;
+    padding: 20px !important;
+    color: #0f172a !important;
+}
+
+/* Numbered step circles (if any) */
+.step-number,
+.install-step-number {
+    background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+    color: #ffffff !important;
+    border: 2px solid rgba(234, 179, 8, 0.4) !important;
+}
+
+/* Note / info text */
+.app-section .note,
+.ios-install-card .note,
+.app-section .hint,
+.ios-install-card .hint {
+    color: #71717a !important;
+    font-style: italic !important;
+}
+
+/* Any remaining span without class inside the install area */
+#howToInstall span,
+#how-to-install span,
+#installSection span,
+#ios-install span {
+    color: #0f172a !important;
+}
