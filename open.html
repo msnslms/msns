@@ -2,37 +2,45 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="google-site-verification" content="Ihn5xmushUjUaDypm_IDAc3Z-YQIDOa61yOyv1rl52w" />
     <title>Welcome | A/Maithripala Senanayaka Central College</title>
     <link rel="icon" type="image/png" href="school bage.png">
-    <link rel="stylesheet" href="fix.css">
+
     <style>
+        /* ==========================================================
+           GLOBAL RESET
+           ========================================================== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, 'Noto Sans Sinhala', 'Noto Sans Tamil';
         }
 
+        /* ==========================================================
+           BODY + AMBIENT BACKGROUND
+           ========================================================== */
         body {
-            background-color: #070b12; /* index.html එකේ background එකමයි */
+            background-color: #070b12;
             color: #ffffff;
             min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
             padding: 2.5rem 1.5rem;
             overflow: hidden;
+            position: relative;
         }
 
-        /* Ambient Background Glow */
+        /* Ambient radial glows */
         .glow-bg {
             position: absolute;
-            width: 250px;
-            height: 250px;
-            background: radial-gradient(circle, rgba(0, 198, 255, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, rgba(220, 38, 38, 0.10) 0%, rgba(0, 0, 0, 0) 70%);
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -40,7 +48,20 @@
             pointer-events: none;
         }
 
-        /* Main Welcome Container */
+        .glow-bg-2 {
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            background: radial-gradient(circle, rgba(234, 179, 8, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
+            top: 30%;
+            left: 30%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ==========================================================
+           MAIN WELCOME CARD
+           ========================================================== */
         .welcome-card {
             position: relative;
             z-index: 1;
@@ -49,51 +70,190 @@
             align-items: center;
             text-align: center;
             max-width: 480px;
+            width: 100%;
             margin: auto;
+            gap: 0.3rem;
         }
 
-        /* 1. Badge Pop/Fade Animation */
+        /* ---------- School Badge (Pop + Float) ---------- */
         .badge-container {
-            margin-bottom: 1.8rem;
+            margin-bottom: 1.6rem;
         }
 
         .school-badge {
-            width: 100px; /* Clean & Compact Size */
+            width: 100px;
             height: 100px;
             object-fit: contain;
-            filter: drop-shadow(0 4px 18px rgba(255, 255, 255, 0.12));
+            filter: drop-shadow(0 4px 18px rgba(255, 255, 255, 0.15));
             opacity: 0;
             transform: scale(0.7);
-            animation: badgeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.2s;
+            animation: badgeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.2s,
+                       badgeFloat 3.5s ease-in-out infinite 1.2s;
         }
 
-        /* 2. Welcome To Fade Animation */
-        .sub-tag {
-            font-size: 0.68rem;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            color: #94a3b8;
-            font-weight: 500;
-            margin-bottom: 0.6rem;
+        /* ---------- Multi-Language "Welcome" ---------- */
+        .lang-welcome-wrap {
+            position: relative;
+            height: 60px;
+            width: 100%;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .welcome-word {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #ffffff;
             opacity: 0;
-            transform: translateY(8px);
-            animation: fadeIn 0.8s ease forwards 0.9s;
+            transform: translateY(20px) scale(0.9);
+            filter: blur(10px);
+            pointer-events: none;
+            transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        /* 3. Typewriter School Name */
+        .welcome-word.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            filter: blur(0);
+        }
+
+        .welcome-word.exit {
+            opacity: 0;
+            transform: translateY(-20px) scale(1.05);
+            filter: blur(10px);
+        }
+
+        /* Language-specific colors */
+        .welcome-word.sinhala {
+            color: #fbbf24;
+            font-family: 'Noto Sans Sinhala', sans-serif;
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+        }
+
+        .welcome-word.english {
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .welcome-word.tamil {
+            color: #fca5a5;
+            font-family: 'Noto Sans Tamil', sans-serif;
+            text-shadow: 0 0 20px rgba(252, 165, 165, 0.4);
+        }
+
+        /* ---------- School Name Typewriter ---------- */
         .school-name {
-            font-size: 1.05rem; /* Sleek & Small Size */
-            font-weight: 600;
+            font-size: 1.05rem;
+            font-weight: 700;
             color: #ffffff;
             letter-spacing: 1.2px;
             line-height: 1.6;
-            min-height: 3.2rem; /* Avoid layout shift while typing */
+            min-height: 3.2rem;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-wrap: wrap;
+            text-align: center;
+            margin-bottom: 0.4rem;
         }
-       /* Footer */
+
+        #typed-text {
+            white-space: pre-wrap;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1.1em;
+            background: #b91c1c;
+            margin-left: 4px;
+            vertical-align: middle;
+            animation: blink 0.9s step-end infinite;
+            box-shadow: 0 0 8px rgba(185, 28, 28, 0.8);
+        }
+
+        /* ---------- School Name Tamil & Sinhala Preview ---------- */
+        .school-name-alt {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #94a3b8;
+            letter-spacing: 0.5px;
+            line-height: 1.7;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards 4.5s;
+            max-width: 90%;
+            margin: 0 auto 1.4rem auto;
+        }
+
+        .school-name-alt .sinhala-line {
+            font-family: 'Noto Sans Sinhala', sans-serif;
+            color: #fbbf24;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .school-name-alt .tamil-line {
+            font-family: 'Noto Sans Tamil', sans-serif;
+            color: #fca5a5;
+            display: block;
+            opacity: 0.85;
+        }
+
+        /* ---------- Loading Dots ---------- */
+        .loading-dots-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 0.4rem;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards 5.2s;
+        }
+
+        .loading-dots {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            height: 12px;
+        }
+
+        .loading-dots .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #b91c1c;
+            box-shadow: 0 0 10px rgba(185, 28, 28, 0.6);
+            animation: bouncingDots 1.4s ease-in-out infinite;
+        }
+
+        .loading-dots .dot:nth-child(1) { animation-delay: 0s; }
+        .loading-dots .dot:nth-child(2) { animation-delay: 0.2s; background: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.6); }
+        .loading-dots .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        .loading-text {
+            font-size: 0.75rem;
+            color: #64748b;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-left: 10px;
+        }
+
+        /* ==========================================================
+           FOOTER
+           ========================================================== */
         footer {
             position: relative;
             z-index: 1;
@@ -102,14 +262,18 @@
             color: #475569;
             letter-spacing: 0.8px;
             opacity: 0;
-            animation: fadeIn 0.8s ease forwards 1.2s;
+            animation: fadeIn 0.8s ease forwards 5.8s;
         }
 
         footer span {
             color: #64748b;
         }
 
-        /* Animations */
+        /* ==========================================================
+           KEYFRAMES
+           ========================================================== */
+
+        /* Badge pop in */
         @keyframes badgeIn {
             to {
                 opacity: 1;
@@ -117,6 +281,13 @@
             }
         }
 
+        /* Badge continuous float */
+        @keyframes badgeFloat {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-6px); }
+        }
+
+        /* Fade in */
         @keyframes fadeIn {
             to {
                 opacity: 1;
@@ -124,67 +295,204 @@
             }
         }
 
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Blinking cursor */
         @keyframes blink {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
+            50%      { opacity: 0; }
+        }
+
+        /* Bouncing dots (like Apple / React component) */
+        @keyframes bouncingDots {
+            0%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            50% {
+                transform: scale(1.3);
+                opacity: 1;
+            }
+        }
+
+        /* ==========================================================
+           ANIMISTA ANIMATIONS (text-focus-in / focus-in-expand)
+           ========================================================== */
+        @-webkit-keyframes text-focus-in {
+            0% {
+                -webkit-filter: blur(12px);
+                filter: blur(12px);
+                opacity: 0;
+            }
+            100% {
+                -webkit-filter: blur(0px);
+                filter: blur(0px);
+                opacity: 1;
+            }
+        }
+        @keyframes text-focus-in {
+            0% {
+                -webkit-filter: blur(12px);
+                filter: blur(12px);
+                opacity: 0;
+            }
+            100% {
+                -webkit-filter: blur(0px);
+                filter: blur(0px);
+                opacity: 1;
+            }
+        }
+
+        @-webkit-keyframes focus-in-expand {
+            0% {
+                letter-spacing: -0.5em;
+                -webkit-filter: blur(12px);
+                filter: blur(12px);
+                opacity: 0;
+            }
+            100% {
+                -webkit-filter: blur(0px);
+                filter: blur(0px);
+                opacity: 1;
+            }
+        }
+        @keyframes focus-in-expand {
+            0% {
+                letter-spacing: -0.5em;
+                -webkit-filter: blur(12px);
+                filter: blur(12px);
+                opacity: 0;
+            }
+            100% {
+                -webkit-filter: blur(0px);
+                filter: blur(0px);
+                opacity: 1;
+            }
+        }
+
+        .text-focus-in {
+            -webkit-animation: text-focus-in 1s cubic-bezier(0.550, 0.085, 0.680, 0.530) both;
+            animation: text-focus-in 1s cubic-bezier(0.550, 0.085, 0.680, 0.530) both;
+        }
+
+        .focus-in-expand {
+            -webkit-animation: focus-in-expand 0.8s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+            animation: focus-in-expand 0.8s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+        }
+
+        /* ==========================================================
+           RESPONSIVE
+           ========================================================== */
+        @media (max-width: 480px) {
+            body {
+                padding: 2rem 1rem;
+            }
+
+            .school-badge {
+                width: 85px;
+                height: 85px;
+            }
+
+            .welcome-word {
+                font-size: 1.8rem;
+            }
+
+            .lang-welcome-wrap {
+                height: 55px;
+            }
+
+            .school-name {
+                font-size: 0.95rem;
+            }
+
+            .school-name-alt {
+                font-size: 0.78rem;
+            }
+
+            .loading-dots .dot {
+                width: 7px;
+                height: 7px;
+            }
+        }
+
+        /* ==========================================================
+           REDUCED MOTION
+           ========================================================== */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
+
+    <!-- Google Fonts (Multi-language) -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
+    <!-- Ambient Background Glows -->
     <div class="glow-bg"></div>
+    <div class="glow-bg-2"></div>
 
     <div class="welcome-card">
+
         <!-- School Badge -->
         <div class="badge-container">
             <img src="school bage.png" alt="School Badge" class="school-badge">
         </div>
 
-        <!-- Fade Animation Subtitle -->
-        <div class="sub-tag">Welcome to</div>
+        <!-- Multi-Language Welcome (cycles: Sinhala → English → Tamil) -->
+        <div class="lang-welcome-wrap">
+            <div class="welcome-word sinhala" data-lang="sinhala">සාදරයෙන් පිළිගනිමු</div>
+            <div class="welcome-word english" data-lang="english">Welcome</div>
+            <div class="welcome-word tamil" data-lang="tamil">வரவேற்கிறோம்</div>
+        </div>
 
-        <!-- Typewriter Animated Title -->
+        <!-- Typewriter School Name (English) -->
         <h1 class="school-name">
             <span id="typed-text"></span><span class="cursor" id="cursor"></span>
         </h1>
+
+        <!-- Sinhala + Tamil School Names -->
+        <p class="school-name-alt">
+            <span class="sinhala-line">ආ/මෛත්‍රීපාල සේනානායක මධ්‍ය විද්‍යාලය</span>
+            <span class="tamil-line">ஏ/மைத்ரிபால சேனாநாயக்க மத்திய கல்லூரி</span>
+        </p>
+
+        <!-- Bouncing Loading Dots -->
+        <div class="loading-dots-wrap">
+            <span class="loading-dots" role="status" aria-label="Loading">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+            </span>
+            <span class="loading-text">Loading Portal</span>
+        </div>
+
     </div>
 
-    <!-- Clean Footer -->
+    <!-- Footer -->
     <footer>
         <p>© 2026 MSNS.LK &nbsp;&nbsp; <br><span>Designed by K.D.G.S.M. Deniyegedara</span></p>
     </footer>
 
-    <script>
-        const textToType = "A/MAITHRIPALA SENANAYAKA CENTRAL COLLEGE";
-        const typedTextElement = document.getElementById("typed-text");
-        const cursorElement = document.getElementById("cursor");
+    <!-- ==========================================================
+         WELCOME SPLASH LOGIC (External JS)
+         ========================================================== -->
+    <script src="js/opdn.js?v=3"></script>
 
-        let index = 0;
-        const typingSpeed = 45; // Speed per character (ms)
-        const startDelay = 1600; // Delay before typing starts (after badge & welcome fade in)
-        const redirectDelay = 1200; // Wait time after typing finishes before redirecting
-
-        function typeWriter() {
-            if (index < textToType.length) {
-                // Break lines cleanly for mobile view readability
-                if (textToType.substring(index).startsWith("CENTRAL")) {
-                    typedTextElement.innerHTML += "<br>";
-                }
-                typedTextElement.innerHTML += textToType.charAt(index);
-                index++;
-                setTimeout(typeWriter, typingSpeed);
-            } else {
-                // Typing complete: set session & auto redirect
-                setTimeout(() => {
-                    sessionStorage.setItem('welcomeShown', 'true');
-                    window.location.href = 'index.html?visited=true';
-                }, redirectDelay);
-            }
-        }
-
-        // Start typing after initial animations finish
-        setTimeout(typeWriter, startDelay);
-    </script>
-    <script src="paw.js?v=2"></script>
 </body>
 </html>
