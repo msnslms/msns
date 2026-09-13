@@ -6,180 +6,180 @@
     <title>Student Traffic Warden Unit - MSNS.EDU.LK</title>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style-w.css">
     <link rel="stylesheet" href="css/footer.css?v=2">
     <style>
-      .hero-banner {
-            position: relative;
-            width: 100%;
-            height: 340px;
-            overflow: hidden;
-            border-radius: 0 0 28px 28px;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            padding: 24px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
-        }
+.hero-banner {
+    position: relative;
+    width: 100%;
+    height: 340px;
+    overflow: hidden;
+    border-radius: 0 0 28px 28px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 24px;
+    box-shadow: 0 15px 35px rgba(185, 28, 28, 0.15);
+}
 
-        .hero-video {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: translate(-50%, -50%);
-            z-index: 1;
-            filter: brightness(0.6) contrast(1.1);
-        }
-        /* Modern Glassmorphism Cards */
-        .glass-card {
-            background: rgba(18, 26, 43, 0.5);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 24px;
-            padding: 35px 28px;
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
-            margin-bottom: 35px;
-        }
+.hero-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    filter: brightness(0.6) contrast(1.1);
+}
+/* Modern Glassmorphism Cards */
+.glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 24px;
+    padding: 35px 28px;
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 35px;
+}
 
-        /* Hero Video Container */
-        .hero-video-container {
-            position: relative;
-            width: 100%;
-            height: 55vh;
-            min-height: 360px;
-            overflow: hidden;
-            border-radius: 28px;
-            margin-bottom: 35px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
+/* Hero Video Container */
+.hero-video-container {
+    position: relative;
+    width: 100%;
+    height: 55vh;
+    min-height: 360px;
+    overflow: hidden;
+    border-radius: 28px;
+    margin-bottom: 35px;
+    box-shadow: 0 20px 40px rgba(185, 28, 28, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
 
-        .hero-video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+.hero-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
 
-        /* Badge Display */
-        .badge-wrapper {
-            text-align: center;
-            margin: 20px 0 30px 0;
-        }
+/* Badge Display */
+.badge-wrapper {
+    text-align: center;
+    margin: 20px 0 30px 0;
+}
 
-        .badge-img {
-            max-width: 260px;
-            width: 100%;
-            height: auto;
-            filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.5));
-            transition: transform 0.4s ease;
-        }
+.badge-img {
+    max-width: 260px;
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 12px 24px rgba(185, 28, 28, 0.25));
+    transition: transform 0.4s ease;
+}
 
-        .badge-img:hover {
-            transform: scale(1.05);
-        }
+.badge-img:hover {
+    transform: scale(1.05);
+}
 
-        /* Content Text */
-        .about-text {
-            color: #cbd5e1;
-            line-height: 1.8;
-            font-size: 1.05rem;
-            text-align: justify;
-        }
+/* Content Text */
+.about-text {
+    color: #52525b;
+    line-height: 1.8;
+    font-size: 1.05rem;
+    text-align: justify;
+}
 
-        .about-text strong, .about-text b {
-            color: #38bdf8;
-        }
+.about-text strong, .about-text b {
+    color: #b91c1c;
+}
 
-        /* Gallery Grid System */
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 20px;
-            margin-top: 15px;
-        }
+/* Gallery Grid System */
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    margin-top: 15px;
+}
 
-        .gallery-item {
-            position: relative;
-            border-radius: 20px;
-            overflow: hidden;
-            aspect-ratio: 4 / 3;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-        }
+.gallery-item {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
 
-        .gallery-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
 
-        .gallery-item:hover img {
-            transform: scale(1.1);
-        }
+.gallery-item:hover img {
+    transform: scale(1.1);
+}
 
-        .gallery-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(4px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.4s ease;
-        }
+.gallery-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
 
-        .gallery-item:hover .gallery-overlay {
-            opacity: 1;
-        }
+.gallery-item:hover .gallery-overlay {
+    opacity: 1;
+}
 
-        .overlay-text h4 {
-            color: #38bdf8;
-            font-size: 1.15rem;
-            font-weight: 800;
-            letter-spacing: 1.5px;
-            transform: translateY(15px);
-            transition: transform 0.4s ease;
-            margin: 0;
-        }
+.overlay-text h4 {
+    color: #fbbf24;
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    transform: translateY(15px);
+    transition: transform 0.4s ease;
+    margin: 0;
+}
 
-        .gallery-item:hover .overlay-text h4 {
-            transform: translateY(0);
-        }
+.gallery-item:hover .overlay-text h4 {
+    transform: translateY(0);
+}
 
-        /* Scroll To Top Button */
-        #backToTop {
-            display: none;
-            position: fixed;
-            bottom: 30px;
-            right: 25px;
-            z-index: 99;
-            border: none;
-            outline: none;
-            background: #38bdf8;
-            color: #0f172a;
-            cursor: pointer;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            font-size: 20px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
-            align-items: center;
-            justify-content: center;
-        }
+/* Scroll To Top Button */
+#backToTop {
+    display: none;
+    position: fixed;
+    bottom: 30px;
+    right: 25px;
+    z-index: 99;
+    border: none;
+    outline: none;
+    background: #b91c1c;
+    color: #ffffff;
+    cursor: pointer;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    font-size: 20px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(185, 28, 28, 0.35);
+    align-items: center;
+    justify-content: center;
+}
 
-        #backToTop:hover {
-            background: #ffffff;
-            color: #0284c7;
-            transform: scale(1.1);
-        }
+#backToTop:hover {
+    background: #0f172a;
+    color: #ffffff;
+    transform: scale(1.1);
+}
     </style>
 </head>
 <body>
