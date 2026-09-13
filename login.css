@@ -1,5 +1,6 @@
 /* ==========================================
-   MSNS Login & Profile Modern Glassmorphic CSS
+   MSNS Login & Profile Modern Light CSS
+   (Red & Gold School Theme)
    ========================================== */
 
 /* Global Reset & Body Setup */
@@ -10,9 +11,13 @@
 }
 
 body {
-    background-color: #0d1117;
+    background-color: #ffffff;
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(220, 38, 38, 0.05) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(234, 179, 8, 0.05) 0px, transparent 50%);
+    background-attachment: fixed;
     font-family: 'Poppins', sans-serif;
-    color: #ffffff;
+    color: #0f172a;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -27,32 +32,32 @@ header#top {
     justify-content: space-between;
     padding: 12px 20px;
     width: 100%;
-    background: rgba(13, 17, 23, 0.85);
+    background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     position: sticky;
     top: 0;
     z-index: 100;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .header-title {
     font-size: 1.15rem;
     font-weight: 700;
-    color: #ffffff;
+    color: #0f172a;
     letter-spacing: 1px;
 }
 
 .back-home-btn {
-    color: #60a5fa;
+    color: #b91c1c;
     text-decoration: none;
     font-size: 0.82rem;
-    font-weight: 500;
+    font-weight: 600;
     transition: color 0.3s ease;
 }
 
 .back-home-btn:hover {
-    color: #ffffff;
+    color: #b45309;
 }
 
 /* ==========================================
@@ -67,15 +72,15 @@ header#top {
 }
 
 .login-card {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.75);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 20px;
     padding: 22px 20px;
     width: 100%;
     max-width: 410px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
     text-align: center;
 }
 
@@ -89,13 +94,13 @@ header#top {
     margin: 0;
     font-size: 1.25rem;
     font-weight: 600;
-    color: #ffffff;
+    color: #0f172a;
 }
 
 .login-header p {
     margin: 4px 0 14px 0;
     font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.65);
+    color: #71717a;
 }
 
 /* ==========================================
@@ -103,8 +108,8 @@ header#top {
    ========================================== */
 .auth-mode-switch {
     display: flex;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 10px;
     padding: 3px;
     margin-bottom: 12px;
@@ -116,7 +121,7 @@ header#top {
     padding: 8px 10px;
     border: none;
     background: transparent;
-    color: rgba(255, 255, 255, 0.6);
+    color: #71717a;
     font-size: 0.82rem;
     font-weight: 600;
     border-radius: 7px;
@@ -125,9 +130,9 @@ header#top {
 }
 
 .mode-btn.active {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
     color: #ffffff;
-    box-shadow: 0 4px 10px rgba(29, 78, 216, 0.35);
+    box-shadow: 0 4px 10px rgba(185, 28, 28, 0.3);
 }
 
 /* ==========================================
@@ -136,11 +141,11 @@ header#top {
 .role-selector {
     display: flex;
     gap: 6px;
-    background: rgba(0, 0, 0, 0.25);
+    background: rgba(0, 0, 0, 0.04);
     padding: 4px;
     border-radius: 10px;
     margin-bottom: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .role-btn {
@@ -151,7 +156,7 @@ header#top {
     gap: 5px;
     background: transparent;
     border: none;
-    color: rgba(255, 255, 255, 0.6);
+    color: #71717a;
     padding: 8px 4px;
     border-radius: 7px;
     font-size: 0.78rem;
@@ -165,9 +170,9 @@ header#top {
 }
 
 .role-btn.active {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
     color: #ffffff;
-    box-shadow: 0 4px 10px rgba(29, 78, 216, 0.35);
+    box-shadow: 0 4px 10px rgba(185, 28, 28, 0.3);
 }
 
 /* ==========================================
@@ -181,7 +186,8 @@ header#top {
 .input-group label {
     display: block;
     font-size: 0.76rem;
-    color: rgba(255, 255, 255, 0.8);
+    color: #52525b;
+    font-weight: 600;
     margin-bottom: 4px;
 }
 
@@ -198,7 +204,7 @@ header#top {
     position: absolute;
     left: 12px;
     font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.5);
+    color: #b45309;
     pointer-events: none;
     z-index: 2;
 }
@@ -206,10 +212,10 @@ header#top {
 .input-wrap input {
     width: 100%;
     padding: 10px 12px 10px 38px !important;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.12);
     border-radius: 10px;
-    color: #ffffff;
+    color: #0f172a;
     font-size: 0.85rem;
     outline: none;
     transition: all 0.3s ease;
@@ -217,24 +223,28 @@ header#top {
 }
 
 .input-wrap input:focus {
-    border-color: #3b82f6;
-    background: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+    border-color: #b91c1c;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.12);
+}
+
+.input-wrap input::placeholder {
+    color: #a1a1aa;
 }
 
 .help-text {
     display: block;
     margin-top: 4px;
     font-size: 0.72rem;
-    color: rgba(255, 255, 255, 0.5);
+    color: #71717a;
 }
 
 /* ==========================================
    CAPTCHA Box Styling
    ========================================== */
 .captcha-box {
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(254, 252, 232, 0.6);
+    border: 1px solid rgba(234, 179, 8, 0.3);
     border-radius: 10px;
     padding: 10px;
     margin-bottom: 12px;
@@ -250,23 +260,23 @@ header#top {
 
 .captcha-code {
     flex: 1;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px dashed rgba(255, 255, 255, 0.25);
+    background: #ffffff;
+    border: 1px dashed rgba(185, 28, 28, 0.4);
     border-radius: 7px;
     padding: 6px 10px;
     font-family: 'Courier New', Courier, monospace;
     font-weight: 700;
     font-size: 1.05rem;
     letter-spacing: 3px;
-    color: #38bdf8;
+    color: #b91c1c;
     text-align: center;
     user-select: none;
 }
 
 .btn-refresh-captcha {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #ffffff;
+    background: #ffffff;
+    border: 1px solid rgba(234, 179, 8, 0.4);
+    color: #b45309;
     width: 34px;
     height: 34px;
     border-radius: 7px;
@@ -278,8 +288,9 @@ header#top {
 }
 
 .btn-refresh-captcha:hover {
-    background: #3b82f6;
-    border-color: #60a5fa;
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    border-color: #b91c1c;
+    color: #ffffff;
 }
 
 /* ==========================================
@@ -289,20 +300,21 @@ header#top {
     width: 100%;
     padding: 11px;
     margin-top: 4px;
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    border: none;
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    border: 1px solid rgba(234, 179, 8, 0.35);
     border-radius: 10px;
     color: #ffffff;
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 14px rgba(29, 78, 216, 0.4);
+    box-shadow: 0 4px 14px rgba(185, 28, 28, 0.35);
 }
 
 .login-submit-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 20px rgba(29, 78, 216, 0.5);
+    box-shadow: 0 8px 20px rgba(185, 28, 28, 0.5);
+    background: linear-gradient(135deg, #ef4444, #dc2626);
 }
 
 /* Divider */
@@ -316,13 +328,13 @@ header#top {
     content: "";
     flex: 1;
     height: 1px;
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.1);
 }
 
 .divider span {
     padding: 0 10px;
     font-size: 0.72rem;
-    color: rgba(255, 255, 255, 0.4);
+    color: #a1a1aa;
 }
 
 /* Google Sign-In Button */
@@ -333,19 +345,20 @@ header#top {
     justify-content: center;
     gap: 8px;
     padding: 10px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.12);
     border-radius: 10px;
-    color: #ffffff;
+    color: #0f172a;
     font-size: 0.85rem;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .google-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.35);
+    background: rgba(254, 252, 232, 0.9);
+    border-color: rgba(234, 179, 8, 0.5);
+    color: #b45309;
 }
 
 /* Alerts */
@@ -355,18 +368,19 @@ header#top {
     font-size: 0.78rem;
     margin-bottom: 12px;
     text-align: left;
+    font-weight: 600;
 }
 
 .auth-alert.error {
-    background: rgba(239, 68, 68, 0.2);
-    border: 1px solid rgba(239, 68, 68, 0.4);
-    color: #fca5a5;
+    background: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.35);
+    color: #b91c1c;
 }
 
 .auth-alert.success {
-    background: rgba(34, 197, 94, 0.2);
-    border: 1px solid rgba(34, 197, 94, 0.4);
-    color: #86efac;
+    background: rgba(22, 163, 74, 0.1);
+    border: 1px solid rgba(22, 163, 74, 0.35);
+    color: #15803d;
 }
 
 .auth-alert.hidden {
@@ -384,14 +398,14 @@ header#top {
 }
 
 .profile-card {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.75);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 18px;
     padding: 20px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
-    color: #ffffff;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+    color: #0f172a;
 }
 
 .profile-header-wrap {
@@ -399,22 +413,22 @@ header#top {
     align-items: center;
     gap: 16px;
     padding-bottom: 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .user-avatar-circle {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.6rem;
     font-weight: 700;
     color: #ffffff;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(185, 28, 28, 0.35);
+    border: 2px solid rgba(234, 179, 8, 0.4);
     text-transform: uppercase;
     overflow: hidden;
 }
@@ -429,13 +443,13 @@ header#top {
     margin: 0;
     font-size: 1.4rem;
     font-weight: 600;
-    color: #ffffff;
+    color: #0f172a;
 }
 
 .user-main-info p {
     margin: 2px 0 4px 0;
     font-size: 0.85rem;
-    color: #93c5fd;
+    color: #b91c1c;
 }
 
 /* Badges */
@@ -444,23 +458,23 @@ header#top {
     padding: 3px 10px;
     border-radius: 16px;
     font-size: 0.75rem;
-    font-weight: 500;
-    background: rgba(59, 130, 246, 0.2);
-    border: 1px solid rgba(59, 130, 246, 0.4);
-    color: #60a5fa;
+    font-weight: 600;
+    background: rgba(220, 38, 38, 0.12);
+    border: 1px solid rgba(220, 38, 38, 0.35);
+    color: #b91c1c;
 }
 
 .role-badge.teacher {
-    background: rgba(16, 185, 129, 0.2);
-    border-color: rgba(16, 185, 129, 0.4);
-    color: #34d399;
+    background: rgba(22, 163, 74, 0.12);
+    border-color: rgba(22, 163, 74, 0.35);
+    color: #15803d;
 }
 
 /* Modals */
 .modal-backdrop {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(15, 23, 42, 0.6);
     backdrop-filter: blur(5px);
     display: flex;
     align-items: center;
@@ -469,14 +483,14 @@ header#top {
 }
 
 .modal-card {
-    background: #111827;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 16px;
     padding: 20px;
     width: 90%;
     max-width: 380px;
-    color: white;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    color: #0f172a;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
 /* Responsive Rules for Small Mobile Screens */
