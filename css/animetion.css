@@ -1,106 +1,79 @@
 /* ==========================================================
-   🎬 SCROLL REVEAL ANIMATIONS — Mobile Optimized & Ultra Smooth
+   🎬 SCROLL REVEAL ANIMATIONS — Global Float-Up System
+   (Blur ලාවට තියලා, හැම device එකකටම optimize කරපු version)
    ========================================================== */
 
 /* ---------- Base State: මුලින් invisible + යට ---------- */
 .scroll-reveal {
     opacity: 0;
-    /* Translate දුර 60px සිට 30px දක්වා අඩු කලා (Mobile screens වල Lag වීම වැලැක්වීමට) */
-    transform: translateY(30px) scale(0.98) translateZ(0);
-    filter: blur(4px);
+    transform: translateY(45px) scale(0.98);
+    filter: blur(2px);                    /* ← 6px → 2px (ලාවට) */
     transition: 
-        opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-        transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-        filter 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-    /* Mobile RAM එක Save කිරීමට will-change වලින් filter ඉවත් කරන ලදී */
+        opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+        filter 0.5s cubic-bezier(0.22, 1, 0.36, 1);  /* ← blur ඉක්මනට clear වෙනවා */
     will-change: opacity, transform;
-    /* GPU Hardware Acceleration සක්‍රීය කර iOS/Android flicker වීම නවත්වයි */
-    backface-visibility: hidden;
+    backface-visibility: hidden;          /* ← GPU smooth render */
     -webkit-backface-visibility: hidden;
+    transform: translateZ(0);             /* ← GPU layer promote */
 }
 
-/* ---------- Active State: Scroll කරාම visible ---------- */
+/* ---------- Active State ---------- */
 .scroll-reveal.is-visible {
     opacity: 1;
     transform: translateY(0) scale(1) translateZ(0);
     filter: blur(0);
 }
 
-/* ---------- Variants (Mobile වලට ගැලපෙන ලෙස Distance අඩු කර ඇත) ---------- */
+/* ---------- Variants ---------- */
 
-/* වම් පැත්තෙන් එන එක */
 .scroll-reveal.reveal-from-left {
-    transform: translateX(-35px) scale(0.98) translateZ(0);
+    transform: translateX(-50px) scale(0.98) translateZ(0);
 }
 .scroll-reveal.reveal-from-left.is-visible {
     transform: translateX(0) scale(1) translateZ(0);
 }
 
-/* දකුණු පැත්තෙන් එන එක */
 .scroll-reveal.reveal-from-right {
-    transform: translateX(35px) scale(0.98) translateZ(0);
+    transform: translateX(50px) scale(0.98) translateZ(0);
 }
 .scroll-reveal.reveal-from-right.is-visible {
     transform: translateX(0) scale(1) translateZ(0);
 }
 
-/* Zoom වෙලා එන එක */
 .scroll-reveal.reveal-zoom {
     transform: scale(0.9) translateZ(0);
-    filter: blur(6px);
+    filter: blur(3px);                    /* ← 10px → 3px */
 }
 .scroll-reveal.reveal-zoom.is-visible {
     transform: scale(1) translateZ(0);
     filter: blur(0);
 }
 
-/* ලාවට rotate වෙලා එන එක */
 .scroll-reveal.reveal-rotate {
-    transform: translateY(25px) rotate(-2deg) scale(0.97) translateZ(0);
+    transform: translateY(40px) rotate(-2deg) scale(0.97) translateZ(0);
     transform-origin: center bottom;
 }
 .scroll-reveal.reveal-rotate.is-visible {
     transform: translateY(0) rotate(0) scale(1) translateZ(0);
 }
 
-/* ---------- Stagger Delays (ක්‍රමයෙන් ඉක්මන් වන පරිදි 0.04s බැගින්) ---------- */
-.scroll-reveal.delay-1 { transition-delay: 0.04s; }
-.scroll-reveal.delay-2 { transition-delay: 0.08s; }
-.scroll-reveal.delay-3 { transition-delay: 0.12s; }
-.scroll-reveal.delay-4 { transition-delay: 0.16s; }
-.scroll-reveal.delay-5 { transition-delay: 0.20s; }
-.scroll-reveal.delay-6 { transition-delay: 0.24s; }
-.scroll-reveal.delay-7 { transition-delay: 0.28s; }
-.scroll-reveal.delay-8 { transition-delay: 0.32s; }
+/* ---------- Stagger Delays ---------- */
+.scroll-reveal.delay-1 { transition-delay: 0.05s; }
+.scroll-reveal.delay-2 { transition-delay: 0.10s; }
+.scroll-reveal.delay-3 { transition-delay: 0.15s; }
+.scroll-reveal.delay-4 { transition-delay: 0.20s; }
+.scroll-reveal.delay-5 { transition-delay: 0.25s; }
+.scroll-reveal.delay-6 { transition-delay: 0.30s; }
+.scroll-reveal.delay-7 { transition-delay: 0.35s; }
+.scroll-reveal.delay-8 { transition-delay: 0.40s; }
 
 /* ==========================================================
-   📱 MOBILE SPECIFIC OPTIMIZATIONS (Screen width <= 768px)
-   ========================================================== */
-@media (max-width: 768px) {
-    .scroll-reveal {
-        /* Mobile GPU වල Blur ධාවනය කිරීම Lag වීමට ප්‍රධාන හේතුවක් නිසා Mobile වල Blur සම්පූර්ණයෙන්ම ඉවත් කලා */
-        filter: none !important;
-        transform: translateY(20px) scale(0.99) translateZ(0);
-        transition-duration: 0.45s;
-    }
-
-    .scroll-reveal.reveal-from-left { transform: translateX(-20px) scale(0.99) translateZ(0); }
-    .scroll-reveal.reveal-from-right { transform: translateX(20px) scale(0.99) translateZ(0); }
-    .scroll-reveal.reveal-zoom { transform: scale(0.94) translateZ(0); }
-    .scroll-reveal.reveal-rotate { transform: translateY(15px) rotate(-1deg) translateZ(0); }
-
-    .scroll-reveal.reveal-zoom,
-    .scroll-reveal.reveal-zoom.is-visible {
-        filter: none !important;
-    }
-}
-
-/* ==========================================================
-   ✨ Continuous Subtle Float (GPU Optimized)
+   ✨ Continuous Subtle Float
    ========================================================== */
 @keyframes subtleFloat {
     0%, 100% { transform: translateY(0) translateZ(0); }
-    50% { transform: translateY(-3px) translateZ(0); }
+    50%      { transform: translateY(-3px) translateZ(0); }
 }
 
 .scroll-reveal.is-visible .card-icon-wrap,
@@ -109,77 +82,117 @@
 .scroll-reveal.is-visible .dev-avatar-box,
 .scroll-reveal.is-visible .exam-header-icon {
     animation: subtleFloat 3.5s ease-in-out infinite;
-    will-change: transform;
 }
 
 /* ==========================================================
-   🎭 Text Focus In (Animista — Optimized)
+   🎭 Text Focus In (Blur ලාවට තියලා)
    ========================================================== */
 @keyframes text-focus-in {
     0% {
-        filter: blur(8px);
+        -webkit-filter: blur(6px);        /* ← 12px → 6px */
+        filter: blur(6px);
         opacity: 0;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
     }
     100% {
+        -webkit-filter: blur(0px);
         filter: blur(0px);
         opacity: 1;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
     }
 }
 
 .text-focus-in {
-    animation: text-focus-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-/* Mobile වල Text Focus blur ඉවත් කිරීම */
-@media (max-width: 768px) {
-    @keyframes text-focus-in {
-        0% { opacity: 0; transform: translateY(10px); }
-        100% { opacity: 1; transform: translateY(0); }
-    }
+    -webkit-animation: text-focus-in 0.8s cubic-bezier(0.550, 0.085, 0.680, 0.530) both;
+    animation: text-focus-in 0.8s cubic-bezier(0.550, 0.085, 0.680, 0.530) both;
 }
 
 /* ==========================================================
-   🎭 Scale Up Center & Down Top
+   🎭 Scale Up Center
    ========================================================== */
 @keyframes scale-up-center {
-    0% { transform: scale(0.85) translateZ(0); opacity: 0; }
-    100% { transform: scale(1) translateZ(0); opacity: 1; }
+    0%   { transform: scale(0.6) translateZ(0); }
+    100% { transform: scale(1)   translateZ(0); }
 }
 
 .scale-up-center {
-    animation: scale-up-center 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+    -webkit-animation: scale-up-center 0.4s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
+    animation: scale-up-center 0.4s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
 }
 
+/* ==========================================================
+   🎭 Scale Down Top
+   ========================================================== */
 @keyframes scale-down-top {
     0% {
         transform: scale(1) translateZ(0);
         transform-origin: 50% 0%;
     }
     100% {
-        transform: scale(0.85) translateZ(0);
+        transform: scale(0.6) translateZ(0);
         transform-origin: 50% 0%;
     }
 }
 
 .scale-down-top {
-    animation: scale-down-top 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+    -webkit-animation: scale-down-top 0.4s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+    animation: scale-down-top 0.4s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+}
+
+/* ==========================================================
+   📱 Mobile Devices — Blur අයින් කරලා smooth කරනවා
+   (Mobile GPU එකට blur බර වැඩි නිසා performance එකට)
+   ========================================================== */
+@media (max-width: 768px) {
+    .scroll-reveal {
+        filter: blur(1px);                /* ← Mobile වලට ලාවටම */
+        transform: translateY(35px) scale(0.99);
+        transition: 
+            opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+            transform 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+            filter 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .scroll-reveal.reveal-zoom {
+        filter: blur(2px);
+        transform: scale(0.94) translateZ(0);
+    }
+    .scroll-reveal.reveal-from-left {
+        transform: translateX(-35px) scale(0.99) translateZ(0);
+    }
+    .scroll-reveal.reveal-from-right {
+        transform: translateX(35px) scale(0.99) translateZ(0);
+    }
+}
+
+/* ==========================================================
+   🖥️ Low-end / Touch Devices — Blur කරන්නේ නෑ
+   ========================================================== */
+@media (hover: none) and (pointer: coarse) {
+    .scroll-reveal,
+    .scroll-reveal.reveal-zoom,
+    .scroll-reveal.reveal-rotate,
+    .scroll-reveal.reveal-from-left,
+    .scroll-reveal.reveal-from-right {
+        filter: none;                     /* Touch devices වල GPU save කරන්න */
+    }
+    .text-focus-in {
+        -webkit-animation: text-focus-in 0.8s cubic-bezier(0.550, 0.085, 0.680, 0.530) both;
+        animation: text-focus-in 0.8s cubic-bezier(0.550, 0.085, 0.680, 0.530) both;
+    }
 }
 
 /* ==========================================================
    ♿ Reduced Motion Support
    ========================================================== */
 @media (prefers-reduced-motion: reduce) {
-    .scroll-reveal,
-    .text-focus-in,
-    .scale-up-center,
-    .scale-down-top {
+    .scroll-reveal {
         opacity: 1 !important;
         transform: none !important;
         filter: none !important;
         transition: none !important;
-        animation: none !important;
     }
-    
     .scroll-reveal.is-visible .card-icon-wrap,
     .scroll-reveal.is-visible .feature-icon,
     .scroll-reveal.is-visible .stat-icon-wrap,
