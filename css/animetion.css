@@ -201,3 +201,29 @@
         animation: none !important;
     }
 }
+/* Lite tier — mobile / low-end devices */
+html.reveal-lite .scroll-reveal {
+    filter: blur(1px);
+    transform: translateY(35px) scale(0.99);
+    transition:
+        opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+        filter 0.35s ease;
+}
+
+/* Off tier — reduced motion */
+html.reveal-off .scroll-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
+}
+
+/* Lite tier — animated icons float එක නවත්තනවා */
+html.reveal-lite .scroll-reveal.is-visible .card-icon-wrap,
+html.reveal-lite .scroll-reveal.is-visible .feature-icon,
+html.reveal-lite .scroll-reveal.is-visible .stat-icon-wrap,
+html.reveal-lite .scroll-reveal.is-visible .dev-avatar-box,
+html.reveal-lite .scroll-reveal.is-visible .exam-header-icon {
+    animation: none;
+}
