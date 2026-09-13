@@ -437,7 +437,7 @@ function renderReportCard(data) {
     if ($('rRank')) $('rRank').textContent = data.position || '—';
 }
 
-/* ---------- PDF Download ---------- */
+/* ---------- PDF Download (FIXED) ---------- */
 $('btnDownloadPDF')?.addEventListener('click', async () => {
     const sheet = $('a4Sheet');
     if (!sheet) return;
@@ -448,10 +448,60 @@ $('btnDownloadPDF')?.addEventListener('click', async () => {
     btn.innerHTML = '<i class="fa-solid fa-circle-notch spin"></i> Generating PDF...';
 
     try {
+        // Wait for html2pdf to be ready (script might still be loading)
+        if (typeof window.html2pdf === 'undefined') {
+            await new Promise((resolve) => {
+                let waited = 0;
+                const check = setInterval(() => {
+                    if (window.html2pdf || waited >= 5000) {
+                        clearInterval(check);
+                        resolve();
+                    }
+                    waited += 100;
+                }, 100);
+            });
+        }
+
+        if (typeof window.html2pdf === 'undefined') {
+            throw new Error('html2pdf library not loaded');
+        }
+
         const studentName = (currentResultData?.name || 'Student').replace(/[^\w]/g, '_');
         const year = currentResultData?.year || '';
         const term = (currentResultData?.term || '').replace(/\s+/g, '_');
         const filename = `MSNS_Report_${studentName}_${year}_${term}.pdf`;
+
+        // Clone the sheet to a clean offscreen container so the library
+        // can render it properly without parent CSS interference
+        const clonedSheet = sheet.cloneNode(true);
+        clonedSheet.id = 'a4SheetClone';
+        clonedSheet.style.position = 'fixed';
+        clonedSheet.style.left = '-10000px';
+        clonedSheet.style.top = '0';
+        clonedSheet.style.width = '800px';
+        clonedSheet.style.maxWidth = '800px';
+        clonedSheet.style.margin = '0';
+        clonedSheet.style.boxShadow = 'none';
+        clonedSheet.style.borderRadius = '0';
+        clonedSheet.style.background = '#ffffff';
+        clonedSheet.style.padding = '35px 40px';
+        clonedSheet.style.zIndex = '-1';
+        document.body.appendChild(clonedSheet);
+
+        // Wait for all images inside the clone to load
+        const images = clonedSheet.querySelectorAll('img');
+        await Promise.all(Array.from(images).map(img => {
+            if (img.complete && img.naturalHeight !== 0) return Promise.resolve();
+            return new Promise((resolve) => {
+                img.onload = resolve;
+                img.onerror = resolve;
+                // Safety timeout
+                setTimeout(resolve, 3000);
+            });
+        }));
+
+        // Small delay to ensure layout is settled
+        await new Promise(r => setTimeout(r, 200));
 
         const opt = {
             margin: [8, 8, 8, 8],
@@ -461,7 +511,12 @@ $('btnDownloadPDF')?.addEventListener('click', async () => {
                 scale: 2,
                 useCORS: true,
                 backgroundColor: '#ffffff',
-                logging: false
+                logging: false,
+                allowTaint: true,
+                scrollY: 0,
+                scrollX: 0,
+                windowWidth: 800,
+                windowHeight: clonedSheet.scrollHeight
             },
             jsPDF: {
                 unit: 'mm',
@@ -471,12 +526,20 @@ $('btnDownloadPDF')?.addEventListener('click', async () => {
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
         };
 
-        // Module එකක් ඇතුලේ window.html2pdf() කියලා දුන්නම හරියටම වැඩ කරනවා
-        await window.html2pdf().set(opt).from(sheet).save();
+        // Call the library with the cloned element
+        await window.html2pdf().set(opt).from(clonedSheet).save();
+
+        // Clean up: remove the cloned element
+        if (clonedSheet.parentNode) {
+            clonedSheet.parentNode.removeChild(clonedSheet);
+        }
 
     } catch (err) {
         console.error('PDF generation error:', err);
-        alert('Failed to generate PDF. Please try again.');
+        alert('Failed to generate PDF: ' + (err.message || 'Unknown error'));
+        // Ensure cleanup even on error
+        const clone = $('a4SheetClone');
+        if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
     } finally {
         btn.disabled = false;
         btn.innerHTML = originalHTML;
