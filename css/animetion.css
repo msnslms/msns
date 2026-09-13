@@ -1,32 +1,27 @@
 /* ==========================================================
-   🎬 SCROLL REVEAL ANIMATIONS — Global Float-Up System
-   (Blur ලාවට තියලා, හැම device එකකටම optimize කරපු version)
+   🎬 SCROLL REVEAL — Float-Up System (No Blur Version)
    ========================================================== */
 
-/* ---------- Base State: මුලින් invisible + යට ---------- */
+/* ---------- Base State ---------- */
 .scroll-reveal {
     opacity: 0;
     transform: translateY(45px) scale(0.98);
-    filter: blur(2px);                    /* ← 6px → 2px (ලාවට) */
-    transition: 
+    transition:
         opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-        transform 0.8s cubic-bezier(0.22, 1, 0.36, 1),
-        filter 0.5s cubic-bezier(0.22, 1, 0.36, 1);  /* ← blur ඉක්මනට clear වෙනවා */
+        transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
     will-change: opacity, transform;
-    backface-visibility: hidden;          /* ← GPU smooth render */
+    backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-    transform: translateZ(0);             /* ← GPU layer promote */
+    transform: translateY(45px) scale(0.98) translateZ(0);
 }
 
 /* ---------- Active State ---------- */
 .scroll-reveal.is-visible {
     opacity: 1;
     transform: translateY(0) scale(1) translateZ(0);
-    filter: blur(0);
 }
 
 /* ---------- Variants ---------- */
-
 .scroll-reveal.reveal-from-left {
     transform: translateX(-50px) scale(0.98) translateZ(0);
 }
@@ -42,12 +37,10 @@
 }
 
 .scroll-reveal.reveal-zoom {
-    transform: scale(0.9) translateZ(0);
-    filter: blur(3px);                    /* ← 10px → 3px */
+    transform: scale(0.92) translateZ(0);
 }
 .scroll-reveal.reveal-zoom.is-visible {
     transform: scale(1) translateZ(0);
-    filter: blur(0);
 }
 
 .scroll-reveal.reveal-rotate {
@@ -69,7 +62,7 @@
 .scroll-reveal.delay-8 { transition-delay: 0.40s; }
 
 /* ==========================================================
-   ✨ Continuous Subtle Float
+   ✨ Continuous Subtle Float (icon animation)
    ========================================================== */
 @keyframes subtleFloat {
     0%, 100% { transform: translateY(0) translateZ(0); }
@@ -85,78 +78,48 @@
 }
 
 /* ==========================================================
-   🎭 Text Focus In (Blur ලාවට තියලා)
+   🎭 Text Focus In (blur වෙනුවට fade + slide)
    ========================================================== */
 @keyframes text-focus-in {
-    0% {
-        -webkit-filter: blur(6px);        /* ← 12px → 6px */
-        filter: blur(6px);
-        opacity: 0;
-        -webkit-transform: translateZ(0);
-        transform: translateZ(0);
-    }
-    100% {
-        -webkit-filter: blur(0px);
-        filter: blur(0px);
-        opacity: 1;
-        -webkit-transform: translateZ(0);
-        transform: translateZ(0);
-    }
+    0%   { opacity: 0; transform: translateY(15px) translateZ(0); }
+    100% { opacity: 1; transform: translateY(0) translateZ(0); }
 }
 
 .text-focus-in {
-    -webkit-animation: text-focus-in 0.8s cubic-bezier(0.550, 0.085, 0.680, 0.530) both;
     animation: text-focus-in 0.8s cubic-bezier(0.550, 0.085, 0.680, 0.530) both;
 }
 
 /* ==========================================================
-   🎭 Scale Up Center
+   🎭 Scale Up / Down
    ========================================================== */
 @keyframes scale-up-center {
     0%   { transform: scale(0.6) translateZ(0); }
     100% { transform: scale(1)   translateZ(0); }
 }
-
 .scale-up-center {
-    -webkit-animation: scale-up-center 0.4s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
     animation: scale-up-center 0.4s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
 }
 
-/* ==========================================================
-   🎭 Scale Down Top
-   ========================================================== */
 @keyframes scale-down-top {
-    0% {
-        transform: scale(1) translateZ(0);
-        transform-origin: 50% 0%;
-    }
-    100% {
-        transform: scale(0.6) translateZ(0);
-        transform-origin: 50% 0%;
-    }
+    0%   { transform: scale(1) translateZ(0); transform-origin: 50% 0%; }
+    100% { transform: scale(0.6) translateZ(0); transform-origin: 50% 0%; }
 }
-
 .scale-down-top {
-    -webkit-animation: scale-down-top 0.4s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
     animation: scale-down-top 0.4s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
 }
 
 /* ==========================================================
-   📱 Mobile Devices — Blur අයින් කරලා smooth කරනවා
-   (Mobile GPU එකට blur බර වැඩි නිසා performance එකට)
+   📱 Mobile — lightweight transform
    ========================================================== */
 @media (max-width: 768px) {
     .scroll-reveal {
-        filter: blur(1px);                /* ← Mobile වලට ලාවටම */
-        transform: translateY(35px) scale(0.99);
-        transition: 
+        transform: translateY(35px) scale(0.99) translateZ(0);
+        transition:
             opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-            transform 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-            filter 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .scroll-reveal.reveal-zoom {
-        filter: blur(2px);
-        transform: scale(0.94) translateZ(0);
+        transform: scale(0.95) translateZ(0);
     }
     .scroll-reveal.reveal-from-left {
         transform: translateX(-35px) scale(0.99) translateZ(0);
@@ -167,19 +130,19 @@
 }
 
 /* ==========================================================
-   🖥️ Low-end / Touch Devices — Blur කරන්නේ නෑ
+   🖥️ Low-end / Touch Devices
    ========================================================== */
 @media (hover: none) and (pointer: coarse) {
-    .scroll-reveal,
-    .scroll-reveal.reveal-zoom,
-    .scroll-reveal.reveal-rotate,
+    .scroll-reveal {
+        transform: translateY(30px) translateZ(0);
+        transition: opacity 0.5s ease, transform 0.6s ease;
+    }
     .scroll-reveal.reveal-from-left,
     .scroll-reveal.reveal-from-right {
-        filter: none;                     /* Touch devices වල GPU save කරන්න */
+        transform: translateY(30px) translateZ(0);
     }
-    .text-focus-in {
-        -webkit-animation: text-focus-in 0.8s cubic-bezier(0.550, 0.085, 0.680, 0.530) both;
-        animation: text-focus-in 0.8s cubic-bezier(0.550, 0.085, 0.680, 0.530) both;
+    .scroll-reveal.reveal-zoom {
+        transform: translateY(30px) scale(0.97) translateZ(0);
     }
 }
 
@@ -190,7 +153,6 @@
     .scroll-reveal {
         opacity: 1 !important;
         transform: none !important;
-        filter: none !important;
         transition: none !important;
     }
     .scroll-reveal.is-visible .card-icon-wrap,
@@ -201,29 +163,28 @@
         animation: none !important;
     }
 }
-/* Lite tier — mobile / low-end devices */
+
+/* ---------- Lite tier ---------- */
 html.reveal-lite .scroll-reveal {
-    filter: blur(1px);
     transform: translateY(35px) scale(0.99);
     transition:
         opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-        transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
-        filter 0.35s ease;
+        transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
 }
-
-/* Off tier — reduced motion */
-html.reveal-off .scroll-reveal {
-    opacity: 1 !important;
-    transform: none !important;
-    filter: none !important;
-    transition: none !important;
+html.reveal-lite .scroll-reveal.is-visible {
+    transform: translateY(0) scale(1);
 }
-
-/* Lite tier — animated icons float එක නවත්තනවා */
 html.reveal-lite .scroll-reveal.is-visible .card-icon-wrap,
 html.reveal-lite .scroll-reveal.is-visible .feature-icon,
 html.reveal-lite .scroll-reveal.is-visible .stat-icon-wrap,
 html.reveal-lite .scroll-reveal.is-visible .dev-avatar-box,
 html.reveal-lite .scroll-reveal.is-visible .exam-header-icon {
     animation: none;
+}
+
+/* ---------- Off tier ---------- */
+html.reveal-off .scroll-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
 }
