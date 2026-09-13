@@ -1,54 +1,64 @@
 /* ==========================================================
-   🎬 SCROLL REVEAL — Float-Up System (No Blur Version)
+   🎬 SCROLL REVEAL ANIMATIONS — Optimized for Mobile
    ========================================================== */
 
 /* ---------- Base State ---------- */
 .scroll-reveal {
     opacity: 0;
-    transform: translateY(45px) scale(0.98);
-    transition:
-        opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-        transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-    will-change: opacity, transform;
+    transform: translate3d(0, 50px, 0);
+    transition: 
+        opacity 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-    transform: translateY(45px) scale(0.98) translateZ(0);
+    transform-style: preserve-3d;
+}
+
+/* GPU layer එක අවශ්‍ය වෙලාවට විතරක් */
+.scroll-reveal.reveal-prep {
+    will-change: opacity, transform;
 }
 
 /* ---------- Active State ---------- */
 .scroll-reveal.is-visible {
     opacity: 1;
-    transform: translateY(0) scale(1) translateZ(0);
+    transform: translate3d(0, 0, 0);
 }
 
-/* ---------- Variants ---------- */
+/* Animation ඉවර වුනාම will-change අයින් කරනවා (JS එකෙන්) */
+.scroll-reveal.reveal-done {
+    will-change: auto;
+}
+
+/* ---------- Variants (Blur නැතුව) ---------- */
+
 .scroll-reveal.reveal-from-left {
-    transform: translateX(-50px) scale(0.98) translateZ(0);
+    transform: translate3d(-60px, 0, 0);
 }
 .scroll-reveal.reveal-from-left.is-visible {
-    transform: translateX(0) scale(1) translateZ(0);
+    transform: translate3d(0, 0, 0);
 }
 
 .scroll-reveal.reveal-from-right {
-    transform: translateX(50px) scale(0.98) translateZ(0);
+    transform: translate3d(60px, 0, 0);
 }
 .scroll-reveal.reveal-from-right.is-visible {
-    transform: translateX(0) scale(1) translateZ(0);
+    transform: translate3d(0, 0, 0);
 }
 
 .scroll-reveal.reveal-zoom {
-    transform: scale(0.92) translateZ(0);
+    transform: translate3d(0, 30px, 0) scale(0.94);
 }
 .scroll-reveal.reveal-zoom.is-visible {
-    transform: scale(1) translateZ(0);
+    transform: translate3d(0, 0, 0) scale(1);
 }
 
 .scroll-reveal.reveal-rotate {
-    transform: translateY(40px) rotate(-2deg) scale(0.97) translateZ(0);
+    transform: translate3d(0, 40px, 0) rotate(-2deg);
     transform-origin: center bottom;
 }
 .scroll-reveal.reveal-rotate.is-visible {
-    transform: translateY(0) rotate(0) scale(1) translateZ(0);
+    transform: translate3d(0, 0, 0) rotate(0);
 }
 
 /* ---------- Stagger Delays ---------- */
@@ -62,11 +72,11 @@
 .scroll-reveal.delay-8 { transition-delay: 0.40s; }
 
 /* ==========================================================
-   ✨ Continuous Subtle Float (icon animation)
+   ✨ Continuous Subtle Float (Optimized)
    ========================================================== */
 @keyframes subtleFloat {
-    0%, 100% { transform: translateY(0) translateZ(0); }
-    50%      { transform: translateY(-3px) translateZ(0); }
+    0%, 100% { transform: translate3d(0, 0, 0); }
+    50% { transform: translate3d(0, -3px, 0); }
 }
 
 .scroll-reveal.is-visible .card-icon-wrap,
@@ -75,85 +85,107 @@
 .scroll-reveal.is-visible .dev-avatar-box,
 .scroll-reveal.is-visible .exam-header-icon {
     animation: subtleFloat 3.5s ease-in-out infinite;
+    will-change: transform;
 }
 
 /* ==========================================================
-   🎭 Text Focus In (blur වෙනුවට fade + slide)
+   🎭 Text Focus In (Blur පොඩ්ඩක් තියෙනවා — විතරක් header titles වලට)
    ========================================================== */
 @keyframes text-focus-in {
-    0%   { opacity: 0; transform: translateY(15px) translateZ(0); }
-    100% { opacity: 1; transform: translateY(0) translateZ(0); }
+    0% { opacity: 0; transform: translate3d(0, 10px, 0); }
+    100% { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
 .text-focus-in {
-    animation: text-focus-in 0.8s cubic-bezier(0.550, 0.085, 0.680, 0.530) both;
+    animation: text-focus-in 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 /* ==========================================================
-   🎭 Scale Up / Down
+   🎭 Scale Up / Down (Transform only — lag නැහැ)
    ========================================================== */
 @keyframes scale-up-center {
-    0%   { transform: scale(0.6) translateZ(0); }
-    100% { transform: scale(1)   translateZ(0); }
+    0% { transform: scale(0.85); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
 }
+
 .scale-up-center {
-    animation: scale-up-center 0.4s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
+    animation: scale-up-center 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 @keyframes scale-down-top {
-    0%   { transform: scale(1) translateZ(0); transform-origin: 50% 0%; }
-    100% { transform: scale(0.6) translateZ(0); transform-origin: 50% 0%; }
+    0% { transform: scale(1); transform-origin: 50% 0%; }
+    100% { transform: scale(0.85); transform-origin: 50% 0%; opacity: 0; }
 }
+
 .scale-down-top {
-    animation: scale-down-top 0.4s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+    animation: scale-down-top 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 /* ==========================================================
-   📱 Mobile — lightweight transform
+   📱 MOBILE OPTIMIZATION (max-width: 768px)
    ========================================================== */
 @media (max-width: 768px) {
+    /* Animation ටිකක් ඉක්මන් + සැහැල්ලු */
     .scroll-reveal {
-        transform: translateY(35px) scale(0.99) translateZ(0);
-        transition:
-            opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-            transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+        transform: translate3d(0, 35px, 0);
+        transition: 
+            opacity 0.55s ease-out,
+            transform 0.65s ease-out;
     }
-    .scroll-reveal.reveal-zoom {
-        transform: scale(0.95) translateZ(0);
-    }
+
     .scroll-reveal.reveal-from-left {
-        transform: translateX(-35px) scale(0.99) translateZ(0);
+        transform: translate3d(-40px, 0, 0);
     }
     .scroll-reveal.reveal-from-right {
-        transform: translateX(35px) scale(0.99) translateZ(0);
-    }
-}
-
-/* ==========================================================
-   🖥️ Low-end / Touch Devices
-   ========================================================== */
-@media (hover: none) and (pointer: coarse) {
-    .scroll-reveal {
-        transform: translateY(30px) translateZ(0);
-        transition: opacity 0.5s ease, transform 0.6s ease;
-    }
-    .scroll-reveal.reveal-from-left,
-    .scroll-reveal.reveal-from-right {
-        transform: translateY(30px) translateZ(0);
+        transform: translate3d(40px, 0, 0);
     }
     .scroll-reveal.reveal-zoom {
-        transform: translateY(30px) scale(0.97) translateZ(0);
+        transform: translate3d(0, 25px, 0) scale(0.96);
+    }
+    .scroll-reveal.reveal-rotate {
+        transform: translate3d(0, 30px, 0);
+    }
+
+    /* Delays අඩු කරනවා — card ගොඩක් තියෙන page වලට smooth */
+    .scroll-reveal.delay-1 { transition-delay: 0.03s; }
+    .scroll-reveal.delay-2 { transition-delay: 0.06s; }
+    .scroll-reveal.delay-3 { transition-delay: 0.09s; }
+    .scroll-reveal.delay-4 { transition-delay: 0.12s; }
+    .scroll-reveal.delay-5 { transition-delay: 0.15s; }
+    .scroll-reveal.delay-6 { transition-delay: 0.18s; }
+    .scroll-reveal.delay-7 { transition-delay: 0.21s; }
+    .scroll-reveal.delay-8 { transition-delay: 0.24s; }
+
+    /* Continuous float mobile වල disable — battery + performance */
+    .scroll-reveal.is-visible .card-icon-wrap,
+    .scroll-reveal.is-visible .feature-icon,
+    .scroll-reveal.is-visible .stat-icon-wrap,
+    .scroll-reveal.is-visible .dev-avatar-box,
+    .scroll-reveal.is-visible .exam-header-icon {
+        animation: none;
+    }
+}
+
+/* ගොඩක් පොඩි phones (max-width: 480px) */
+@media (max-width: 480px) {
+    .scroll-reveal {
+        transform: translate3d(0, 25px, 0);
+        transition: 
+            opacity 0.45s ease-out,
+            transform 0.55s ease-out;
     }
 }
 
 /* ==========================================================
-   ♿ Reduced Motion Support
+   ♿ Reduced Motion
    ========================================================== */
 @media (prefers-reduced-motion: reduce) {
-    .scroll-reveal {
+    .scroll-reveal,
+    .scroll-reveal.is-visible {
         opacity: 1 !important;
         transform: none !important;
         transition: none !important;
+        will-change: auto !important;
     }
     .scroll-reveal.is-visible .card-icon-wrap,
     .scroll-reveal.is-visible .feature-icon,
@@ -162,29 +194,4 @@
     .scroll-reveal.is-visible .exam-header-icon {
         animation: none !important;
     }
-}
-
-/* ---------- Lite tier ---------- */
-html.reveal-lite .scroll-reveal {
-    transform: translateY(35px) scale(0.99);
-    transition:
-        opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-        transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
-}
-html.reveal-lite .scroll-reveal.is-visible {
-    transform: translateY(0) scale(1);
-}
-html.reveal-lite .scroll-reveal.is-visible .card-icon-wrap,
-html.reveal-lite .scroll-reveal.is-visible .feature-icon,
-html.reveal-lite .scroll-reveal.is-visible .stat-icon-wrap,
-html.reveal-lite .scroll-reveal.is-visible .dev-avatar-box,
-html.reveal-lite .scroll-reveal.is-visible .exam-header-icon {
-    animation: none;
-}
-
-/* ---------- Off tier ---------- */
-html.reveal-off .scroll-reveal {
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
 }
