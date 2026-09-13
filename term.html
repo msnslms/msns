@@ -1,22 +1,26 @@
 <!DOCTYPE html>
-<html lang="si">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Term Test Results</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Term Test Results | MSNS</title>
+
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Main Global Stylesheets -->
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Noto+Sans+Sinhala:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Existing global stylesheets -->
+    <link rel="stylesheet" href="css/style-w.css?v=2">
     <link rel="stylesheet" href="css/footer.css?v=2">
-    <!-- Exam Specific Stylesheet -->
-    <link rel="stylesheet" href="exam.css">
+    
+    <!-- Exam specific stylesheet -->
+    <link rel="stylesheet" href="css/exam.css?v=3">
 </head>
 <body>
 
-    <!-- Overlay for Sidebar Menu -->
+    <!-- Overlay for Sidebar -->
     <div class="menu-overlay" id="menuOverlay"></div>
 
     <!-- Sidebar Menu -->
@@ -36,7 +40,7 @@
                 <i class="fa-solid fa-square-poll-vertical"></i> Term Test Results
             </a>
             <a href="Past.html" class="menu-item">
-                <i class="fa-solid fa-book-open"></i> Past Papers & Application
+                <i class="fa-solid fa-book-open"></i> Past Papers & Documents
             </a>
             <a href="msns-ai.html" class="menu-item">
                 <i class="fa-solid fa-robot"></i> MSNS.AI Assistant
@@ -44,13 +48,16 @@
             <a href="news.html" class="menu-item">
                 <i class="fa-solid fa-newspaper"></i> News
             </a>
+            <a href="u.html" class="menu-item">
+                <i class="fa-solid fa-user"></i> My Profile
+            </a>
             <a href="ab.html" class="menu-item">
-                <i class="fa-solid fa-user"></i> About Developer
+                <i class="fa-solid fa-code"></i> About Developer
             </a>
         </nav>
     </aside>
 
-    <!-- Header Navigation Bar -->
+    <!-- Header -->
     <header id="top">
         <div class="header-title">MSNS</div>
         <button class="nav-icon" id="menuToggle" aria-label="Open Menu">
@@ -58,64 +65,77 @@
         </button>
     </header>
 
-    <!-- Main Content Container -->
+    <!-- Main Content -->
     <main class="content-wrapper">
 
-        <!-- Page Header Card -->
-        <div class="profile-container" style="text-align:center;">
-            <div class="dev-avatar-box" style="margin: 0 auto 15px auto;">
-                <i class="fa-solid fa-graduation-cap" style="font-size: 32px; color: var(--accent-color, #ffd966);"></i>
+        <!-- Loading State -->
+        <div id="loadingState" class="exam-state-card">
+            <i class="fa-solid fa-circle-notch spin"></i>
+            <h3>Loading your profile...</h3>
+        </div>
+
+        <!-- Page Header -->
+        <div id="pageHeader" class="exam-page-header" style="display:none;">
+            <div class="exam-header-icon">
+                <i class="fa-solid fa-graduation-cap"></i>
             </div>
-            <h2 class="dev-name">CheckYour Results</h2>
-            <p class="dev-tag">Term Test Results Portal</p>
+            <h2 class="exam-header-title">Check Your Results</h2>
+            <p class="exam-header-subtitle">Term Test Results Portal</p>
         </div>
 
         <!-- Search Form Card -->
-        <div class="bio-card exam-search-card">
+        <div id="searchCard" class="exam-search-card" style="display:none;">
             <form id="resultSearchForm" class="exam-form">
                 <div class="form-grid">
-                    
-                    <!-- Year Selection -->
+
+                    <!-- Year -->
                     <div class="form-group">
-                        <label for="searchYear"><i class="fa-solid fa-calendar"></i>Year</label>
+                        <label for="searchYear">
+                            <i class="fa-solid fa-calendar"></i> Year
+                        </label>
                         <select id="searchYear" class="custom-select" required>
                             <option value="2026">2026</option>
                             <option value="2025" selected>2025</option>
                             <option value="2024">2024</option>
+                            <option value="2023">2023</option>
                         </select>
                     </div>
 
-                    <!-- Term Selection -->
+                    <!-- Term -->
                     <div class="form-group">
-                        <label for="searchTerm"><i class="fa-solid fa-layer-group"></i>Term</label>
+                        <label for="searchTerm">
+                            <i class="fa-solid fa-layer-group"></i> Term
+                        </label>
                         <select id="searchTerm" class="custom-select" required>
-                            <option value="1">1 වන වාරය (1st Term)</option>
-                            <option value="2">2 වන වාරය (2nd Term)</option>
-                            <option value="3">3 වන වාරය (3rd Term)</option>
+                            <option value="1st term">1st Term</option>
+                            <option value="2nd term">2nd Term</option>
+                            <option value="3rd term">3rd Term</option>
                         </select>
                     </div>
 
-                    <!-- Grade Selection -->
+                    <!-- Index (Locked) -->
                     <div class="form-group">
-                        <label for="searchGrade"><i class="fa-solid fa-school"></i> Grade</label>
-                        <select id="searchGrade" class="custom-select" required>
-                            <option value="">ශ්‍රේණිය තෝරන්න</option>
-                            <option value="6">Grade 6</option>
-                            <option value="7">Grade 7</option>
-                            <option value="8">Grade 8</option>
-                            <option value="9">Grade 9</option>
-                            <option value="10">Grade 10</option>
-                            <option value="11">Grade 11</option>
-                            <option value="12">Grade 12</option>
-                            <option value="13">Grade 13</option>
-                        </select>
+                        <label for="searchIndex">
+                            <i class="fa-solid fa-id-card"></i> Index Number
+                            <span class="lock-hint"><i class="fa-solid fa-lock"></i></span>
+                        </label>
+                        <input type="text" id="searchIndex" class="custom-input" readonly placeholder="—">
                     </div>
 
-                    <!-- Class Selection -->
+                    <!-- Grade (Locked) -->
                     <div class="form-group">
-                        <label for="searchClass"><i class="fa-solid fa-users-rectangle"></i>Class</label>
-                        <select id="searchClass" class="custom-select" required>
-                            <option value="">පන්තිය තෝරන්න</option>
+                        <label for="searchGrade">
+                            <i class="fa-solid fa-school"></i> Grade
+                        </label>
+                        <input type="text" id="searchGrade" class="custom-input" readonly placeholder="—">
+                    </div>
+
+                    <!-- Class (Editable) -->
+                    <div class="form-group">
+                        <label for="searchClass">
+                            <i class="fa-solid fa-users-rectangle"></i> Class
+                        </label>
+                        <select id="searchClass" class="custom-select">
                             <option value="A">A</option>
                             <option value="B">B</option>
                             <option value="C">C</option>
@@ -126,9 +146,11 @@
                         </select>
                     </div>
 
-                    <!-- Stream selection for Grade 12 & 13 -->
-                    <div class="form-group" id="streamSelectBox" style="display: none; grid-column: 1 / -1;">
-                        <label for="searchStream"><i class="fa-solid fa-code-branch"></i> විෂය ධාරාව (Stream)</label>
+                    <!-- Stream (only for grade 12/13) -->
+                    <div class="form-group" id="streamGroup" style="display:none;">
+                        <label for="searchStream">
+                            <i class="fa-solid fa-code-branch"></i> Stream
+                        </label>
                         <select id="searchStream" class="custom-select">
                             <option value="Technology">Technology</option>
                             <option value="Bio">Biological Science</option>
@@ -138,98 +160,177 @@
                         </select>
                     </div>
 
-                    <!-- Index Number Input -->
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label for="searchIndex"><i class="fa-solid fa-id-card"></i> විභාග අංකය (Index Number)</label>
-                        <input type="text" id="searchIndex" class="custom-input" placeholder="උදා: 10243" required autocomplete="off">
-                    </div>
                 </div>
 
-                <!-- Submit Button -->
                 <button type="submit" class="btn-search-result" id="btnSearch">
-                    <i class="fa-solid fa-magnifying-glass"></i> ප්‍රතිඵල බලන්න (Get Results)
+                    <i class="fa-solid fa-magnifying-glass"></i> Search Results
                 </button>
             </form>
 
-            <!-- Status Message Area -->
             <div id="statusMessage" class="status-msg" aria-live="polite"></div>
         </div>
 
-        <!-- Printable A4 Result Report Card Container -->
-        <div id="resultCardWrapper" style="display: none;">
-            
-            <!-- Print Action Header -->
-            <div class="print-actions">
-                <button onclick="window.print()" class="btn-print">
-                    <i class="fa-solid fa-print"></i> Download PDF
+        <!-- Results Section (Hidden until search) -->
+        <div id="resultsSection" style="display:none;">
+
+            <!-- Tabs -->
+            <div class="exam-tabs">
+                <button class="exam-tab active" data-tab="analysis">
+                    <i class="fa-solid fa-chart-line"></i> Analysis
+                </button>
+                <button class="exam-tab" data-tab="report">
+                    <i class="fa-solid fa-file-invoice"></i> Report Card
                 </button>
             </div>
 
-            <!-- A4 Sheet Body -->
-            <div class="a4-sheet" id="a4Sheet">
-                
-                <!-- Header Logo & School Name -->
-                <div class="a4-header">
-                    <img src="school bage.png" alt="School Badge" class="a4-logo" onerror="this.onerror=null; this.src='logo.png';">
-                    <h1 class="a4-school-title">A/Maithripala Senanayake Central College</h1>
-                    <h3 class="a4-school-subtitle"> MSNS - Medawachchiya</h3>
-                    <div class="a4-badge-tag" id="a4TermTitle">2025 - 1st Term Examination Report</div>
-                </div>
+            <!-- ============ ANALYSIS TAB ============ -->
+            <div class="exam-tab-content active" id="tabAnalysis">
 
-                <!-- Student Info Grid -->
-                <div class="a4-student-info">
-                    <div class="info-row">
-                        <span><strong>Index Number:</strong> <span id="rIndex">N/A</span></span>
-                        <span><strong>Grade & Class:</strong> <span id="rClass">N/A</span></span>
+                <!-- Summary Stats -->
+                <div class="analysis-summary-grid">
+                    <div class="summary-stat-card stat-total">
+                        <div class="stat-icon-wrap">
+                            <i class="fa-solid fa-calculator"></i>
+                        </div>
+                        <span class="stat-label">Total Marks</span>
+                        <span class="stat-value" id="statTotal">—</span>
                     </div>
-                    <div class="info-row">
-                        <span class="full-width"><strong>Student Name:</strong> <span id="rName">N/A</span></span>
+                    <div class="summary-stat-card stat-avg">
+                        <div class="stat-icon-wrap">
+                            <i class="fa-solid fa-chart-simple"></i>
+                        </div>
+                        <span class="stat-label">Average</span>
+                        <span class="stat-value" id="statAvg">—</span>
                     </div>
-                </div>
-
-                <!-- Results Table -->
-                <table class="a4-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 10%;">#</th>
-                            <th style="text-align: left; width: 65%;">Subject</th>
-                            <th style="width: 25%;">Marks</th>
-                        </tr>
-                    </thead>
-                    <tbody id="rTableBody">
-                        <!-- Dynamic Marks Inserted Here via exam.js -->
-                    </tbody>
-                </table>
-
-                <!-- Summary Footer -->
-                <div class="a4-summary-box">
-                    <div class="summary-item">
-                        <span class="s-label">Total</span>
-                        <span class="s-value" id="rTotal">-</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="s-label">Average</span>
-                        <span class="s-value" id="rAvg">-</span>
-                    </div>
-                    <div class="summary-item highlight">
-                        <span class="s-label">Position</span>
-                        <span class="s-value" id="rRank">-</span>
+                    <div class="summary-stat-card stat-pos">
+                        <div class="stat-icon-wrap">
+                            <i class="fa-solid fa-trophy"></i>
+                        </div>
+                        <span class="stat-label">Position</span>
+                        <span class="stat-value" id="statPosition">—</span>
                     </div>
                 </div>
 
-                <!-- Footer Signatures -->
-                <div class="a4-footer-signatures">
-                    <div class="sig-block">
-                        <div class="sig-line"></div>
-                        <p>Class teacher</p>
+                <!-- Charts -->
+                <div class="charts-grid-exam">
+
+                    <div class="exam-chart-card">
+                        <h3 class="chart-card-title">
+                            <i class="fa-solid fa-chart-column"></i> Subject Marks
+                        </h3>
+                        <div class="chart-wrapper-exam">
+                            <canvas id="subjectBarChart"></canvas>
+                        </div>
                     </div>
-                    <div class="sig-block">
-                        <div class="sig-line"></div>
-                        <p>Principal</p>
+
+                    <div class="exam-chart-card">
+                        <h3 class="chart-card-title">
+                            <i class="fa-solid fa-chart-pie"></i> Grade Distribution
+                        </h3>
+                        <div class="chart-wrapper-exam">
+                            <canvas id="gradeChart"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Subject Table -->
+                <div class="exam-table-card">
+                    <h3 class="chart-card-title">
+                        <i class="fa-solid fa-list-ol"></i> Subject-wise Marks & Grades
+                    </h3>
+                    <div class="exam-table-wrap">
+                        <table class="exam-results-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:8%;">#</th>
+                                    <th style="text-align:left;">Subject</th>
+                                    <th style="width:20%;">Marks</th>
+                                    <th style="width:20%;">Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subjectTableBody"></tbody>
+                        </table>
                     </div>
                 </div>
 
             </div>
+
+            <!-- ============ REPORT CARD TAB ============ -->
+            <div class="exam-tab-content" id="tabReport">
+
+                <div class="print-actions">
+                    <button id="btnDownloadPDF" class="btn-print">
+                        <i class="fa-solid fa-download"></i> Download PDF
+                    </button>
+                </div>
+
+                <!-- A4 Sheet -->
+                <div class="a4-sheet" id="a4Sheet">
+
+                    <!-- Header -->
+                    <div class="a4-header">
+                        <img src="school bage.png" alt="School Badge" class="a4-logo" onerror="this.onerror=null; this.src='logo.png';">
+                        <h1 class="a4-school-title">A/Maithripala Senanayake Central College</h1>
+                        <h3 class="a4-school-subtitle">MSNS - Medawachchiya</h3>
+                        <div class="a4-badge-tag" id="a4TermTitle">Term Test Report</div>
+                    </div>
+
+                    <!-- Student Info -->
+                    <div class="a4-student-info">
+                        <div class="info-row">
+                            <span><strong>Index Number:</strong> <span id="rIndex">—</span></span>
+                            <span><strong>Grade & Class:</strong> <span id="rClass">—</span></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="full-width"><strong>Student Name:</strong> <span id="rName">—</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Results Table -->
+                    <table class="a4-table">
+                        <thead>
+                            <tr>
+                                <th style="width:8%;">#</th>
+                                <th style="text-align:left; width:52%;">Subject</th>
+                                <th style="width:20%;">Marks</th>
+                                <th style="width:20%;">Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rTableBody"></tbody>
+                    </table>
+
+                    <!-- Summary -->
+                    <div class="a4-summary-box">
+                        <div class="summary-item">
+                            <span class="s-label">Total</span>
+                            <span class="s-value" id="rTotal">—</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="s-label">Average</span>
+                            <span class="s-value" id="rAvg">—</span>
+                        </div>
+                        <div class="summary-item highlight">
+                            <span class="s-label">Position</span>
+                            <span class="s-value" id="rRank">—</span>
+                        </div>
+                    </div>
+
+                    <!-- Signatures -->
+                    <div class="a4-footer-signatures">
+                        <div class="sig-block">
+                            <div class="sig-line"></div>
+                            <p>Class Teacher</p>
+                        </div>
+                        <div class="sig-block">
+                            <div class="sig-line"></div>
+                            <p>Principal</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
         </div>
 
     </main>
@@ -240,10 +341,12 @@
         <p class="al-text">MSNS.EDU.LK</p>
     </footer>
 
-    <!-- Firebase JS Modules & Logic -->
-    <script type="module" src="exam.js?v=2"></script>
+    <!-- CDN Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- Sidebar Toggle Script -->
     <script>
-        // Navigation sidebar toggle logic
         const menuToggle = document.getElementById('menuToggle');
         const closeMenu = document.getElementById('closeMenu');
         const sidebar = document.getElementById('sidebar');
@@ -262,6 +365,8 @@
         closeMenu?.addEventListener('click', hideMenu);
         menuOverlay?.addEventListener('click', hideMenu);
     </script>
-    <script src="js/hide-f.js?v=2"></script>
+
+    <!-- Exam Logic -->
+    <script type="module" src="js/exam.js?v=3"></script>
 </body>
 </html>
