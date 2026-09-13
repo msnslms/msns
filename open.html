@@ -7,67 +7,67 @@
     <title>Welcome | A/Maithripala Senanayaka Central College</title>
     <link rel="icon" type="image/png" href="school bage.png">
 
-    <!-- Google Fonts (Multi-language) -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700;800&family=Noto+Sans+Tamil:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Premium Multi-language Google Fonts (Apple-like Rendering) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700;800;900&family=Noto+Sans+Tamil:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         /* ==========================================================
-           GLOBAL RESET
+           1. APPLE-INSPIRED RESET & CORE VARS
            ========================================================== */
-        * {
+        *, *::before, *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* ==========================================================
-           BODY + AMBIENT BACKGROUND (Red & Gold Theme)
-           ========================================================== */
+        :root {
+            --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-in-out-apple: cubic-bezier(0.4, 0, 0.2, 1);
+            --color-primary-red: #dc2626;
+            --color-primary-gold: #d97706;
+            --color-dark: #0f172a;
+        }
+
         body {
             background-color: #ffffff;
             background-image: 
-                radial-gradient(at 0% 0%, rgba(220, 38, 38, 0.07) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(234, 179, 8, 0.07) 0px, transparent 50%);
+                radial-gradient(at 10% 10%, rgba(220, 38, 38, 0.08) 0px, transparent 45%),
+                radial-gradient(at 90% 90%, rgba(217, 119, 6, 0.08) 0px, transparent 45%);
             background-attachment: fixed;
-            color: #0f172a;
+            color: var(--color-dark);
             min-height: 100vh;
             min-height: 100dvh;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
-            padding: 2.5rem 1.5rem;
+            padding: 3rem 1.5rem;
             overflow: hidden;
             position: relative;
+            user-select: none;
+            cursor: pointer;
         }
 
-        /* Ambient radial glows */
+        /* Ambient Glow Backdrop */
         .glow-bg {
             position: absolute;
-            width: 380px;
-            height: 380px;
-            background: radial-gradient(circle, rgba(220, 38, 38, 0.10) 0%, rgba(255, 255, 255, 0) 70%);
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, rgba(220, 38, 38, 0.07) 0%, rgba(255, 255, 255, 0) 70%);
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 0;
             pointer-events: none;
-        }
-
-        .glow-bg-2 {
-            position: absolute;
-            width: 260px;
-            height: 260px;
-            background: radial-gradient(circle, rgba(234, 179, 8, 0.10) 0%, rgba(255, 255, 255, 0) 70%);
-            top: 25%;
-            left: 25%;
-            z-index: 0;
-            pointer-events: none;
+            filter: blur(40px);
         }
 
         /* ==========================================================
-           MAIN WELCOME CARD
+           2. WELCOME CONTAINER & BADGE
            ========================================================== */
         .welcome-card {
             position: relative;
@@ -76,40 +76,39 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
-            max-width: 520px;
+            max-width: 580px;
             width: 100%;
             margin: auto;
-            gap: 0.4rem;
         }
 
-        /* ---------- School Badge (Pop + Float) ---------- */
         .badge-container {
-            margin-bottom: 1.6rem;
+            margin-bottom: 2rem;
+            will-change: transform, opacity;
         }
 
         .school-badge {
-            width: 105px;
-            height: 105px;
+            width: 110px;
+            height: 110px;
             object-fit: contain;
-            filter: drop-shadow(0 6px 20px rgba(185, 28, 28, 0.25));
+            filter: drop-shadow(0 10px 25px rgba(185, 28, 28, 0.2));
             opacity: 0;
-            transform: scale(0.7);
-            animation: badgeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.2s,
-                       badgeFloat 3.5s ease-in-out infinite 1.2s;
+            transform: scale(0.6) translateY(10px);
+            animation: appleBadgePop 1.1s var(--ease-apple) forwards 0.1s,
+                       appleFloat 4s ease-in-out infinite 1.2s;
         }
 
         /* ==========================================================
-           LANGUAGE SLIDES (Welcome + School Name per language)
+           3. APPLE-STYLE MULTI-LANGUAGE SLIDER
            ========================================================== */
         .lang-slider {
             position: relative;
             width: 100%;
-            min-height: 130px;
+            min-height: 140px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 0.6rem;
-            overflow: hidden;
+            margin-bottom: 1rem;
+            will-change: opacity, transform, height;
         }
 
         .lang-slide {
@@ -122,15 +121,15 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
             opacity: 0;
-            transform: translateY(24px) scale(0.94);
-            filter: blur(12px);
+            transform: translateY(20px) scale(0.95);
+            filter: blur(10px);
             pointer-events: none;
             transition: 
-                opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-                transform 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-                filter 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+                opacity 0.7s var(--ease-apple),
+                transform 0.7s var(--ease-apple),
+                filter 0.7s var(--ease-apple);
         }
 
         .lang-slide.active {
@@ -141,100 +140,86 @@
 
         .lang-slide.exit {
             opacity: 0;
-            transform: translateY(-24px) scale(1.06);
-            filter: blur(12px);
+            transform: translateY(-20px) scale(1.03);
+            filter: blur(10px);
         }
 
-        /* Welcome Word */
+        /* Typography Styling */
         .welcome-word {
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: 800;
-            letter-spacing: 2px;
+            letter-spacing: -0.5px;
             line-height: 1.2;
         }
 
-        /* School Name */
         .school-word {
-            font-size: 0.92rem;
+            font-size: 1rem;
             font-weight: 700;
-            line-height: 1.55;
-            letter-spacing: 0.4px;
-            max-width: 92%;
-            opacity: 0.9;
+            line-height: 1.6;
+            letter-spacing: 0.2px;
+            max-width: 90%;
+            opacity: 0.88;
         }
 
-        /* ---------- Language-specific Colors ---------- */
-        /* Sinhala - Gold */
-        .lang-slide.sinhala .welcome-word {
-            color: #b45309;
-            font-family: 'Noto Sans Sinhala', sans-serif;
-            text-shadow: 0 2px 16px rgba(180, 83, 9, 0.25);
-        }
+        /* Sinhala Specifics */
+        .lang-slide.sinhala .welcome-word,
         .lang-slide.sinhala .school-word {
-            color: #b45309;
             font-family: 'Noto Sans Sinhala', sans-serif;
+            color: #b45309;
         }
 
-        /* English - Red */
-        .lang-slide.english .welcome-word {
-            color: #b91c1c;
-            text-shadow: 0 2px 16px rgba(185, 28, 28, 0.22);
-        }
+        /* English Specifics */
+        .lang-slide.english .welcome-word,
         .lang-slide.english .school-word {
+            font-family: 'Plus Jakarta Sans', sans-serif;
             color: #b91c1c;
         }
 
-        /* Tamil - Deep Red/Orange */
-        .lang-slide.tamil .welcome-word {
-            color: #dc2626;
-            font-family: 'Noto Sans Tamil', sans-serif;
-            text-shadow: 0 2px 16px rgba(220, 38, 38, 0.22);
-        }
+        /* Tamil Specifics */
+        .lang-slide.tamil .welcome-word,
         .lang-slide.tamil .school-word {
-            color: #dc2626;
             font-family: 'Noto Sans Tamil', sans-serif;
+            color: #dc2626;
         }
 
         /* ==========================================================
-           TYPEWRITER (After all 3 languages cycle)
+           4. TYPEWRITER WRAPPER
            ========================================================== */
         .typewriter-wrap {
             display: none;
             flex-direction: column;
             align-items: center;
             gap: 8px;
-            margin-top: 0.4rem;
-            margin-bottom: 0.6rem;
             width: 100%;
+            min-height: 120px;
+            justify-content: center;
         }
 
         .typewriter-wrap.show {
             display: flex;
-            animation: fadeInUp 0.6s ease forwards;
+            animation: appleFadeInUp 0.8s var(--ease-apple) forwards;
         }
 
         .typewriter-title {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 3px;
+            letter-spacing: 4px;
             color: #b45309;
-            font-weight: 700;
-            margin-bottom: 4px;
+            font-weight: 800;
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
         .school-name {
-            font-size: 1rem;
+            font-size: 1.05rem;
             font-weight: 800;
             color: #0f172a;
-            letter-spacing: 1.2px;
+            letter-spacing: 1px;
             line-height: 1.6;
-            min-height: 3.2rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-wrap: wrap;
             text-align: center;
-            max-width: 100%;
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
         #typed-text {
@@ -244,111 +229,100 @@
         .cursor {
             display: inline-block;
             width: 2px;
-            height: 1.05em;
+            height: 1.1em;
             background: #b91c1c;
             margin-left: 4px;
             vertical-align: middle;
-            animation: blink 0.9s step-end infinite;
-            box-shadow: 0 0 8px rgba(185, 28, 28, 0.7);
+            animation: blink 0.8s step-end infinite;
+            border-radius: 1px;
         }
 
         /* ==========================================================
-           LOADING DOTS
+           5. LOADING DOTS & FOOTER
            ========================================================== */
         .loading-dots-wrap {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            margin-top: 0.6rem;
+            gap: 10px;
+            margin-top: 1.5rem;
             opacity: 0;
-            animation: fadeInUp 0.6s ease forwards 6.8s;
+            animation: appleFadeInUp 0.8s var(--ease-apple) forwards 0.8s;
         }
 
         .loading-dots {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            height: 12px;
+            gap: 6px;
         }
 
         .loading-dots .dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
             background: #b91c1c;
-            box-shadow: 0 0 10px rgba(185, 28, 28, 0.5);
-            animation: bouncingDots 1.4s ease-in-out infinite;
+            animation: applePulse 1.4s ease-in-out infinite;
         }
 
-        .loading-dots .dot:nth-child(1) { animation-delay: 0s; }
         .loading-dots .dot:nth-child(2) { 
             animation-delay: 0.2s; 
             background: #f59e0b; 
-            box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); 
         }
-        .loading-dots .dot:nth-child(3) { animation-delay: 0.4s; }
+        .loading-dots .dot:nth-child(3) { 
+            animation-delay: 0.4s; 
+        }
 
         .loading-text {
             font-size: 0.72rem;
-            color: #71717a;
-            letter-spacing: 1.5px;
+            color: #64748b;
+            letter-spacing: 2px;
             text-transform: uppercase;
-            margin-left: 10px;
             font-weight: 700;
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
-        /* ==========================================================
-           FOOTER
-           ========================================================== */
         footer {
             position: relative;
             z-index: 1;
             text-align: center;
-            font-size: 0.7rem;
-            color: #a1a1aa;
-            letter-spacing: 0.8px;
+            font-size: 0.72rem;
+            color: #94a3b8;
+            letter-spacing: 0.5px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             opacity: 0;
-            animation: fadeIn 0.8s ease forwards 7.4s;
+            animation: appleFadeInUp 0.8s var(--ease-apple) forwards 1s;
         }
 
         footer span {
-            color: #71717a;
+            color: #475569;
             font-weight: 600;
         }
 
         /* ==========================================================
-           KEYFRAMES
+           6. ANIMATION KEYFRAMES
            ========================================================== */
-
-        @keyframes badgeIn {
+        @keyframes appleBadgePop {
             to {
                 opacity: 1;
-                transform: scale(1);
+                transform: scale(1) translateY(0);
             }
         }
 
-        @keyframes badgeFloat {
+        @keyframes appleFloat {
             0%, 100% { transform: translateY(0); }
             50%      { transform: translateY(-6px); }
         }
 
-        @keyframes fadeIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeInUp {
+        @keyframes appleFadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(12px);
+                transform: translateY(14px);
+                filter: blur(4px);
             }
             to {
                 opacity: 1;
                 transform: translateY(0);
+                filter: blur(0);
             }
         }
 
@@ -357,61 +331,24 @@
             50%      { opacity: 0; }
         }
 
-        @keyframes bouncingDots {
-            0%, 100% {
-                transform: scale(0.8);
-                opacity: 0.5;
-            }
-            50% {
-                transform: scale(1.3);
-                opacity: 1;
-            }
+        @keyframes applePulse {
+            0%, 100% { transform: scale(0.85); opacity: 0.4; }
+            50%      { transform: scale(1.25); opacity: 1; }
         }
 
-        /* ==========================================================
-           RESPONSIVE
-           ========================================================== */
+        /* Mobile Optimization */
         @media (max-width: 480px) {
-            body {
-                padding: 2rem 1rem;
-            }
-
-            .school-badge {
-                width: 90px;
-                height: 90px;
-            }
-
-            .lang-slider {
-                min-height: 115px;
-            }
-
-            .welcome-word {
-                font-size: 1.6rem;
-            }
-
-            .school-word {
-                font-size: 0.82rem;
-            }
-
-            .school-name {
-                font-size: 0.9rem;
-            }
-
-            .loading-dots .dot {
-                width: 7px;
-                height: 7px;
-            }
+            body { padding: 2rem 1rem; }
+            .school-badge { width: 95px; height: 95px; }
+            .welcome-word { font-size: 1.75rem; }
+            .school-word { font-size: 0.88rem; }
+            .school-name { font-size: 0.88rem; }
+            .lang-slider { min-height: 125px; }
         }
 
-        /* ==========================================================
-           REDUCED MOTION
-           ========================================================== */
         @media (prefers-reduced-motion: reduce) {
-            *,
-            *::before,
-            *::after {
+            *, *::before, *::after {
                 animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
                 transition-duration: 0.01ms !important;
             }
         }
@@ -419,27 +356,20 @@
 </head>
 <body>
 
-    <!-- Ambient Background Glows -->
     <div class="glow-bg"></div>
-    <div class="glow-bg-2"></div>
 
     <div class="welcome-card">
-
         <!-- School Badge -->
         <div class="badge-container">
             <img src="school bage.png" alt="School Badge" class="school-badge">
         </div>
 
-        <!-- ==========================================================
-             LANGUAGE SLIDER (Welcome + School Name per language)
-             Sinhala → English → Tamil, each with its own school name
-             ========================================================== -->
+        <!-- Language Cycle Slider (Sinhala → Tamil → English) -->
         <div class="lang-slider">
-
             <!-- Sinhala Slide -->
             <div class="lang-slide sinhala" data-lang="sinhala">
-                <div class="welcome-word">සාදරයෙන් පිළිගනිමු</div>
-                <div class="school-word">ආ/මෛත්‍රීපාල සේනානායක මධ්‍ය විද්‍යාලය</div>
+                <div class="welcome-word">ආයුබෝවන්</div>
+                <div class="school-word">ආ/මෛත්‍රීපාල සේනානායක මධ්‍ය මහා විද්‍යාලය</div>
             </div>
 
             <!-- English Slide -->
@@ -450,15 +380,12 @@
 
             <!-- Tamil Slide -->
             <div class="lang-slide tamil" data-lang="tamil">
-                <div class="welcome-word">வரவேற்கிறோம்</div>
+                <div class="welcome-word">வணக்கம்</div>
                 <div class="school-word">ஏ/மைத்ரிபால சேனாநாயக்க மத்திய கல்லூரி</div>
             </div>
-
         </div>
 
-        <!-- ==========================================================
-             TYPEWRITER (English school name — after language cycles)
-             ========================================================== -->
+        <!-- Typewriter Title Transition -->
         <div class="typewriter-wrap" id="typewriterWrap">
             <div class="typewriter-title">Now Entering</div>
             <h1 class="school-name">
@@ -466,7 +393,7 @@
             </h1>
         </div>
 
-        <!-- Bouncing Loading Dots -->
+        <!-- Loading Dots -->
         <div class="loading-dots-wrap">
             <span class="loading-dots" role="status" aria-label="Loading">
                 <span class="dot"></span>
@@ -475,18 +402,14 @@
             </span>
             <span class="loading-text">Loading Portal</span>
         </div>
-
     </div>
 
     <!-- Footer -->
     <footer>
-        <p>© 2026 MSNS.LK &nbsp; <br><span>Designed by K.D.G.S.M. Deniyegedara</span></p>
+        <p>© 2026 MSNS.LK &nbsp;<br><span>Designed by K.D.G.S.M. Deniyegedara</span></p>
     </footer>
 
-    <!-- ==========================================================
-         WELCOME SPLASH LOGIC
-         ========================================================== -->
-    <script src="js/opdn.js?v=4"></script>
-
+    <!-- Splash Logic -->
+    <script src="js/opdn.js?v=5"></script>
 </body>
 </html>
