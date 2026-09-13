@@ -9,7 +9,100 @@
     <link rel="stylesheet" href="css/style-w.css?v=2">
     <link rel="stylesheet" href="css/footer.css?v=2">
     <style>
-        
+        /* Hero Video Section Custom Styling */
+.hero-banner {
+    position: relative;
+    width: 100%;
+    height: 340px;
+    overflow: hidden;
+    border-radius: 0 0 28px 28px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 24px;
+    box-shadow: 0 15px 35px rgba(185, 28, 28, 0.18);
+}
+
+.hero-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    filter: brightness(0.6) contrast(1.1);
+}
+
+.hero-caption {
+    position: relative;
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(185, 28, 28, 0.25);
+    padding: 14px 28px;
+    border-radius: 50px;
+    color: #b91c1c;
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(185, 28, 28, 0.15);
+    text-transform: uppercase;
+}
+
+/* ICT Page Specific Custom Styles */
+.ict-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 24px;
+    padding: 32px 24px;
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.ict-badge {
+    max-width: 280px;
+    width: 75%;
+    height: auto;
+    margin-bottom: 28px;
+    filter: drop-shadow(0 0 25px rgba(185, 28, 28, 0.25));
+    transition: transform 0.4s ease, filter 0.4s ease;
+}
+
+.ict-badge:hover {
+    transform: scale(1.04);
+    filter: drop-shadow(0 0 35px rgba(185, 28, 28, 0.45));
+}
+
+.ict-heading {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #b91c1c;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.ict-text {
+    font-size: 0.95rem;
+    line-height: 1.85;
+    color: #52525b;
+    text-align: justify;
+}
+
+.ict-text strong, 
+.ict-text b {
+    color: #b91c1c;
+    font-weight: 700;
+}
     </style>
 </head>
 <body>
