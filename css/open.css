@@ -1,0 +1,354 @@
+/* ==========================================================
+   css/open.css — Apple-Inspired Welcome Splash Styles
+   Fully Responsive • Fit to Any Screen • Optimized Animations
+   ========================================================== */
+
+/* ---------- 1. RESET & CORE VARS ---------- */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+:root {
+    --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in-out-apple: cubic-bezier(0.4, 0, 0.2, 1);
+    --color-primary-red: #dc2626;
+    --color-primary-gold: #d97706;
+    --color-dark: #0f172a;
+}
+
+html, body {
+    height: 100%;
+    width: 100%;
+}
+
+body {
+    background-color: #ffffff;
+    background-image:
+        radial-gradient(at 10% 10%, rgba(220, 38, 38, 0.08) 0px, transparent 45%),
+        radial-gradient(at 90% 90%, rgba(217, 119, 6, 0.08) 0px, transparent 45%);
+    background-attachment: fixed;
+    color: var(--color-dark);
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem 1.25rem;
+    overflow: hidden;
+    position: relative;
+    user-select: none;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+/* ---------- 2. AMBIENT GLOW ---------- */
+.glow-bg {
+    position: absolute;
+    width: min(450px, 90vw);
+    height: min(450px, 90vw);
+    background: radial-gradient(circle, rgba(220, 38, 38, 0.07) 0%, rgba(255, 255, 255, 0) 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+    filter: blur(40px);
+}
+
+/* ---------- 3. WELCOME CARD ---------- */
+.welcome-card {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 580px;
+    width: 100%;
+    margin: auto;
+}
+
+/* ---------- 4. BADGE ---------- */
+.badge-container {
+    margin-bottom: 1.5rem;
+    will-change: transform, opacity;
+}
+
+.school-badge {
+    width: clamp(80px, 22vw, 110px);
+    height: clamp(80px, 22vw, 110px);
+    object-fit: contain;
+    filter: drop-shadow(0 10px 25px rgba(185, 28, 28, 0.2));
+    opacity: 0;
+    transform: scale(0.6) translateY(10px);
+    animation:
+        appleBadgePop 0.8s var(--ease-apple) forwards 0.05s,
+        appleFloat 4s ease-in-out infinite 0.9s;
+}
+
+/* ---------- 5. LANGUAGE SLIDER ---------- */
+.lang-slider {
+    position: relative;
+    width: 100%;
+    min-height: 130px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    will-change: opacity, transform, height, min-height;
+}
+
+.lang-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 0.5rem;
+    opacity: 0;
+    transform: translateY(18px) scale(0.95);
+    filter: blur(10px);
+    pointer-events: none;
+    transition:
+        opacity 0.5s var(--ease-apple),
+        transform 0.5s var(--ease-apple),
+        filter 0.5s var(--ease-apple);
+}
+
+.lang-slide.active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+}
+
+.lang-slide.exit {
+    opacity: 0;
+    transform: translateY(-18px) scale(1.03);
+    filter: blur(10px);
+}
+
+/* Typography */
+.welcome-word {
+    font-size: clamp(1.5rem, 6.5vw, 2.2rem);
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    word-break: break-word;
+}
+
+.school-word {
+    font-size: clamp(0.78rem, 2.9vw, 1rem);
+    font-weight: 700;
+    line-height: 1.55;
+    letter-spacing: 0.2px;
+    max-width: 95%;
+    opacity: 0.9;
+    word-break: break-word;
+}
+
+/* Language Specifics */
+.lang-slide.sinhala .welcome-word,
+.lang-slide.sinhala .school-word {
+    font-family: 'Noto Sans Sinhala', sans-serif;
+    color: #b45309;
+}
+
+.lang-slide.english .welcome-word,
+.lang-slide.english .school-word {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: #b91c1c;
+}
+
+.lang-slide.tamil .welcome-word,
+.lang-slide.tamil .school-word {
+    font-family: 'Noto Sans Tamil', sans-serif;
+    color: #dc2626;
+}
+
+/* ---------- 6. TYPEWRITER ---------- */
+.typewriter-wrap {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 110px;
+    justify-content: center;
+}
+
+.typewriter-wrap.show {
+    display: flex;
+    animation: appleFadeInUp 0.6s var(--ease-apple) forwards;
+}
+
+.typewriter-title {
+    font-size: clamp(0.65rem, 2vw, 0.75rem);
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    color: #b45309;
+    font-weight: 800;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.school-name {
+    font-size: clamp(0.85rem, 2.6vw, 1.05rem);
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: 1px;
+    line-height: 1.55;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    padding: 0 0.5rem;
+    word-break: break-word;
+}
+
+#typed-text {
+    white-space: pre-wrap;
+}
+
+.cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.1em;
+    background: #b91c1c;
+    margin-left: 4px;
+    vertical-align: middle;
+    animation: blink 0.8s step-end infinite;
+    border-radius: 1px;
+}
+
+/* ---------- 7. LOADING DOTS ---------- */
+.loading-dots-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 1.25rem;
+    opacity: 0;
+    animation: appleFadeInUp 0.6s var(--ease-apple) forwards 0.5s;
+}
+
+.loading-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.loading-dots .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #b91c1c;
+    animation: applePulse 1.4s ease-in-out infinite;
+}
+.loading-dots .dot:nth-child(2) { animation-delay: 0.2s; background: #f59e0b; }
+.loading-dots .dot:nth-child(3) { animation-delay: 0.4s; }
+
+.loading-text {
+    font-size: 0.72rem;
+    color: #64748b;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 700;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* ---------- 8. FOOTER ---------- */
+footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    font-size: 0.7rem;
+    color: #94a3b8;
+    letter-spacing: 0.5px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    line-height: 1.7;
+    opacity: 0;
+    animation: appleFadeInUp 0.6s var(--ease-apple) forwards 0.7s;
+}
+
+footer span {
+    color: #475569;
+    font-weight: 600;
+}
+
+/* ---------- 9. KEYFRAMES ---------- */
+@keyframes appleBadgePop {
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes appleFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+}
+
+@keyframes appleFadeInUp {
+    from { opacity: 0; transform: translateY(14px); filter: blur(4px); }
+    to   { opacity: 1; transform: translateY(0);    filter: blur(0);   }
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0; }
+}
+
+@keyframes applePulse {
+    0%, 100% { transform: scale(0.85); opacity: 0.4; }
+    50%      { transform: scale(1.25); opacity: 1;   }
+}
+
+/* ---------- 10. RESPONSIVE TWEAKS ---------- */
+
+/* Small phones */
+@media (max-width: 380px) {
+    body { padding: 1.5rem 1rem; }
+    .welcome-word { font-size: 1.4rem; }
+    .school-word { font-size: 0.75rem; }
+    .lang-slider { min-height: 115px; }
+    .loading-text { font-size: 0.65rem; letter-spacing: 1.5px; }
+    footer { font-size: 0.65rem; }
+}
+
+/* Phones landscape / short screens */
+@media (max-height: 600px) and (orientation: landscape) {
+    body { padding: 1rem; }
+    .badge-container { margin-bottom: 0.75rem; }
+    .school-badge { width: 65px; height: 65px; }
+    .lang-slider { min-height: 95px; margin-bottom: 0.5rem; }
+    .welcome-word { font-size: 1.4rem; }
+    .loading-dots-wrap { margin-top: 0.75rem; }
+    footer { display: none; }
+}
+
+/* Tablet / desktop */
+@media (min-width: 768px) {
+    body { padding: 3rem 2rem; }
+    .lang-slider { min-height: 150px; }
+}
+
+/* Tall desktop */
+@media (min-width: 1024px) and (min-height: 800px) {
+    .welcome-card { max-width: 640px; }
+    .lang-slider { min-height: 160px; }
+}
+
+/* ---------- 11. REDUCED MOTION ---------- */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+  }
