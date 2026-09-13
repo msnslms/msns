@@ -1,265 +1,320 @@
 /* ==========================================================
-   SCROLL REVEAL — Auto Animation Engine
-   Header, Footer, Sidebar, Modals, Body හැර
-   හැම card / section එකකටම auto apply වෙනවා
+   🎬 SCROLL REVEAL — Auto Animation Engine (Performance Optimized)
+   - Device capability detect කරලා auto adjust වෙනවා
+   - Low-end / mobile වලට lightweight mode
+   - Throttled observer + batched DOM writes
+   - Header, Footer, Sidebar, Modals හැර හැම card / section එකකටම
    ========================================================== */
 
 (function () {
     'use strict';
 
-    /* ---------- 1. ඕන class ටික (මේවට animation apply වෙනවා) ---------- */
+    /* ==========================================================
+       0. DEVICE CAPABILITY DETECTION
+       ========================================================== */
+    const IS_TOUCH       = matchMedia('(hover: none) and (pointer: coarse)').matches;
+    const IS_MOBILE      = window.innerWidth <= 768;
+    const IS_REDUCED     = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const IS_LOW_END     = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4;
+    const IS_SLOW_NET    = navigator.connection &&
+                           /(^|-)2g$/.test(navigator.connection.effectiveType || '');
+
+    // Performance tier: 'full' | 'lite' | 'off'
+    const PERF_TIER =
+        IS_REDUCED                       ? 'off'  :
+        (IS_TOUCH || IS_MOBILE || IS_LOW_END || IS_SLOW_NET) ? 'lite' :
+        'full';
+
+    // Reduced motion නම් කිසිම animation එකක් නෑ — අයින් කරලා යනවා
+    if (PERF_TIER === 'off') {
+        document.documentElement.classList.add('reveal-off');
+        return;
+    }
+
+    document.documentElement.classList.add('reveal-' + PERF_TIER);
+
+    /* ==========================================================
+       1. REVEAL TARGET CLASSES
+       ========================================================== */
     const REVEAL_CLASSES = [
-        // Home page
-        '.info-card',
-        '.feature-box',
-        '.glass-card',
-        '.people-card',
-        '.governing-slider',
-        '.section-title',
-        '.hero-banner',
-        '.hero-caption',
-        '.news-banner',
-        '.main-news-card',
-        '.news-grid-item',
-        '.news-grid-section',
-        '.news-card',
-        '.news-slider-container',
-        '.quick-tab-card',
-        '.quick-tabs-grid',
+        // Home
+        '.info-card', '.feature-box', '.glass-card', '.people-card',
+        '.governing-slider', '.section-title', '.hero-banner', '.hero-caption',
+        '.news-banner', '.main-news-card', '.news-grid-item', '.news-grid-section',
+        '.news-card', '.news-slider-container', '.quick-tab-card', '.quick-tabs-grid',
 
         // About / Developer
-        '.profile-container',
-        '.bio-card',
-        '.skill-card',
-        '.chart-card',
-        '.chart-details',
-        '.stat-card',
-        '.stats-overview-grid',
-        '.achiever-card',
-        '.achievers-grid',
-        '.contact-item',
-        '.contact-list',
-        '.history-card',
-        '.modern-table',
-        '.table-wrap',
-        '.map-frame',
-        '.pdf-download-wrapper',
-        '.pdf-download-btn',
-        '.download-btn-wrap',
-        '.ex',
-        '.pdf-btn-wrapper',
+        '.profile-container', '.bio-card', '.skill-card', '.chart-card',
+        '.chart-details', '.stat-card', '.stats-overview-grid', '.achiever-card',
+        '.achievers-grid', '.contact-item', '.contact-list', '.history-card',
+        '.modern-table', '.table-wrap', '.map-frame', '.pdf-download-wrapper',
+        '.pdf-download-btn', '.download-btn-wrap', '.ex', '.pdf-btn-wrapper',
         '.full-pdf-wrapper',
 
         // Media
-        '.yt',
-        '.yt-grid',
-        '.iframe-container',
-        '.video-card-title',
+        '.yt', '.yt-grid', '.iframe-container', '.video-card-title',
 
-        // Text blocks
-        '.about-text',
-        '.media-text',
-        '.ict-text',
-        '.history-text',
+        // Text
+        '.about-text', '.media-text', '.ict-text', '.history-text',
 
         // Quiz / Exam
-        '.qz-card',
-        '.qz-news-card',
-        '.qz-card-grid',
-        '.qz-news-grid',
-        '.qz-teacher-header',
-        '.qz-student-header',
-        '.qz-tabs',
-        '.qz-empty-state',
-        '.exam-page-header',
-        '.exam-search-card',
-        '.exam-state-card',
-        '.exam-tabs',
-        '.summary-stat-card',
-        '.analysis-summary-grid',
-        '.exam-chart-card',
-        '.charts-grid-exam',
-        '.exam-table-card',
-        '.print-actions',
+        '.qz-card', '.qz-news-card', '.qz-card-grid', '.qz-news-grid',
+        '.qz-teacher-header', '.qz-student-header', '.qz-tabs', '.qz-empty-state',
+        '.exam-page-header', '.exam-search-card', '.exam-state-card', '.exam-tabs',
+        '.summary-stat-card', '.analysis-summary-grid', '.exam-chart-card',
+        '.charts-grid-exam', '.exam-table-card', '.print-actions',
 
-        // App page
-        '.app-card',
-        '.app-hero-card',
-        '.app-section',
-        '.platform-tabs',
+        // App
+        '.app-card', '.app-hero-card', '.app-section', '.platform-tabs',
         '.ios-install-card',
 
         // Misc
-        '.msns-custom-card',
-        '.msns-data-grid',
-        '.msns-loading-text',
-        '.brand-section'
+        '.msns-custom-card', '.msns-data-grid', '.msns-loading-text', '.brand-section'
     ];
 
-    /* ---------- 2. Skip කරන්න ඕන elements (header, footer, sidebar, modals) ---------- */
-    const SKIP_ANCESTORS = [
-        'header',
-        'footer',
-        'aside.sidebar',
-        '.sidebar',
-        '.menu-overlay',
-        '.qz-modal-overlay',
-        '.modal-backdrop',
-        '.paper-modal-overlay',
-        '.pdf-preview-overlay',
-        '.preview-overlay',
-        '.image-modal',
-        '.exam-tabs' // Tabs හැර
-    ];
+    /* ==========================================================
+       2. SKIP ANCESTORS
+       ========================================================== */
+    const SKIP_SELECTOR = [
+        'header', 'footer', '.sidebar', 'aside.sidebar',
+        '.menu-overlay', '.qz-modal-overlay', '.modal-backdrop',
+        '.paper-modal-overlay', '.pdf-preview-overlay', '.preview-overlay',
+        '.image-modal'
+    ].join(',');
 
     function shouldSkip(el) {
-        // Skip if inside an excluded ancestor
-        for (const sel of SKIP_ANCESTORS) {
-            if (el.closest(sel)) return true;
-        }
-        // Skip if already has scroll-reveal class (avoid double processing)
+        if (!el || el.nodeType !== 1) return true;
         if (el.classList.contains('scroll-reveal')) return true;
-        // Skip if hidden
-        if (el.style.display === 'none' || el.offsetParent === null) {
-            // Still include if it will be shown later - just check visibility
-        }
+        if (el.closest(SKIP_SELECTOR)) return true;
         return false;
     }
 
-    /* ---------- 3. Grid / Stagger group classes ---------- */
+    /* ==========================================================
+       3. STAGGER GROUP CLASSES
+       ========================================================== */
     const STAGGER_CLASSES = [
-        '.info-card',
-        '.feature-box',
-        '.quick-tab-card',
-        '.news-grid-item',
-        '.news-card',
-        '.skill-card',
-        '.contact-item',
-        '.stat-card',
-        '.achiever-card',
-        '.qz-card',
-        '.qz-news-card',
-        '.summary-stat-card',
-        '.exam-chart-card',
-        '.app-card'
+        '.info-card', '.feature-box', '.quick-tab-card', '.news-grid-item',
+        '.news-card', '.skill-card', '.contact-item', '.stat-card',
+        '.achiever-card', '.qz-card', '.qz-news-card', '.summary-stat-card',
+        '.exam-chart-card', '.app-card'
     ];
 
-    /* ---------- 4. Variant mapping (විශේෂ card වලට විවිධ animations) ---------- */
+    /* ==========================================================
+       4. VARIANT MAP
+       - 'lite' tier එකේදී zoom/rotate variants අයින් කරනවා (GPU බර)
+       ========================================================== */
     const VARIANT_MAP = {
-        '.yt': 'reveal-zoom',
-        '.iframe-container': 'reveal-zoom',
-        '.glass-card': 'reveal-zoom',
-        '.main-news-card': 'reveal-zoom',
-        '.profile-container': 'reveal-zoom',
-        '.history-card': 'reveal-zoom',
-        '.chart-card': 'reveal-zoom',
-        '.qz-teacher-header': 'reveal-from-left',
-        '.qz-student-header': 'reveal-from-left',
-        '.exam-page-header': 'reveal-zoom',
-        '.hero-banner': 'reveal-zoom',
-        '.app-hero-card': 'reveal-zoom'
+        '.yt':                  'reveal-zoom',
+        '.iframe-container':    'reveal-zoom',
+        '.glass-card':          'reveal-zoom',
+        '.main-news-card':      'reveal-zoom',
+        '.profile-container':   'reveal-zoom',
+        '.history-card':        'reveal-zoom',
+        '.chart-card':          'reveal-zoom',
+        '.qz-teacher-header':   'reveal-from-left',
+        '.qz-student-header':   'reveal-from-left',
+        '.exam-page-header':    'reveal-zoom',
+        '.hero-banner':         'reveal-zoom',
+        '.app-hero-card':       'reveal-zoom'
     };
 
-    /* ---------- 5. Initialize elements ---------- */
-    const elementsToReveal = new Set();
+    // Lite tier එකේදී expensive variants skip
+    const HEAVY_VARIANTS = new Set(['reveal-zoom', 'reveal-rotate']);
+    const useVariant = (v) => !(PERF_TIER === 'lite' && HEAVY_VARIANTS.has(v));
 
-    REVEAL_CLASSES.forEach(selector => {
-        const nodes = document.querySelectorAll(selector);
-        nodes.forEach(el => {
-            if (shouldSkip(el)) return;
-            elementsToReveal.add(el);
-        });
-    });
+    /* ==========================================================
+       5. HELPERS — batched DOM writes (performance!)
+       ========================================================== */
+    const pendingReveals = new Set();
+    let   flushScheduled = false;
 
-    /* ---------- 6. Apply reveal class + variant + stagger ---------- */
-    elementsToReveal.forEach(el => {
+    function scheduleReveal(el) {
+        pendingReveals.add(el);
+        if (!flushScheduled) {
+            flushScheduled = true;
+            requestAnimationFrame(flushReveals);
+        }
+    }
+
+    function flushReveals() {
+        flushScheduled = false;
+        pendingReveals.forEach(el => el.classList.add('is-visible'));
+        pendingReveals.clear();
+    }
+
+    /* ==========================================================
+       6. TAG ELEMENT — apply classes (variant + delay)
+       ========================================================== */
+    function tagElement(el) {
+        if (shouldSkip(el)) return false;
         el.classList.add('scroll-reveal');
 
-        // Apply variant if matched
-        for (const [sel, variant] of Object.entries(VARIANT_MAP)) {
+        // Variant
+        for (const sel in VARIANT_MAP) {
             if (el.matches(sel)) {
-                el.classList.add(variant);
+                const v = VARIANT_MAP[sel];
+                if (useVariant(v)) el.classList.add(v);
                 break;
             }
         }
 
-        // Apply stagger delay if part of a grid
+        // Stagger delay (lite tier එකේදී max 4 විතරයි)
         const isStagger = STAGGER_CLASSES.some(sel => el.matches(sel));
         if (isStagger && el.parentElement) {
             const siblings = Array.from(el.parentElement.children).filter(
                 s => STAGGER_CLASSES.some(sel => s.matches(sel))
             );
-            const index = siblings.indexOf(el);
-            if (index >= 0) {
-                const delay = Math.min(index + 1, 8);
+            const idx = siblings.indexOf(el);
+            if (idx >= 0) {
+                const maxDelay = PERF_TIER === 'lite' ? 4 : 8;
+                const delay = Math.min(idx + 1, maxDelay);
                 el.classList.add('delay-' + delay);
             }
         }
-    });
+        return true;
+    }
 
-    /* ---------- 7. Intersection Observer ---------- */
-    const observer = new IntersectionObserver((entries, obs) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('is-visible');
-                obs.unobserve(entry.target); // එක වතාවක් විතරයි
-            }
-        });
-    }, {
-        threshold: 0.08,
-        rootMargin: '0px 0px -60px 0px'
-    });
+    /* ==========================================================
+       7. INITIAL SCAN — batched, chunked for large pages
+       ========================================================== */
+    const elementsToReveal = new Set();
 
-    /* ---------- 8. Observe all elements ---------- */
-    elementsToReveal.forEach(el => observer.observe(el));
-
-    /* ---------- 9. Auto-trigger on page load (above-the-fold items) ---------- */
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            elementsToReveal.forEach(el => {
-                const rect = el.getBoundingClientRect();
-                if (rect.top < window.innerHeight * 0.9 && rect.bottom > 0) {
-                    el.classList.add('is-visible');
-                    observer.unobserve(el);
+    function initialScan() {
+        const found = [];
+        REVEAL_CLASSES.forEach(sel => {
+            document.querySelectorAll(sel).forEach(el => {
+                if (shouldSkip(el)) return;
+                if (!elementsToReveal.has(el)) {
+                    elementsToReveal.add(el);
+                    found.push(el);
                 }
             });
-        }, 80);
-    });
+        });
 
-    /* ---------- 10. MutationObserver — dynamically added elements (Firebase, AJAX) ---------- */
-    const mo = new MutationObserver(mutations => {
-        mutations.forEach(mut => {
-            mut.addedNodes.forEach(node => {
-                if (node.nodeType !== 1) return; // Element නොවෙන nodes skip
-                REVEAL_CLASSES.forEach(sel => {
-                    const matches = node.matches?.(sel) ? [node] : [];
-                    const children = node.querySelectorAll?.(sel) || [];
-                    [...matches, ...children].forEach(el => {
-                        if (shouldSkip(el)) return;
-                        el.classList.add('scroll-reveal');
+        // Tag elements in idle chunks (avoid jank on big pages)
+        const CHUNK = PERF_TIER === 'lite' ? 30 : 60;
+        let i = 0;
 
-                        // Variant
-                        for (const [vSel, variant] of Object.entries(VARIANT_MAP)) {
-                            if (el.matches(vSel)) {
-                                el.classList.add(variant);
-                                break;
-                            }
-                        }
-                        observer.observe(el);
-                        // Trigger immediately if visible
-                        const rect = el.getBoundingClientRect();
-                        if (rect.top < window.innerHeight * 0.9 && rect.bottom > 0) {
-                            setTimeout(() => el.classList.add('is-visible'), 30);
-                        }
-                    });
+        function processChunk(deadline) {
+            const start = performance.now();
+            while (i < found.length && (performance.now() - start) < 6) {
+                tagElement(found[i]);
+                observer.observe(found[i]);
+                i++;
+            }
+            if (i < found.length) {
+                (window.requestIdleCallback || setTimeout)(processChunk);
+            } else {
+                // Above-the-fold trigger
+                triggerVisibleNow();
+            }
+        }
+        (window.requestIdleCallback || setTimeout)(processChunk, { timeout: 200 });
+    }
+
+    /* ==========================================================
+       8. INTERSECTION OBSERVER
+       - rootMargin threshold: device tier එකට adjust
+       ========================================================== */
+    const OBS_CONFIG = PERF_TIER === 'lite'
+        ? { threshold: 0.05, rootMargin: '0px 0px -40px 0px' }
+        : { threshold: 0.10, rootMargin: '0px 0px -60px 0px' };
+
+    const observer = new IntersectionObserver((entries, obs) => {
+        // Batched reveal on next frame
+        for (let i = 0; i < entries.length; i++) {
+            const e = entries[i];
+            if (e.isIntersecting) {
+                scheduleReveal(e.target);
+                obs.unobserve(e.target); // once only
+            }
+        }
+    }, OBS_CONFIG);
+
+    /* ==========================================================
+       9. TRIGGER VISIBLE-ON-LOAD ELEMENTS
+       ========================================================== */
+    function triggerVisibleNow() {
+        const vh = window.innerHeight;
+        elementsToReveal.forEach(el => {
+            const r = el.getBoundingClientRect();
+            if (r.top < vh * 0.9 && r.bottom > 0) {
+                scheduleReveal(el);
+                observer.unobserve(el);
+            }
+        });
+    }
+
+    window.addEventListener('load', () => {
+        // RAF double → layout settled
+        requestAnimationFrame(() => requestAnimationFrame(triggerVisibleNow));
+    }, { once: true });
+
+    /* ==========================================================
+       10. MUTATION OBSERVER — dynamically added nodes
+       - Debounced so rapid Firebase/AJAX inserts බර අඩු වෙනවා
+       ========================================================== */
+    const pendingNodes = new Set();
+    let moTimer = null;
+
+    function processPendingNodes() {
+        moTimer = null;
+        pendingNodes.forEach(node => {
+            REVEAL_CLASSES.forEach(sel => {
+                const matches = node.matches?.(sel) ? [node] : [];
+                const children = node.querySelectorAll?.(sel) || [];
+                [...matches, ...children].forEach(el => {
+                    if (!tagElement(el)) return;
+                    observer.observe(el);
+
+                    // Already in viewport → reveal
+                    const r = el.getBoundingClientRect();
+                    if (r.top < window.innerHeight * 0.9 && r.bottom > 0) {
+                        scheduleReveal(el);
+                        observer.unobserve(el);
+                    }
                 });
             });
         });
+        pendingNodes.clear();
+    }
+
+    const mo = new MutationObserver(mutations => {
+        for (const m of mutations) {
+            for (const n of m.addedNodes) {
+                if (n.nodeType === 1) pendingNodes.add(n);
+            }
+        }
+        if (pendingNodes.size && !moTimer) {
+            // Debounce: 80ms full / 150ms lite
+            moTimer = setTimeout(processPendingNodes, PERF_TIER === 'lite' ? 150 : 80);
+        }
     });
 
-    mo.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
+    mo.observe(document.body, { childList: true, subtree: true });
+
+    /* ==========================================================
+       11. PREFETCH / RESIZE SAFETY
+       - Viewport resize එකට (mobile rotate) අලුත් elements trigger
+       ========================================================== */
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(triggerVisibleNow, 200);
+    }, { passive: true });
+
+    /* ==========================================================
+       12. BOOT
+       ========================================================== */
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initialScan, { once: true });
+    } else {
+        initialScan();
+    }
+
+    // Console info (debug-friendly)
+    if (typeof console !== 'undefined') {
+        console.log('[ScrollReveal] tier:', PERF_TIER);
+    }
 
 })();
