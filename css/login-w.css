@@ -1,0 +1,515 @@
+/* ==========================================
+   MSNS Login & Profile Modern Light CSS
+   (Red & Gold School Theme)
+   ========================================== */
+
+/* Global Reset & Body Setup */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #ffffff;
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(220, 38, 38, 0.05) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(234, 179, 8, 0.05) 0px, transparent 50%);
+    background-attachment: fixed;
+    font-family: 'Poppins', sans-serif;
+    color: #0f172a;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ==========================================
+   Top Header Styling
+   ========================================== */
+header#top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.header-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: 1px;
+}
+
+.back-home-btn {
+    color: #b91c1c;
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.back-home-btn:hover {
+    color: #b45309;
+}
+
+/* ==========================================
+   Login Container & Card Styling (Compact Size)
+   ========================================== */
+.login-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 12px;
+}
+
+.login-card {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 20px;
+    padding: 22px 20px;
+    width: 100%;
+    max-width: 410px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+    text-align: center;
+}
+
+.login-badge {
+    max-width: 55px;
+    height: auto;
+    margin-bottom: 8px;
+}
+
+.login-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.login-header p {
+    margin: 4px 0 14px 0;
+    font-size: 0.8rem;
+    color: #71717a;
+}
+
+/* ==========================================
+   Auth Mode Switch (Log In / Register Tabs)
+   ========================================== */
+.auth-mode-switch {
+    display: flex;
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    padding: 3px;
+    margin-bottom: 12px;
+    gap: 4px;
+}
+
+.mode-btn {
+    flex: 1;
+    padding: 8px 10px;
+    border: none;
+    background: transparent;
+    color: #71717a;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.mode-btn.active {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(185, 28, 28, 0.3);
+}
+
+/* ==========================================
+   Role Selector Tabs (Student / Teacher / Old Student)
+   ========================================== */
+.role-selector {
+    display: flex;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.04);
+    padding: 4px;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.role-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    background: transparent;
+    border: none;
+    color: #71717a;
+    padding: 8px 4px;
+    border-radius: 7px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.role-btn i, .role-btn svg {
+    font-size: 0.85rem;
+}
+
+.role-btn.active {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(185, 28, 28, 0.3);
+}
+
+/* ==========================================
+   Form Input Styling
+   ========================================== */
+.input-group {
+    text-align: left;
+    margin-bottom: 12px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.76rem;
+    color: #52525b;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Icon placement fix for FontAwesome <i> tags */
+.input-wrap i,
+.input-wrap svg,
+.input-wrap .input-icon {
+    position: absolute;
+    left: 12px;
+    font-size: 0.9rem;
+    color: #b45309;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.input-wrap input {
+    width: 100%;
+    padding: 10px 12px 10px 38px !important;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 10px;
+    color: #0f172a;
+    font-size: 0.85rem;
+    outline: none;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.input-wrap input:focus {
+    border-color: #b91c1c;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.12);
+}
+
+.input-wrap input::placeholder {
+    color: #a1a1aa;
+}
+
+.help-text {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.72rem;
+    color: #71717a;
+}
+
+/* ==========================================
+   CAPTCHA Box Styling
+   ========================================== */
+.captcha-box {
+    background: rgba(254, 252, 232, 0.6);
+    border: 1px solid rgba(234, 179, 8, 0.3);
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 12px;
+}
+
+.captcha-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.captcha-code {
+    flex: 1;
+    background: #ffffff;
+    border: 1px dashed rgba(185, 28, 28, 0.4);
+    border-radius: 7px;
+    padding: 6px 10px;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 3px;
+    color: #b91c1c;
+    text-align: center;
+    user-select: none;
+}
+
+.btn-refresh-captcha {
+    background: #ffffff;
+    border: 1px solid rgba(234, 179, 8, 0.4);
+    color: #b45309;
+    width: 34px;
+    height: 34px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-refresh-captcha:hover {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    border-color: #b91c1c;
+    color: #ffffff;
+}
+
+/* ==========================================
+   Buttons & Alerts
+   ========================================== */
+.login-submit-btn {
+    width: 100%;
+    padding: 11px;
+    margin-top: 4px;
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    border: 1px solid rgba(234, 179, 8, 0.35);
+    border-radius: 10px;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 14px rgba(185, 28, 28, 0.35);
+}
+
+.login-submit-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(185, 28, 28, 0.5);
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+/* Divider */
+.divider {
+    display: flex;
+    align-items: center;
+    margin: 12px 0;
+}
+
+.divider::before, .divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.divider span {
+    padding: 0 10px;
+    font-size: 0.72rem;
+    color: #a1a1aa;
+}
+
+/* Google Sign-In Button */
+.google-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 10px;
+    color: #0f172a;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.google-btn:hover {
+    background: rgba(254, 252, 232, 0.9);
+    border-color: rgba(234, 179, 8, 0.5);
+    color: #b45309;
+}
+
+/* Alerts */
+.auth-alert {
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    margin-bottom: 12px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.auth-alert.error {
+    background: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.35);
+    color: #b91c1c;
+}
+
+.auth-alert.success {
+    background: rgba(22, 163, 74, 0.1);
+    border: 1px solid rgba(22, 163, 74, 0.35);
+    color: #15803d;
+}
+
+.auth-alert.hidden {
+    display: none;
+}
+
+/* ==========================================
+   Profile & User Dashboard Styling
+   ========================================== */
+.content-wrapper {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    margin-top: 30px;
+}
+
+.profile-card {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+    color: #0f172a;
+}
+
+.profile-header-wrap {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.user-avatar-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(185, 28, 28, 0.35);
+    border: 2px solid rgba(234, 179, 8, 0.4);
+    text-transform: uppercase;
+    overflow: hidden;
+}
+
+.user-avatar-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-main-info h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.user-main-info p {
+    margin: 2px 0 4px 0;
+    font-size: 0.85rem;
+    color: #b91c1c;
+}
+
+/* Badges */
+.role-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: rgba(220, 38, 38, 0.12);
+    border: 1px solid rgba(220, 38, 38, 0.35);
+    color: #b91c1c;
+}
+
+.role-badge.teacher {
+    background: rgba(22, 163, 74, 0.12);
+    border-color: rgba(22, 163, 74, 0.35);
+    color: #15803d;
+}
+
+/* Modals */
+.modal-backdrop {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.modal-card {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    padding: 20px;
+    width: 90%;
+    max-width: 380px;
+    color: #0f172a;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive Rules for Small Mobile Screens */
+@media (max-width: 480px) {
+    .login-card {
+        padding: 18px 14px;
+        border-radius: 16px;
+    }
+
+    .role-btn {
+        font-size: 0.74rem;
+        padding: 7px 2px;
+    }
+
+    .role-btn i, .role-btn svg {
+        font-size: 0.78rem;
+    }
+
+    .input-wrap input {
+        font-size: 0.82rem;
+    }
+}
