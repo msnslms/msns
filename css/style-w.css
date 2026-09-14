@@ -2062,3 +2062,556 @@ i[class*="fa-"] {
     color: inherit;
     vertical-align: middle;
 }
+
+/* ==========================================================
+   🖥️ MSNS DESKTOP NAVBAR & RESPONSIVE FIX
+   (PC එකට fit වෙන්න + horizontal navbar එක)
+   ========================================================== */
+
+/* ---------- Desktop Navbar ---------- */
+.msns-desktop-navbar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    padding: 0 2rem;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.04);
+}
+
+.msns-navbar-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    height: 76px;
+}
+
+/* ---------- Brand ---------- */
+.msns-navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+.msns-navbar-brand:hover {
+    transform: translateY(-1px);
+}
+
+.msns-navbar-logo {
+    width: 46px;
+    height: 46px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 8px rgba(185, 28, 28, 0.2));
+}
+
+.msns-navbar-brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.msns-navbar-brand-name {
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: 1.5px;
+}
+
+.msns-navbar-brand-sub {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #b91c1c;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+}
+
+/* ---------- Menu Links (Center) ---------- */
+.msns-navbar-menu {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex: 1;
+    justify-content: center;
+}
+
+.msns-nav-link {
+    display: inline-block;
+    padding: 10px 16px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #52525b;
+    text-decoration: none;
+    border-radius: 10px;
+    letter-spacing: 0.3px;
+    transition: all 0.25s ease;
+    position: relative;
+    white-space: nowrap;
+}
+
+.msns-nav-link:hover {
+    color: #b91c1c;
+    background: rgba(185, 28, 28, 0.06);
+}
+
+.msns-nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 60%;
+    height: 2px;
+    background: linear-gradient(90deg, #dc2626, #f59e0b);
+    border-radius: 2px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.msns-nav-link:hover::after {
+    transform: translateX(-50%) scaleX(1);
+}
+
+/* Active link (current page) */
+.msns-nav-link.active-link,
+.msns-nav-link[aria-current="page"] {
+    color: #b91c1c;
+    background: rgba(185, 28, 28, 0.08);
+}
+
+.msns-nav-link.active-link::after {
+    transform: translateX(-50%) scaleX(1);
+}
+
+/* ---------- Actions (Right) ---------- */
+.msns-navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.msns-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    letter-spacing: 0.3px;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+}
+
+.msns-nav-btn i {
+    font-size: 1rem;
+}
+
+.msns-nav-btn-profile {
+    background: #ffffff;
+    color: #b91c1c;
+    border: 1px solid rgba(185, 28, 28, 0.25);
+}
+
+.msns-nav-btn-profile:hover {
+    background: rgba(185, 28, 28, 0.06);
+    border-color: rgba(185, 28, 28, 0.5);
+    color: #b91c1c;
+    transform: translateY(-1px);
+}
+
+.msns-nav-btn-login {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #ffffff;
+    border: 1px solid rgba(234, 179, 8, 0.35);
+    box-shadow: 0 4px 12px rgba(185, 28, 28, 0.3);
+}
+
+.msns-nav-btn-login:hover {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(185, 28, 28, 0.45);
+}
+
+/* ==========================================================
+   📱 MOBILE HEADER — PC එකේ hide කරන්න
+   ========================================================== */
+@media (min-width: 992px) {
+    /* Mobile header (hamburger) PC එකේ hide */
+    header#top {
+        display: none !important;
+    }
+    
+    /* Sidebar PC එකේ disable */
+    .sidebar,
+    .menu-overlay {
+        display: none !important;
+    }
+}
+
+/* ==========================================================
+   🖥️ DESKTOP LAYOUT — Container Wider, Grid 3 Columns
+   ========================================================== */
+@media (min-width: 992px) {
+    
+    /* Body padding */
+    body {
+        padding: 0 2rem 2rem 2rem;
+    }
+    
+    /* Content wrapper wider */
+    .content-wrapper {
+        max-width: 1200px !important;
+    }
+    
+    /* Header title bigger (mobile header - hidden anyway) */
+    .header-title {
+        font-size: 1.6rem;
+    }
+    
+    /* ============ HERO BANNER ============ */
+    .hero-banner {
+        max-width: 1200px !important;
+        height: 420px !important;
+        border-radius: 24px;
+    }
+    
+    .hero-c {
+        padding: 20px 28px;
+        font-size: 0.95rem;
+    }
+    
+    /* ============ GRID CONTAINERS ============ */
+    .grid-container {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+    }
+    
+    .features-container {
+        gap: 24px;
+    }
+    
+    .news-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+    }
+    
+    .skills-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+    }
+    
+    .contact-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 18px;
+    }
+    
+    .stats-overview-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+    }
+    
+    .achievers-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* ============ CARDS — Bigger & Better ============ */
+    .info-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 32px 24px;
+        gap: 20px;
+    }
+    
+    .card-icon-wrap {
+        width: 64px;
+        height: 64px;
+        min-width: 64px;
+    }
+    
+    .card-icon-wrap svg {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .card-text h3 {
+        font-size: 1.15rem;
+    }
+    
+    .card-text p {
+        font-size: 0.92rem;
+    }
+    
+    .feature-box {
+        padding: 32px 24px;
+        gap: 16px;
+    }
+    
+    .feature-box .feature-icon,
+    .feature-box svg {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .feature-box h4 {
+        font-size: 1.15rem;
+    }
+    
+    .feature-box p {
+        font-size: 0.88rem;
+    }
+    
+    /* ============ GLASS CARD ============ */
+    .glass-card {
+        padding: 48px 40px;
+    }
+    
+    /* ============ SECTION TITLE ============ */
+    .section-title {
+        font-size: 1.05rem;
+        letter-spacing: 2.5px;
+        margin-bottom: 24px;
+    }
+    
+    /* ============ NEWS ============ */
+    .main-news-card {
+        flex-direction: row;
+        align-items: stretch;
+    }
+    
+    .main-news-image {
+        width: 45%;
+        height: 100%;
+        min-height: 380px;
+        border-bottom: none;
+        border-right: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .main-news-content {
+        width: 55%;
+        padding: 40px;
+    }
+    
+    .main-news-content h2 {
+        font-size: 1.55rem;
+    }
+    
+    .main-news-content p {
+        font-size: 0.95rem;
+    }
+    
+    .news-grid-image {
+        height: 220px;
+    }
+    
+    /* ============ SKILL CARDS ============ */
+    .skill-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 32px 24px;
+    }
+    
+    .skill-img {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .skill-text h3 {
+        font-size: 1.2rem;
+    }
+    
+    /* ============ VIDEO EMBED ============ */
+    .yt {
+        border-radius: 24px;
+    }
+    
+    .yt-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 28px;
+        max-width: 1400px;
+        margin: 40px auto;
+        padding: 0;
+    }
+    
+    .yt-grid .yt {
+        max-width: 100%;
+        margin: 0;
+    }
+    
+    .yt-grid > .yt:only-child {
+        grid-column: 1 / -1;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    /* ============ MAP ============ */
+    .map-frame iframe {
+        height: 400px;
+    }
+    
+    /* ============ PROFILE ============ */
+    .profile-container {
+        padding: 50px 40px;
+    }
+    
+    .dev-avatar-box {
+        width: 130px;
+        height: 130px;
+    }
+    
+    .dev-name {
+        font-size: 2rem;
+    }
+    
+    .bio-card {
+        padding: 40px;
+    }
+    
+    .bio-card p {
+        font-size: 1.05rem;
+    }
+    
+    /* ============ CONTACT MAP ============ */
+    .contact-item {
+        padding: 22px 26px;
+        font-size: 1rem;
+    }
+    
+    /* ============ QUICK ACCESS ============ */
+    .quick-tabs-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    /* ============ NEWS SLIDER (Horizontal scroll) ============ */
+    .news-slider-container {
+        padding: 15px 0 24px 0;
+    }
+    
+    .news-card {
+        flex: 0 0 340px !important;
+        max-width: 340px;
+    }
+    
+    /* ============ HISTORY TABLES ============ */
+    .modern-table th,
+    .modern-table td {
+        padding: 18px;
+        font-size: 0.95rem;
+    }
+    
+    /* ============ MSNS CUSTOM CARDS (About page) ============ */
+    .msns-data-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+    
+    /* ============ EXAM/RESULTS (term.html) ============ */
+    .analysis-summary-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .charts-grid-exam {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* ============ BACK TO TOP ============ */
+    #backToTop {
+        bottom: 40px;
+        right: 40px;
+        width: 56px;
+        height: 56px;
+        font-size: 22px;
+    }
+    
+    /* ============ FOOTER ============ */
+    footer {
+        font-size: 0.92rem;
+        padding-top: 40px;
+        padding-bottom: 40px;
+    }
+}
+
+/* ==========================================================
+   🖥️ EXTRA LARGE DESKTOP (1400px+)
+   ========================================================== */
+@media (min-width: 1400px) {
+    .content-wrapper {
+        max-width: 1320px !important;
+    }
+    
+    .hero-banner {
+        max-width: 1320px !important;
+        height: 480px !important;
+    }
+    
+    .msns-navbar-inner {
+        max-width: 1400px;
+    }
+}
+
+/* ==========================================================
+   📱 MOBILE — Bootstrap override නොකර preserve කරන්න
+   ========================================================== */
+@media (max-width: 991.98px) {
+    
+    /* Desktop navbar mobile එකේ hide */
+    .msns-desktop-navbar {
+        display: none !important;
+    }
+    
+    /* Mobile header එහෙම්ම තියෙනවා */
+    header#top {
+        display: flex;
+    }
+    
+    /* Sidebar එහෙම්ම තියෙනවා */
+    .sidebar {
+        display: flex;
+    }
+}
+
+/* ==========================================================
+   🎨 BOOTSTRAP RESET OVERRIDES
+   (Bootstrap default styles අපේ design එකට බලපාන්නෙ නැති වෙන්න)
+   ========================================================== */
+.msns-desktop-navbar * {
+    box-sizing: border-box;
+}
+
+.msns-desktop-navbar a {
+    text-decoration: none;
+}
+
+.msns-desktop-navbar ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* ==========================================================
+   ♿ REDUCED MOTION
+   ========================================================== */
+@media (prefers-reduced-motion: reduce) {
+    .msns-navbar-brand,
+    .msns-nav-link,
+    .msns-nav-btn {
+        transition: none !important;
+    }
+}
