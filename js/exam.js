@@ -1,5 +1,5 @@
 /* ==========================================================
-   EXAM.JS — Term Test Results with Analysis & PDF
+   EXAM.JS — Term Test Results with Analysis & PDF (Print)
    ========================================================== */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -88,7 +88,6 @@ function showState(stateName) {
 /* ---------- Helper: Get Valid Subjects Only ---------- */
 function getValidSubjectEntries(resultsObj) {
     if (!resultsObj) return [];
-    // 'Grade / Class' වගේ subject නොවන දේවල් chart එකටයි table එකටයි එන එක මෙතනින් නවත්වනවා
     return Object.entries(resultsObj).filter(([subject]) => {
         const s = subject.toLowerCase().trim();
         return !s.includes('grade') && !s.includes('class') && !s.includes('stream');
@@ -98,7 +97,6 @@ function getValidSubjectEntries(resultsObj) {
 /* ---------- Auth Check ---------- */
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
-        // Not logged in → redirect to u.html
         window.location.href = 'u.html';
         return;
     }
@@ -125,7 +123,6 @@ onAuthStateChanged(auth, async (user) => {
         currentProfile = { displayName: 'User', role: 'student' };
     }
 
-    // Auto-fill form
     autoFillForm();
     showState('ready');
 });
@@ -134,11 +131,9 @@ onAuthStateChanged(auth, async (user) => {
 function autoFillForm() {
     if (!currentProfile) return;
 
-    // Index (locked)
     const idxEl = $('searchIndex');
     if (idxEl) idxEl.value = currentProfile.indexNo || '—';
 
-    // Grade (locked)
     const gradeEl = $('searchGrade');
     if (gradeEl) {
         gradeEl.value = currentProfile.baseGrade 
@@ -146,13 +141,11 @@ function autoFillForm() {
             : '—';
     }
 
-    // Class (auto-select but editable)
     const classEl = $('searchClass');
     if (classEl && currentProfile.studentClass) {
         classEl.value = currentProfile.studentClass;
     }
 
-    // Stream (only for grade 12/13)
     const gradeNum = parseInt(currentProfile.baseGrade);
     const streamGroup = $('streamGroup');
     const streamEl = $('searchStream');
@@ -184,7 +177,6 @@ $('resultSearchForm')?.addEventListener('submit', async (e) => {
     setStatus('Searching for results...', 'info');
 
     try {
-        // Query: indexNumber + year + term
         const q = query(
             collection(db, 'term-test-student-results'),
             where('indexNumber', '==', index),
@@ -200,20 +192,16 @@ $('resultSearchForm')?.addEventListener('submit', async (e) => {
             return;
         }
 
-        // Take the first matching doc
         const docData = snap.docs[0].data();
         currentResultData = docData;
 
         setStatus('Results loaded successfully!', 'success');
 
-        // Render everything
         renderAnalysis(docData);
         renderReportCard(docData);
 
-        // Show results section
         $('resultsSection').style.display = 'block';
 
-        // Scroll to results
         setTimeout(() => {
             $('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 200);
@@ -231,16 +219,13 @@ function renderAnalysis(data) {
     const avg = data.average || '—';
     const position = data.position || '—';
 
-    // Summary stats
     $('statTotal').textContent = total;
     $('statAvg').textContent = avg;
     $('statPosition').textContent = position !== '—' ? `#${position}` : '—';
 
-    // Subject table
     const tbody = $('subjectTableBody');
     tbody.innerHTML = '';
 
-    // මෙතනදී අනවශ්‍ය දේවල් අයින් කරපු subjectEntries පාවිච්චි කරනවා
     const subjectEntries = getValidSubjectEntries(results);
     
     subjectEntries.forEach(([subject, marks], idx) => {
@@ -255,7 +240,6 @@ function renderAnalysis(data) {
         tbody.appendChild(tr);
     });
 
-    // Render charts
     renderSubjectBarChart(subjectEntries);
     renderGradeChart(subjectEntries);
 }
@@ -265,7 +249,6 @@ function renderSubjectBarChart(subjectEntries) {
     const canvas = $('subjectBarChart');
     if (!canvas) return;
 
-    // Destroy previous chart
     if (subjectBarChartInstance) {
         subjectBarChartInstance.destroy();
     }
@@ -337,7 +320,6 @@ function renderGradeChart(subjectEntries) {
         gradeChartInstance.destroy();
     }
 
-    // Count grades
     const gradeCounts = { A: 0, B: 0, C: 0, S: 0, W: 0 };
     subjectEntries.forEach(([, m]) => {
         const g = calculateGrade(m);
@@ -400,23 +382,19 @@ function renderReportCard(data) {
     const year = data.year || '';
     const term = data.term || '';
 
-    // Title
     const termTitle = $('a4TermTitle');
     if (termTitle) {
         const termDisplay = term.replace(/\b\w/g, c => c.toUpperCase());
         termTitle.textContent = `${year} — ${termDisplay} Examination Report`;
     }
 
-    // Student info
     if ($('rIndex')) $('rIndex').textContent = data.indexNumber || '—';
     if ($('rClass')) $('rClass').textContent = `Grade ${data.grade || '—'} - Class ${data.class || '—'}`;
     if ($('rName')) $('rName').textContent = data.name || '—';
 
-    // Results table
     const tbody = $('rTableBody');
     tbody.innerHTML = '';
 
-    // මෙතනත් අනවශ්‍ය දේවල් අයින් කරපු subjectEntries පාවිච්චි කරනවා
     const subjectEntries = getValidSubjectEntries(results);
 
     subjectEntries.forEach(([subject, marks], idx) => {
@@ -431,119 +409,104 @@ function renderReportCard(data) {
         tbody.appendChild(tr);
     });
 
-    // Summary
     if ($('rTotal')) $('rTotal').textContent = data.total || '—';
     if ($('rAvg')) $('rAvg').textContent = data.average || '—';
     if ($('rRank')) $('rRank').textContent = data.position || '—';
 }
 
-/* ---------- PDF Download (FIXED) ---------- */
-$('btnDownloadPDF')?.addEventListener('click', async () => {
+/* ==========================================================
+   ---------- PRINT / SAVE AS PDF (NEW) ----------
+   ========================================================== */
+$('btnDownloadPDF')?.addEventListener('click', () => {
     const sheet = $('a4Sheet');
     if (!sheet) return;
 
     const btn = $('btnDownloadPDF');
     const originalHTML = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-circle-notch spin"></i> Generating PDF...';
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch spin"></i> Opening Print View...';
 
-    try {
-        // Wait for html2pdf to be ready (script might still be loading)
-        if (typeof window.html2pdf === 'undefined') {
-            await new Promise((resolve) => {
-                let waited = 0;
-                const check = setInterval(() => {
-                    if (window.html2pdf || waited >= 5000) {
-                        clearInterval(check);
-                        resolve();
-                    }
-                    waited += 100;
-                }, 100);
-            });
+    // Remember original location so we can move it back
+    const parent = sheet.parentNode;
+    const nextSibling = sheet.nextSibling;
+
+    // Move the sheet directly under <body> so we can hide everything else
+    document.body.appendChild(sheet);
+
+    // Inject temporary print stylesheet
+    const printStyle = document.createElement('style');
+    printStyle.id = 'printStyleTemp';
+    printStyle.textContent = `
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 10mm;
+            }
+            html, body {
+                background: #ffffff !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+            body > *:not(#a4Sheet) {
+                display: none !important;
+            }
+            #a4Sheet {
+                display: block !important;
+                position: static !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                margin: 0 auto !important;
+                padding: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                background: #ffffff !important;
+                page-break-inside: avoid;
+                page-break-after: avoid;
+            }
+            #a4Sheet * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+        }
+    `;
+    document.head.appendChild(printStyle);
+
+    // Cleanup function (restores DOM + button)
+    const cleanup = () => {
+        const s = document.getElementById('printStyleTemp');
+        if (s) s.remove();
+
+        // Put the sheet back where it was
+        if (parent) {
+            if (nextSibling && nextSibling.parentNode === parent) {
+                parent.insertBefore(sheet, nextSibling);
+            } else {
+                parent.appendChild(sheet);
+            }
         }
 
-        if (typeof window.html2pdf === 'undefined') {
-            throw new Error('html2pdf library not loaded');
-        }
-
-        const studentName = (currentResultData?.name || 'Student').replace(/[^\w]/g, '_');
-        const year = currentResultData?.year || '';
-        const term = (currentResultData?.term || '').replace(/\s+/g, '_');
-        const filename = `MSNS_Report_${studentName}_${year}_${term}.pdf`;
-
-        // Clone the sheet to a clean offscreen container so the library
-        // can render it properly without parent CSS interference
-        const clonedSheet = sheet.cloneNode(true);
-        clonedSheet.id = 'a4SheetClone';
-        clonedSheet.style.position = 'fixed';
-        clonedSheet.style.left = '-10000px';
-        clonedSheet.style.top = '0';
-        clonedSheet.style.width = '800px';
-        clonedSheet.style.maxWidth = '800px';
-        clonedSheet.style.margin = '0';
-        clonedSheet.style.boxShadow = 'none';
-        clonedSheet.style.borderRadius = '0';
-        clonedSheet.style.background = '#ffffff';
-        clonedSheet.style.padding = '35px 40px';
-        clonedSheet.style.zIndex = '-1';
-        document.body.appendChild(clonedSheet);
-
-        // Wait for all images inside the clone to load
-        const images = clonedSheet.querySelectorAll('img');
-        await Promise.all(Array.from(images).map(img => {
-            if (img.complete && img.naturalHeight !== 0) return Promise.resolve();
-            return new Promise((resolve) => {
-                img.onload = resolve;
-                img.onerror = resolve;
-                // Safety timeout
-                setTimeout(resolve, 3000);
-            });
-        }));
-
-        // Small delay to ensure layout is settled
-        await new Promise(r => setTimeout(r, 200));
-
-        const opt = {
-            margin: [8, 8, 8, 8],
-            filename: filename,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: {
-                scale: 2,
-                useCORS: true,
-                backgroundColor: '#ffffff',
-                logging: false,
-                allowTaint: true,
-                scrollY: 0,
-                scrollX: 0,
-                windowWidth: 800,
-                windowHeight: clonedSheet.scrollHeight
-            },
-            jsPDF: {
-                unit: 'mm',
-                format: 'a4',
-                orientation: 'portrait'
-            },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-        };
-
-        // Call the library with the cloned element
-        await window.html2pdf().set(opt).from(clonedSheet).save();
-
-        // Clean up: remove the cloned element
-        if (clonedSheet.parentNode) {
-            clonedSheet.parentNode.removeChild(clonedSheet);
-        }
-
-    } catch (err) {
-        console.error('PDF generation error:', err);
-        alert('Failed to generate PDF: ' + (err.message || 'Unknown error'));
-        // Ensure cleanup even on error
-        const clone = $('a4SheetClone');
-        if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
-    } finally {
         btn.disabled = false;
         btn.innerHTML = originalHTML;
-    }
+        window.removeEventListener('afterprint', cleanup);
+    };
+
+    window.addEventListener('afterprint', cleanup);
+
+    // Safety fallback: if afterprint doesn't fire (old browsers)
+    setTimeout(() => {
+        if (document.getElementById('printStyleTemp')) {
+            cleanup();
+        }
+    }, 60000);
+
+    // Wait a tick so the browser applies the new styles, then print
+    setTimeout(() => {
+        window.print();
+    }, 200);
 });
 
 /* ---------- Tab Switching ---------- */
@@ -551,15 +514,12 @@ document.querySelectorAll('.exam-tab').forEach(tab => {
     tab.addEventListener('click', () => {
         const targetTab = tab.dataset.tab;
 
-        // Update active state on buttons
         document.querySelectorAll('.exam-tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
 
-        // Update active content
         document.querySelectorAll('.exam-tab-content').forEach(c => c.classList.remove('active'));
         if (targetTab === 'analysis') {
             $('tabAnalysis')?.classList.add('active');
-            // Re-render charts (they may be hidden initially)
             if (currentResultData) {
                 const subjectEntries = getValidSubjectEntries(currentResultData.results || {});
                 setTimeout(() => {
