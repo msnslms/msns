@@ -3243,3 +3243,461 @@ html, body {
         transition-duration: 0.01ms !important;
     }
 }
+/* ==========================================================
+   🖼️ MINI IMAGE LIBRARY — Slider Styling
+   ========================================================== */
+
+#mini-image-library {
+    width: 100%;
+    margin: 40px 0 30px 0;
+}
+
+.mil-container {
+    width: 100%;
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+    background: #ffffff;
+    box-shadow: 
+        0 20px 50px -20px rgba(185, 28, 28, 0.2),
+        0 0 0 1px rgba(0, 0, 0, 0.04);
+    margin-bottom: 18px;
+    min-height: 380px;
+}
+
+/* ---------- Main Card ---------- */
+.mil-card {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+    min-height: 380px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+/* ---------- Image Section (Left) ---------- */
+.mil-media {
+    position: relative;
+    width: 100%;
+    height: 320px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #fef3c7, #fef9c3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mil-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    opacity: 0;
+    filter: blur(20px);
+    transform: scale(1.08);
+    transition: 
+        opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+        filter 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity, filter, transform;
+}
+
+.mil-img.active {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+    z-index: 2;
+}
+
+/* "No Image" placeholder */
+.mil-no-image {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    color: #b45309;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.mil-no-image i {
+    font-size: 2.5rem;
+    opacity: 0.7;
+}
+
+/* Dark gradient overlay on image */
+.mil-media::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.35), transparent);
+    z-index: 3;
+    pointer-events: none;
+}
+
+/* ---------- Content Section (Right) ---------- */
+.mil-content {
+    padding: 26px 24px 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: #ffffff;
+    position: relative;
+}
+
+.mil-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.3;
+    margin-bottom: 12px;
+    letter-spacing: 0.2px;
+    transition: 
+        opacity 0.5s ease,
+        filter 0.5s ease,
+        transform 0.5s ease;
+    will-change: opacity, filter, transform;
+}
+
+/* Red-Gold gradient line */
+.mil-line {
+    height: 4px;
+    width: 70px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #dc2626 0%, #f59e0b 50%, #dc2626 100%);
+    background-size: 200% 100%;
+    margin-bottom: 16px;
+    animation: milLineFlow 3s ease infinite;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+}
+
+@keyframes milLineFlow {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+}
+
+.mil-desc {
+    font-size: 0.9rem;
+    color: #52525b;
+    line-height: 1.7;
+    font-weight: 500;
+    max-width: 500px;
+    transition: 
+        opacity 0.5s ease,
+        filter 0.5s ease,
+        transform 0.5s ease;
+    will-change: opacity, filter, transform;
+}
+
+/* Blur transition state */
+.mil-fading .mil-title,
+.mil-fading .mil-desc {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(8px);
+}
+
+/* ---------- Counter Badge ---------- */
+.mil-counter {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #b91c1c;
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 5;
+    border: 1px solid rgba(234, 179, 8, 0.35);
+}
+
+/* ---------- Loading State ---------- */
+.mil-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    min-height: 380px;
+    color: #b91c1c;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.mil-loading i {
+    font-size: 2rem;
+}
+
+/* ---------- Empty State ---------- */
+.mil-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 380px;
+    color: #71717a;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.mil-empty i {
+    font-size: 2.5rem;
+    color: #b45309;
+    opacity: 0.6;
+}
+
+/* ---------- Dots ---------- */
+.mil-dots {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0 18px 0;
+    flex-wrap: wrap;
+}
+
+.mil-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.18);
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    padding: 0;
+}
+
+.mil-dot:hover {
+    background: rgba(185, 28, 28, 0.4);
+    transform: scale(1.2);
+}
+
+.mil-dot.active {
+    background: linear-gradient(90deg, #dc2626, #f59e0b);
+    width: 28px;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+}
+
+/* ==========================================================
+   🔘 READ MORE BUTTON
+   ========================================================== */
+.mil-more-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-top: 6px;
+}
+
+.mil-more-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 32px;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-radius: 50px;
+    border: 1px solid rgba(234, 179, 8, 0.4);
+    box-shadow: 
+        0 8px 22px rgba(185, 28, 28, 0.35),
+        inset 0 1px 1px rgba(255, 255, 255, 0.25);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.mil-more-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(
+        120deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.25) 50%,
+        transparent 100%
+    );
+    transform: skewX(-20deg);
+    transition: left 0.6s ease;
+    pointer-events: none;
+}
+
+.mil-more-btn:hover::before {
+    left: 150%;
+}
+
+.mil-more-btn:hover {
+    transform: translateY(-3px);
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 
+        0 12px 28px rgba(185, 28, 28, 0.5),
+        0 0 20px rgba(234, 179, 8, 0.25),
+        inset 0 1px 1px rgba(255, 255, 255, 0.3);
+    border-color: rgba(234, 179, 8, 0.7);
+    color: #ffffff;
+}
+
+.mil-more-btn:active {
+    transform: translateY(-1px);
+}
+
+.mil-more-btn svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+.mil-more-btn:hover svg {
+    transform: translateX(4px);
+}
+
+/* ==========================================================
+   🖥️ DESKTOP — PC එකේදී side-by-side (image left, text right)
+   ========================================================== */
+@media (min-width: 768px) {
+    .mil-card {
+        grid-template-columns: 1.15fr 1fr;
+        min-height: 420px;
+    }
+    
+    .mil-media {
+        height: 100%;
+        min-height: 420px;
+    }
+    
+    .mil-content {
+        padding: 40px 36px;
+    }
+    
+    .mil-title {
+        font-size: 1.6rem;
+        margin-bottom: 14px;
+    }
+    
+    .mil-desc {
+        font-size: 0.95rem;
+        line-height: 1.8;
+    }
+    
+    .mil-container {
+        min-height: 420px;
+    }
+    
+    .mil-loading,
+    .mil-empty {
+        min-height: 420px;
+    }
+    
+    .mil-more-btn {
+        padding: 15px 38px;
+        font-size: 0.95rem;
+    }
+}
+
+@media (min-width: 1200px) {
+    .mil-card {
+        grid-template-columns: 1.25fr 1fr;
+        min-height: 460px;
+    }
+    
+    .mil-media {
+        min-height: 460px;
+    }
+    
+    .mil-content {
+        padding: 50px 44px;
+    }
+    
+    .mil-title {
+        font-size: 1.75rem;
+    }
+    
+    .mil-container {
+        min-height: 460px;
+    }
+    
+    .mil-loading,
+    .mil-empty {
+        min-height: 460px;
+    }
+}
+
+/* ==========================================================
+   📱 MOBILE — Stack (image top, text bottom)
+   ========================================================== */
+@media (max-width: 767.98px) {
+    .mil-media {
+        height: 260px;
+    }
+    
+    .mil-content {
+        padding: 22px 20px 26px;
+    }
+    
+    .mil-title {
+        font-size: 1.15rem;
+    }
+    
+    .mil-desc {
+        font-size: 0.85rem;
+        line-height: 1.65;
+    }
+    
+    .mil-counter {
+        top: 12px;
+        right: 12px;
+        padding: 5px 11px;
+        font-size: 0.7rem;
+    }
+    
+    .mil-more-btn {
+        padding: 12px 26px;
+        font-size: 0.82rem;
+        width: 100%;
+        max-width: 320px;
+    }
+}
+
+/* ==========================================================
+   ♿ REDUCED MOTION
+   ========================================================== */
+@media (prefers-reduced-motion: reduce) {
+    .mil-img,
+    .mil-title,
+    .mil-desc,
+    .mil-line,
+    .mil-more-btn {
+        transition: none !important;
+        animation: none !important;
+    }
+                                }
