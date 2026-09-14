@@ -2026,7 +2026,10 @@ i[class*="fa-"] {
 }
 
 /* ==========================================================
-   🖥️ MSNS DESKTOP NAVBAR (Base Styles)
+   🖥️ MSNS DESKTOP NAVBAR — SOLID (No Scroll Fade)
+   ==========================================================
+   🔧 FIX: background rgba → #ffffff (fully opaque)
+   → Scroll කරද්දී navbar එකේ opacity වෙනස් වෙන්නෙ නෑ
    ========================================================== */
 
 .msns-desktop-navbar {
@@ -2036,12 +2039,13 @@ i[class*="fa-"] {
     right: 0;
     width: 100%;
     z-index: 9999;
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: #ffffff !important;          /* ← SOLID WHITE */
+    backdrop-filter: none !important;         /* ← Blur අයින් කරා */
+    -webkit-backdrop-filter: none !important;
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
     padding: 0;
     box-shadow: 0 2px 20px rgba(0, 0, 0, 0.04);
+    opacity: 1 !important;                    /* ← Always opaque */
 }
 
 .msns-navbar-inner {
@@ -2633,7 +2637,6 @@ i[class*="fa-"] {
 
 /* ==========================================================
    ⚠️ CRITICAL FIX — Sticky නැතිවීම වළක්වන්න
-   (overflow-x: hidden, position: sticky BREAK කරනවා!)
    ========================================================== */
 html, body {
     overflow-x: clip !important;
