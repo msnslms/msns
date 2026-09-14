@@ -1,7 +1,7 @@
 /* ==========================================================
    🖼️ MINI IMAGE LIBRARY — Google Sheets Slider
    Sheet: mini-image-library
-   Columns: url | titel | discretion
+   Columns: url | titel | discretion | home
    ========================================================== */
 
 (function () {
@@ -40,22 +40,24 @@
     function normalizeImageUrl(rawUrl) {
         if (!rawUrl) return '';
 
-        const url = rawUrl.trim();
+        let url = rawUrl.trim().replace(/^["']|["']$/g, '');
 
-        // Google Drive — multiple formats
+        // Google Drive file ID extraction
         const driveFileMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+        const driveIdMatch   = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        const driveUcMatch   = url.match(/uc\?.*id=([a-zA-Z0-9_-]+)/);
+
+        let fileId = null;
         if (driveFileMatch) {
-            return `https://lh3.googleusercontent.com/d/${driveFileMatch[1]}=w1200`;
+            fileId = driveFileMatch[1];
+        } else if (driveUcMatch) {
+            fileId = driveUcMatch[1];
+        } else if (url.includes('drive.google.com') && driveIdMatch) {
+            fileId = driveIdMatch[1];
         }
 
-        const driveOpenMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-        if (url.includes('drive.google.com') && driveOpenMatch) {
-            return `https://lh3.googleusercontent.com/d/${driveOpenMatch[1]}=w1200`;
-        }
-
-        const driveUcMatch = url.match(/uc\?.*id=([a-zA-Z0-9_-]+)/);
-        if (driveUcMatch) {
-            return `https://lh3.googleusercontent.com/d/${driveUcMatch[1]}=w1200`;
+        if (fileId) {
+            return `https://lh3.googleusercontent.com/d/${fileId}`;
         }
 
         return url;
@@ -77,7 +79,7 @@
     }
 
     /* ==========================================================
-       🧩 PARSE CSV (With quoted fields support)
+       🧩 PARSE CSV (With quoted fields support & home filter)
        ========================================================== */
     function parseCSV(csv) {
         const rows = [];
@@ -129,9 +131,12 @@
         const descIdx = headers.findIndex(h =>
             h.includes('discre') || h.includes('desc')
         );
+        const homeIdx = headers.findIndex(h =>
+            h === 'home' || h.includes('home')
+        );
 
         console.log('📊 Headers:', headers);
-        console.log('📊 Indexes — URL:', urlIdx, 'Title:', titleIdx, 'Desc:', descIdx);
+        console.log('📊 Indexes — URL:', urlIdx, 'Title:', titleIdx, 'Desc:', descIdx, 'Home:', homeIdx);
 
         const data = [];
         for (let i = 1; i < rows.length && data.length < CONFIG.maxItems; i++) {
@@ -139,6 +144,12 @@
             const url = (r[urlIdx] || '').trim();
             const title = (r[titleIdx] || '').trim();
             const desc = (r[descIdx] || '').trim();
+
+            // Home Column Filter Logic (Only show items where 'home' column is 'yes')
+            if (homeIdx !== -1) {
+                const homeVal = (r[homeIdx] || '').trim().toLowerCase();
+                if (homeVal !== 'yes') continue;
+            }
 
             if (!url && !title && !desc) continue;
 
@@ -182,8 +193,7 @@
                     data-index="${i}"
                     src="${item.url}" 
                     alt="${escapeHTML(item.title)}"
-                    loading="lazy"
-                    onerror="this.outerHTML='<div class=\\'mil-img mil-no-image ${i === 0 ? 'active' : ''}\\' data-index=\\'${i}\\'><i class=\\'fa-regular fa-image\\'></i><span>No Image</span></div>'">
+                    loading="lazy">
             `;
         }).join('');
 
@@ -200,6 +210,18 @@
                 </div>
             </div>
         `;
+
+        // Handle Image Load Errors Cleanly
+        container.querySelectorAll('img.mil-img').forEach(img => {
+            img.addEventListener('error', function () {
+                const idx = this.dataset.index;
+                const fallback = document.createElement('div');
+                fallback.className = `mil-img mil-no-image ${this.classList.contains('active') ? 'active' : ''}`;
+                fallback.dataset.index = idx;
+                fallback.innerHTML = `<i class="fa-regular fa-image"></i><span>No Image</span>`;
+                this.replaceWith(fallback);
+            });
+        });
 
         renderDots();
 
