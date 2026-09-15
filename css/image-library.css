@@ -1,14 +1,10 @@
 /* ==========================================================
-   🎨 SCHOOL GALLERY — 3D Image Ring (Full Merged CSS)
+   🎨 SCHOOL GALLERY — 3D Image Ring (Full Fixed CSS)
    ========================================================== */
 
-/* ---------- Base Page Setup ---------- */
+/* ---------- Base Page Setup (සුදු පාට) ---------- */
 body.gallery-page {
-    /* ඔයාට සුදු පාට ඕන නම් මෙතන #fffff වෙනුවට #ffffff දාන්න */
-    background: #ffffff; 
-    background-image: 
-        radial-gradient(circle at 20% 30%, rgba(220, 38, 38, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(234, 179, 8, 0.1) 0%, transparent 50%);
+    background: #ffffff; /* ඔයා ඉල්ලපු සුදු පාට */
     background-attachment: fixed;
     overflow: hidden;
     height: 100vh;
@@ -29,7 +25,7 @@ body.gallery-page {
 }
 
 /* ==========================================================
-   GALLERY TITLE
+   GALLERY TITLE (සුදු background එකට ගැලපෙන්න පාට වෙනස් කරලා)
    ========================================================== */
 .gallery-title-wrap {
     position: relative;
@@ -42,7 +38,7 @@ body.gallery-page {
 .gallery-title {
     font-size: 1.8rem;
     font-weight: 900;
-    color: #ffffff;
+    color: #0f172a; /* තද නිල් පාට */
     letter-spacing: 2px;
     text-transform: uppercase;
     margin: 0;
@@ -61,7 +57,7 @@ body.gallery-page {
 
 .gallery-subtitle {
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: #475569; /* අළු පාට */
     margin-top: 8px;
     letter-spacing: 0.5px;
     font-weight: 500;
@@ -92,12 +88,25 @@ body.gallery-page {
     transform-style: preserve-3d;
 }
 
+/* ==========================================================
+   🎯 මෙන්න මේකයි අර පරණ Animation එක ආයෙත් දාලා තියෙන්නේ!
+   ========================================================== */
 .gallery-ring {
     position: absolute;
     width: 0;
     height: 0;
     transform-style: preserve-3d;
+    animation: ringRotate 40s linear infinite; /* 👈 පරණ Animation එක */
     will-change: transform;
+}
+
+.gallery-ring.paused {
+    animation-play-state: paused;
+}
+
+@keyframes ringRotate {
+    from { transform: rotateY(0deg); }
+    to   { transform: rotateY(360deg); }
 }
 
 /* ==========================================================
@@ -112,9 +121,8 @@ body.gallery-page {
     backface-visibility: hidden;
     background: linear-gradient(135deg, #1a1a1a, #0f0f0f);
     box-shadow: 
-        0 20px 60px rgba(0, 0, 0, 0.7),
-        0 0 0 1px rgba(255, 255, 255, 0.06),
-        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        0 20px 60px rgba(0, 0, 0, 0.2),
+        0 0 0 1px rgba(0, 0, 0, 0.1);
     transition: 
         transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
         box-shadow 0.5s ease,
@@ -156,29 +164,9 @@ body.gallery-page {
 .gallery-item:hover {
     filter: brightness(1.15) saturate(1.1);
     box-shadow: 
-        0 30px 80px rgba(220, 38, 38, 0.55),
-        0 0 0 2px rgba(234, 179, 8, 0.7),
-        0 0 40px rgba(220, 38, 38, 0.4);
+        0 30px 80px rgba(220, 38, 38, 0.4),
+        0 0 0 2px rgba(234, 179, 8, 0.7);
     z-index: 100;
-}
-
-/* No-image placeholder */
-.gallery-item.no-image {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 10px;
-    color: #b45309;
-    background: linear-gradient(135deg, #fef3c7, #fde68a);
-    font-weight: 700;
-    font-size: 0.8rem;
-    letter-spacing: 1px;
-}
-
-.gallery-item.no-image i {
-    font-size: 2rem;
-    opacity: 0.7;
 }
 
 /* ==========================================================
@@ -219,32 +207,27 @@ body.gallery-page {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(234, 179, 8, 0.35);
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(234, 179, 8, 0.6);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    color: #ffffff;
+    color: #0f172a;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
     z-index: 20;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 .gallery-nav:hover {
     background: linear-gradient(135deg, #dc2626, #b91c1c);
-    border-color: rgba(234, 179, 8, 0.7);
+    border-color: rgba(234, 179, 8, 0.8);
+    color: #ffffff;
     transform: translateY(-50%) scale(1.1);
-    box-shadow: 
-        0 12px 30px rgba(185, 28, 28, 0.5),
-        0 0 20px rgba(234, 179, 8, 0.3);
-}
-
-.gallery-nav:active {
-    transform: translateY(-50%) scale(0.95);
+    box-shadow: 0 12px 30px rgba(185, 28, 28, 0.4);
 }
 
 .gallery-nav-prev { left: 20px; }
@@ -259,15 +242,14 @@ body.gallery-page {
     align-items: center;
     gap: 8px;
     padding: 8px 18px;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(234, 179, 8, 0.3);
+    border: 1px solid rgba(234, 179, 8, 0.5);
     border-radius: 50px;
-    color: #cbd5e1;
+    color: #475569;
     font-size: 0.72rem;
     font-weight: 600;
-    letter-spacing: 0.5px;
     z-index: 15;
     animation: hintPulse 3s ease-in-out infinite;
     pointer-events: none;
@@ -275,16 +257,15 @@ body.gallery-page {
 
 .gallery-hint i {
     color: #f59e0b;
-    font-size: 0.8rem;
 }
 
 @keyframes hintPulse {
-    0%, 100% { opacity: 0.6; transform: translateX(-50%) scale(1); }
+    0%, 100% { opacity: 0.7; transform: translateX(-50%) scale(1); }
     50%      { opacity: 1;   transform: translateX(-50%) scale(1.02); }
 }
 
 /* ==========================================================
-   🖼️ LIGHTBOX MODAL
+   🖼️ LIGHTBOX MODAL (Click කරාම එන එක)
    ========================================================== */
 .gallery-modal {
     position: fixed;
@@ -323,15 +304,12 @@ body.gallery-page {
     font-size: 1.2rem;
     z-index: 10001;
     transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
 }
 
 .gallery-modal-close:hover {
     background: #dc2626;
     color: #ffffff;
     transform: rotate(90deg) scale(1.1);
-    box-shadow: 0 0 30px rgba(220, 38, 38, 0.6);
 }
 
 .gallery-modal-nav {
@@ -341,25 +319,21 @@ body.gallery-page {
     width: 52px;
     height: 52px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(234, 179, 8, 0.4);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     color: #ffffff;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     z-index: 10001;
     transition: all 0.3s ease;
 }
 
 .gallery-modal-nav:hover {
     background: linear-gradient(135deg, #dc2626, #b91c1c);
-    border-color: rgba(234, 179, 8, 0.8);
     transform: translateY(-50%) scale(1.1);
-    box-shadow: 0 0 25px rgba(220, 38, 38, 0.5);
 }
 
 .gallery-modal-prev { left: 20px; }
@@ -368,7 +342,6 @@ body.gallery-page {
 .gallery-modal-inner {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 0;
     width: 100%;
     max-width: 1100px;
     max-height: 90vh;
@@ -376,15 +349,10 @@ body.gallery-page {
     border: 1px solid rgba(234, 179, 8, 0.35);
     border-radius: 24px;
     overflow: hidden;
-    box-shadow: 
-        0 30px 80px rgba(0, 0, 0, 0.8),
-        0 0 60px rgba(220, 38, 38, 0.15);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
     transform: scale(0.9) translateY(20px);
     opacity: 0;
-    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-                opacity 0.4s ease;
-    position: relative;
-    z-index: 10000;
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
 }
 
 .gallery-modal.active .gallery-modal-inner {
@@ -397,7 +365,6 @@ body.gallery-page {
     background: #000;
     min-height: 280px;
     max-height: 55vh;
-    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -408,13 +375,12 @@ body.gallery-page {
     height: 100%;
     max-height: 55vh;
     object-fit: contain;
-    display: block;
     animation: modalImgIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @keyframes modalImgIn {
-    from { opacity: 0; transform: scale(1.05); filter: blur(10px); }
-    to   { opacity: 1; transform: scale(1); filter: blur(0); }
+    from { opacity: 0; transform: scale(1.05); }
+    to   { opacity: 1; transform: scale(1); }
 }
 
 .modal-counter {
@@ -423,14 +389,11 @@ body.gallery-page {
     right: 16px;
     padding: 6px 14px;
     background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(234, 179, 8, 0.4);
     border-radius: 50px;
     color: #f59e0b;
     font-size: 0.72rem;
     font-weight: 800;
-    letter-spacing: 0.5px;
     z-index: 3;
 }
 
@@ -440,9 +403,6 @@ body.gallery-page {
     flex-direction: column;
     justify-content: center;
     gap: 12px;
-    background: rgba(15, 23, 42, 0.4);
-    position: relative;
-    overflow-y: auto;
 }
 
 .modal-badge {
@@ -456,38 +416,22 @@ body.gallery-page {
     color: #f59e0b;
     font-size: 0.7rem;
     font-weight: 800;
-    letter-spacing: 1px;
     text-transform: uppercase;
     align-self: flex-start;
-    width: fit-content;
-}
-
-.modal-badge i {
-    font-size: 0.75rem;
 }
 
 .modal-title {
     font-size: 1.35rem;
     font-weight: 800;
     color: #ffffff;
-    line-height: 1.3;
     margin: 0;
-    letter-spacing: 0.2px;
 }
 
 .modal-line {
     height: 4px;
     width: 70px;
     border-radius: 4px;
-    background: linear-gradient(90deg, #dc2626, #f59e0b, #dc2626);
-    background-size: 200% 100%;
-    animation: modalLineFlow 3s ease infinite;
-    box-shadow: 0 2px 10px rgba(220, 38, 38, 0.5);
-}
-
-@keyframes modalLineFlow {
-    0%, 100% { background-position: 0% 50%; }
-    50%      { background-position: 100% 50%; }
+    background: linear-gradient(90deg, #dc2626, #f59e0b);
 }
 
 .modal-desc {
@@ -495,7 +439,6 @@ body.gallery-page {
     color: #cbd5e1;
     line-height: 1.7;
     margin: 0;
-    font-weight: 500;
 }
 
 /* ==========================================================
@@ -521,10 +464,10 @@ body.gallery-page {
 
     .gallery-stage {
         min-height: 400px;
-        perspective: 1200px; /* Mobile වලට 3D එෆෙක්ට් එක ලස්සනට පේන්න */
+        perspective: 1200px;
     }
 
-    /* Images ලොකු කිරීම සහ හරියට මැදට ගැනීම */
+    /* Images ලොකු කරලා මැදට ගැනීම (200x280) */
     .gallery-item {
         width: 200px;
         height: 280px;
@@ -590,7 +533,7 @@ body.gallery-page {
     }
 
     .gallery-modal-nav {
-        display: none; /* Mobile වලදී arrows අවශ්‍ය නැත */
+        display: none;
     }
 }
 
@@ -615,10 +558,6 @@ body.gallery-page {
     .modal-title {
         font-size: 1.6rem;
     }
-    .modal-desc {
-        font-size: 0.95rem;
-        line-height: 1.75;
-    }
 }
 
 @media (min-width: 1200px) {
@@ -634,11 +573,13 @@ body.gallery-page {
    ♿ REDUCED MOTION
    ========================================================== */
 @media (prefers-reduced-motion: reduce) {
+    .gallery-ring {
+        animation: none !important;
+    }
     .gallery-item,
     .gallery-nav,
     .gallery-modal-inner,
     .gallery-modal-media img,
-    .modal-line,
     .gallery-hint {
         animation: none !important;
         transition-duration: 0.01ms !important;
