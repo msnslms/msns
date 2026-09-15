@@ -555,6 +555,7 @@ body.gallery-page {
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none; /* Firefox */
+        scroll-behavior: smooth; /* JS auto slide smooth */
         padding: 20px 0;
     }
 
@@ -576,7 +577,8 @@ body.gallery-page {
         position: relative;
         display: flex;
         gap: 16px;
-        padding: 0 20px;
+        /* 🔥 මෙතන තමයි ෆොටෝ මැදට එන්න හදලා තියෙන්නේ (Center calculation) */
+        padding: 0 calc(50vw - (min(80vw, 320px) / 2)); 
         animation: none !important; /* Rotation off */
         transform: none !important;
         transform-style: flat;
@@ -619,7 +621,7 @@ body.gallery-page {
        📱 Mobile Modal Fix (Centered & Large)
        ----------------------------------------- */
     .gallery-modal {
-        padding: 16px; /* Space around modal */
+        padding: 16px;
         align-items: center; /* Center vertically */
         justify-content: center;
     }
@@ -628,7 +630,7 @@ body.gallery-page {
         max-width: 100%;
         width: 100%;
         max-height: 90vh;
-        border-radius: 20px; /* Not sticking to bottom */
+        border-radius: 20px;
         grid-template-columns: 1fr;
         margin: 0;
         display: flex;
@@ -637,7 +639,7 @@ body.gallery-page {
 
     .gallery-modal-media {
         min-height: 40vh;
-        max-height: 55vh; /* Image takes good space */
+        max-height: 55vh;
         flex: 1;
     }
 
@@ -670,7 +672,6 @@ body.gallery-page {
         font-size: 1rem;
     }
 
-    /* Hide Modal Nav Arrows on Mobile (Swipe supported or just tap) */
     .gallery-modal-nav {
         display: none;
     }
@@ -743,4 +744,4 @@ body.gallery-page {
         animation: none !important;
         transition-duration: 0.01ms !important;
     }
-}
+   }
