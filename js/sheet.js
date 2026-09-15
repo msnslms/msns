@@ -41,16 +41,16 @@
     let isHeroAnimating = false;
 
     /* ==========================================================
-       🎨 URL NORMALIZER — imgbb & Google Drive
+       🎨 URL NORMALIZER — Google Drive & Direct Links
        ========================================================== */
     function normalizeImageUrl(rawUrl) {
         if (!rawUrl) return '';
 
         let url = rawUrl.trim().replace(/^["']|["']$/g, '');
 
-        // Google Drive file ID extraction
-        const driveMatch = url.match(/(?:\/file\/d\/|id=|uc\?.*id=)([a-zA-Z0-9_-]+)/);
-        if (url.includes('drive.google.com') && driveMatch) {
+        // Google Drive file ID extraction (handles /file/d/ID, ?id=ID, /d/ID)
+        const driveMatch = url.match(/(?:\/file\/d\/|id=|uc\?.*id=|\/d\/)([a-zA-Z0-9_-]+)/);
+        if ((url.includes('drive.google.com') || url.includes('docs.google.com')) && driveMatch) {
             return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
         }
 
@@ -63,7 +63,7 @@
     async function fetchSheetData() {
         const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(CONFIG.sheetName)}`;
 
-        console.log('📥 Fetching:', url);
+        console.log('📥 Fetching Sheet:', url);
 
         const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to fetch sheet: ' + response.status);
@@ -73,7 +73,7 @@
     }
 
     /* ==========================================================
-       🧩 PARSE CSV (With Header Separation Fix)
+       🧩 PARSE CSV
        ========================================================== */
     function parseCSV(csv) {
         const rows = [];
@@ -116,26 +116,14 @@
 
         const headers = rows[0].map(h => h.trim().toLowerCase());
 
-        const urlIdx = headers.findIndex(h =>
-            h === 'url' || h.includes('url') || h === 'image'
-        );
-        const titleIdx = headers.findIndex(h =>
-            h === 'titel' || h === 'title' || h.includes('tit')
-        );
-        const descIdx = headers.findIndex(h =>
-            h.includes('discre') || h.includes('desc') || h.includes('text')
-        );
+        const urlIdx = headers.findIndex(h => h === 'url' || h.includes('url') || h === 'image');
+        const titleIdx = headers.findIndex(h => h === 'titel' || h === 'title' || h.includes('tit') || h === 'heading');
+        const descIdx = headers.findIndex(h => h.includes('discre') || h.includes('desc') || h.includes('text') || h === 'discretion');
+        
+        const homeHeaderIdx = headers.findIndex(h => h === 'home-heder' || h === 'home-header' || h.includes('heder') || h.includes('header') || h === 'hero');
+        const homeIdx = headers.findIndex((h, idx) => (h === 'home' || h.trim() === 'home') && idx !== homeHeaderIdx);
 
-        // Header matching fix to avoid collision between 'home' and 'home-heder'
-        const homeHeaderIdx = headers.findIndex(h =>
-            h === 'home-heder' || h === 'home-header' || h.includes('heder') || h.includes('header')
-        );
-        const homeIdx = headers.findIndex((h, idx) =>
-            (h === 'home' || h.trim() === 'home') && idx !== homeHeaderIdx
-        );
-
-        console.log('📊 Headers:', headers);
-        console.log('📊 Indexes — URL:', urlIdx, 'Title:', titleIdx, 'Desc:', descIdx, 'Home:', homeIdx, 'Home-Heder:', homeHeaderIdx);
+        console.log('📊 Column Indexes — URL:', urlIdx, 'Title:', titleIdx, 'Desc:', descIdx, 'Home:', homeIdx, 'Home-Header:', homeHeaderIdx);
 
         const data = [];
         for (let i = 1; i < rows.length && data.length < CONFIG.maxItems; i++) {
@@ -144,7 +132,6 @@
             const title = (r[titleIdx] || '').trim();
             const desc = (r[descIdx] || '').trim();
 
-            // Check Home Column (for mini gallery)
             let isHomeGallery = false;
             if (homeIdx !== -1) {
                 const homeVal = (r[homeIdx] || '').trim().toLowerCase();
@@ -153,7 +140,6 @@
                 }
             }
 
-            // Check Home-Heder Column (for top hero slider)
             let isHero = false;
             if (homeHeaderIdx !== -1) {
                 const homeHeaderVal = (r[homeHeaderIdx] || '').trim().toLowerCase();
@@ -166,7 +152,7 @@
 
             data.push({
                 url: normalizeImageUrl(url),
-                title: title || 'Untitled',
+                title: title || '',
                 desc: desc || '',
                 hasImage: !!url,
                 isHome: isHomeGallery,
@@ -183,12 +169,18 @@
     function renderHeroSlider() {
         if (!heroContainer) return;
 
+        // 1. Filter items marked specifically for Hero
         heroItems = items.filter(item => item.isHero);
+
+        // 2. Fallback: If no items have home-heder = 'yes', take all items with images
+        if (heroItems.length === 0) {
+            heroItems = items.filter(item => item.hasImage || item.title);
+        }
 
         if (heroItems.length === 0) {
             heroContainer.innerHTML = `
-                <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#fef3c7; color:#b45309; font-weight:bold; font-size:0.9rem;">
-                    No Hero Images Found
+                <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#0f172a; color:#94a3b8; font-weight:bold; font-size:0.9rem;">
+                    No Hero Images Available
                 </div>
             `;
             return;
@@ -213,21 +205,25 @@
             `;
         }).join('');
 
+        const initialTitle = heroItems[0]?.title ? escapeHTML(heroItems[0].title) : '';
+        const initialDesc = heroItems[0]?.desc ? escapeHTML(heroItems[0].desc) : '';
+
         heroContainer.innerHTML = `
             ${imagesHTML}
-            <div class="hero-slider-overlay active" id="heroOverlay">
-                <div class="hero-slider-title" id="heroTitle">${escapeHTML(heroItems[0].title)}</div>
-                <div class="hero-slider-desc" id="heroDesc">${escapeHTML(heroItems[0].desc)}</div>
+            <div class="hero-slider-overlay active" id="heroOverlay" style="${(!initialTitle && !initialDesc) ? 'display:none;' : ''}">
+                <div class="hero-slider-title" id="heroTitle">${initialTitle}</div>
+                <div class="hero-slider-desc" id="heroDesc">${initialDesc}</div>
             </div>
         `;
 
+        // Handle load errors gracefully
         heroContainer.querySelectorAll('img.hero-slider-img').forEach(img => {
             img.addEventListener('error', function () {
                 const idx = this.dataset.heroIndex;
                 const fallback = document.createElement('div');
                 fallback.className = `hero-slider-img mil-no-image ${this.classList.contains('active') ? 'active' : ''}`;
                 fallback.dataset.heroIndex = idx;
-                fallback.innerHTML = `<i class="fa-regular fa-image"></i><span>No Image</span>`;
+                fallback.innerHTML = `<i class="fa-regular fa-image"></i><span>Image Load Error</span>`;
                 this.replaceWith(fallback);
             });
         });
@@ -264,13 +260,23 @@
             const nextImg = heroContainer.querySelector(`.hero-slider-img[data-hero-index="${index}"]`);
             if (nextImg) nextImg.classList.add('active');
 
-            if (title) title.textContent = heroItems[index].title;
-            if (desc) desc.textContent = heroItems[index].desc;
+            const newTitle = heroItems[index].title;
+            const newDesc = heroItems[index].desc;
+
+            if (overlay) {
+                if (!newTitle && !newDesc) {
+                    overlay.style.display = 'none';
+                } else {
+                    overlay.style.display = 'block';
+                    if (title) title.textContent = newTitle;
+                    if (desc) desc.textContent = newDesc;
+                }
+            }
 
             heroCurrentIndex = index;
 
             setTimeout(() => {
-                if (overlay) overlay.classList.add('active');
+                if (overlay && (newTitle || newDesc)) overlay.classList.add('active');
                 setTimeout(() => { isHeroAnimating = false; }, 500);
             }, 50);
         }, 350);
@@ -311,6 +317,10 @@
         if (!container) return;
 
         galleryItems = items.filter(item => item.isHome);
+
+        if (galleryItems.length === 0) {
+            galleryItems = items.filter(item => item.hasImage);
+        }
 
         if (galleryItems.length === 0) {
             container.innerHTML = `
@@ -530,8 +540,8 @@
             }
             if (heroContainer) {
                 heroContainer.innerHTML = `
-                    <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#fef3c7; color:#b45309; font-weight:bold; font-size:0.9rem;">
-                        Failed to load images
+                    <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#0f172a; color:#ef4444; font-weight:bold; font-size:0.9rem;">
+                        Failed to load hero banner
                     </div>
                 `;
             }
@@ -539,4 +549,3 @@
     })();
 
 })();
-
