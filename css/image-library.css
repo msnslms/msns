@@ -12,18 +12,17 @@ body.gallery-page {
     margin: 0;
 }
 
-/* Desktop only: lock body to viewport for 3D ring */
+/* Desktop: Allow smooth page scrolling while holding 3D ring height */
 @media (min-width: 768px) {
     body.gallery-page {
-        overflow: hidden;
-        height: 100vh;
-        height: 100dvh;
-        display: flex;
-        flex-direction: column;
+        overflow-x: hidden;
+        overflow-y: auto;
+        min-height: 100vh;
+        display: block;
     }
 }
 
-/* Mobile: clean natural page scroll without header/footer conflicts */
+/* Mobile: Clean natural page scroll */
 @media (max-width: 767.98px) {
     body.gallery-page {
         display: block;
@@ -85,8 +84,8 @@ body.gallery-page {
 
 @media (min-width: 768px) {
     .gallery-stage {
-        flex: 1;
-        min-height: 520px;
+        height: 620px;
+        min-height: 550px;
     }
 }
 
@@ -539,12 +538,10 @@ body.gallery-page {
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
         scroll-behavior: smooth;
-        padding: 12px 0;
-        margin: 0;
+        padding: 12px 0 25px;
+        margin: 0 0 40px 0; /* Pushes the footer down naturally */
         min-height: auto;
         max-height: none;
-        /* Card width එක min(76vw, 290px) නිසා half width = min(38vw, 145px) වේ. 
-           50vw - 38vw මගින් ඡායාරූපය හරියටම Screen එකේ CENTER සෙට් වේ */
         scroll-padding-inline: calc(50vw - min(38vw, 145px));
         touch-action: pan-x pan-y;
     }
@@ -567,7 +564,6 @@ body.gallery-page {
         position: relative;
         display: flex;
         gap: 16px;
-        /* Container padding එකත් scroll-padding එකට සමානව සෙට් කර ඇත */
         padding: 0 calc(50vw - min(38vw, 145px));
         animation: none !important;
         transform: none !important;
@@ -579,7 +575,6 @@ body.gallery-page {
         position: relative;
         left: auto;
         top: auto;
-        /* Card එකේ width එක */
         width: min(76vw, 290px);
         height: min(46vh, 350px);
         flex-shrink: 0;
