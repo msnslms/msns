@@ -199,6 +199,64 @@
          SCRIPTS
          ========================================================== -->
     <script src="js/sheet.js?v=1"></script>
+    <script>
+document.addEventListener("DOMContentLoaded", function () {
+    const galleryStage = document.querySelector('.gallery-stage');
+    let autoSlideInterval;
+    let isUserInteracting = false;
+
+    function startAutoSlide() {
+        // මොබයිල් වලට විතරක් (767px ට අඩු)
+        if (window.innerWidth > 767.98) return;
+
+        autoSlideInterval = setInterval(() => {
+            // යූසර් ස්වයිප් කරන අතරතුර නම් ඕටෝ ස්ලයිඩ් නවත්තන්න
+            if (isUserInteracting || !galleryStage) return;
+
+            const firstItem = galleryStage.querySelector('.gallery-item');
+            if (!firstItem) return;
+
+            const itemWidth = firstItem.offsetWidth;
+            const gap = 16; // CSS එකේ තියෙන gap එක
+            const scrollAmount = itemWidth + gap;
+
+            // අන්තිමට ආවම ආයෙත් මුලට යන්න
+            if (galleryStage.scrollLeft + galleryStage.clientWidth >= galleryStage.scrollWidth - 10) {
+                galleryStage.scrollTo({ left: 0, behavior: 'smooth' });
+            } else {
+                galleryStage.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+            }
+        }, 3000); // තත්පර 3කට වරක් මාරු වේ
+    }
+
+    function stopAutoSlide() {
+        clearInterval(autoSlideInterval);
+    }
+
+    // පේජ් එක ලෝඩ් වෙද්දී ස්ටාර්ට් කරන්න
+    startAutoSlide();
+
+    // ස්ක්‍රීන් සයිස් එක වෙනස් වෙද්දී රීසෙට් කරන්න
+    window.addEventListener('resize', () => {
+        stopAutoSlide();
+        startAutoSlide();
+    });
+
+    // යූසර් ඇඟිල්ල තට්ටු කරාම හෝ ස්වයිප් කරාම ඕටෝ ස්ලයිඩ් නවත්තන්න
+    if (galleryStage) {
+        galleryStage.addEventListener('touchstart', () => {
+            isUserInteracting = true;
+            stopAutoSlide();
+        }, { passive: true });
+
+        galleryStage.addEventListener('touchend', () => {
+            isUserInteracting = false;
+            // යූසර් අත අයින් කරලා තත්පර 3කට පස්සේ ආයෙත් ඕටෝ ස්ලයිඩ් පටන් ගන්න
+            setTimeout(startAutoSlide, 3000);
+        });
+    }
+});
+    </script>
 </body>
 
 </html>
