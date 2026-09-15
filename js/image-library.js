@@ -65,7 +65,6 @@ document.addEventListener("DOMContentLoaded", function () {
             img.loading = 'lazy';
             img.draggable = false;
 
-            // Fallback if image missing
             img.onerror = function () {
                 item.classList.add('no-image');
                 item.innerHTML = '<i class="fa-solid fa-image"></i><span>Image ' + (i + 1) + '</span>';
@@ -118,14 +117,14 @@ document.addEventListener("DOMContentLoaded", function () {
         lastTimestamp = ts;
 
         if (autoRotate && !isMobile() && !modal.classList.contains('active')) {
-            currentRotation += delta * 0.018; // ≈ 6.5°/sec
+            currentRotation += delta * 0.018;
             applyRingRotation();
         }
         rafId = requestAnimationFrame(animateRing);
     }
 
     /* ============================================================
-       ⬅️➡️ NAV ARROWS (Desktop) — snap to next item
+       ⬅️➡️ NAV ARROWS (Desktop)
        ============================================================ */
     function snapToIndex(index) {
         if (N === 0) return;
@@ -147,7 +146,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Pause auto-rotate while hovering
     if (stage) {
         stage.addEventListener('mouseenter', () => { autoRotate = false; });
         stage.addEventListener('mouseleave', () => { autoRotate = true; });
@@ -224,7 +222,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const data = galleryData[modalIndex];
         if (!data) return;
 
-        // Re-trigger entry animation
         modalImage.style.animation = 'none';
         modalImage.src = data.src;
         modalImage.alt = data.title;
@@ -251,7 +248,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Keyboard navigation
     document.addEventListener('keydown', (e) => {
         if (!modal.classList.contains('active')) return;
         if (e.key === 'Escape')      closeModal();
@@ -293,5 +289,28 @@ document.addEventListener("DOMContentLoaded", function () {
     } else {
         rafId = requestAnimationFrame(animateRing);
     }
+
+    /* ============================================================
+       📱 SIDEBAR MENU TOGGLE (like your other pages)
+       ============================================================ */
+    const menuToggle   = document.getElementById('menuToggle');
+    const closeMenuBtn = document.getElementById('closeMenu');
+    const sidebar      = document.getElementById('sidebar');
+    const menuOverlay  = document.getElementById('menuOverlay');
+
+    if (menuToggle && sidebar && menuOverlay) {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.add('active');
+            menuOverlay.classList.add('active');
+        });
+    }
+
+    const hideMenuHub = () => {
+        if (sidebar)     sidebar.classList.remove('active');
+        if (menuOverlay) menuOverlay.classList.remove('active');
+    };
+
+    if (closeMenuBtn) closeMenuBtn.addEventListener('click', hideMenuHub);
+    if (menuOverlay)  menuOverlay.addEventListener('click', hideMenuHub);
 
 });
