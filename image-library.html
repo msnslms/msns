@@ -27,7 +27,27 @@
     <link rel="stylesheet" href="css/style-w.css?v=2">
    <link rel="stylesheet" href="css/image-library.css?v=2"> 
     <!-- Layout tweaks so footer + gallery both fit -->
-    <style>
+   <style>
+        body.gallery-page {
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+            height: auto !important;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body.gallery-page .gallery-stage {
+            flex: 1 1 auto;
+            min-height: 500px;
+            max-height: 800px;
+            margin-bottom: 10px;
+        }
+
+        body.gallery-page footer {
+            margin-top: auto;
+        }
+    </style> 
 </head>
 
 <body class="gallery-page">
