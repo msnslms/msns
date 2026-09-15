@@ -1,43 +1,33 @@
 /* ==========================================================
-   🎨 SCHOOL GALLERY — 3D Image Ring (PC) + 2D Swipe (Mobile)
+   🎨 SCHOOL GALLERY — FIXED (3D Ring PC + Swipe Mobile)
    ========================================================== */
+
+/* ---------- 1. 🔓 SCROLL FIX (වැදගත්ම කොටස) ---------- */
+html {
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    scroll-behavior: smooth;
+}
 
 body.gallery-page {
-    background: #ffffff;
-    background-image: 
-        radial-gradient(circle at 20% 30%, rgba(220, 38, 38, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(234, 179, 8, 0.1) 0%, transparent 50%);
-    background-attachment: fixed;
-    padding: 0;
     margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100vh;
+    display: block;
+    position: static;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;   /* අනිවාර්යයෙන් visible */
+    background: #ffffff;
+    background-image:
+        radial-gradient(circle at 20% 30%, rgba(220, 38, 38, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(234, 179, 8, 0.10) 0%, transparent 50%);
+    background-attachment: fixed;
 }
 
-/* Desktop: Allow smooth page scrolling while holding 3D ring height */
-@media (min-width: 768px) {
-    body.gallery-page {
-        overflow-x: hidden;
-        overflow-y: auto;
-        min-height: 100vh;
-        display: block;
-    }
-}
-
-/* Mobile: Clean natural page scroll */
-@media (max-width: 767.98px) {
-    body.gallery-page {
-        display: block;
-        width: 100%;
-        min-height: 100vh;
-        min-height: 100dvh;
-        height: auto;
-        overflow-x: hidden;
-        overflow-y: auto;
-    }
-}
-
-/* ==========================================================
-   GALLERY TITLE
-   ========================================================== */
+/* ---------- 2. GALLERY TITLE ---------- */
 .gallery-title-wrap {
     position: relative;
     z-index: 10;
@@ -45,34 +35,31 @@ body.gallery-page {
     padding: 10px 20px 0;
     pointer-events: none;
 }
-
 .gallery-title {
     font-size: 1.5rem;
     font-weight: 900;
-    color: #ffffff;
+    color: #0f172a;
     letter-spacing: 2px;
     text-transform: uppercase;
     margin: 0;
     line-height: 1.2;
 }
-
 .gallery-title span {
     background: linear-gradient(135deg, #dc2626, #f59e0b);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
-
 .gallery-subtitle {
     font-size: 0.78rem;
-    color: #94a3b8;
+    color: #64748b;
     margin-top: 4px;
     letter-spacing: 0.5px;
     font-weight: 500;
 }
 
 /* ==========================================================
-   GALLERY STAGE (3D Scene — Desktop)
+   3. 🖥️ DESKTOP — 3D Ring
    ========================================================== */
 .gallery-stage {
     position: relative;
@@ -86,6 +73,7 @@ body.gallery-page {
     .gallery-stage {
         height: 620px;
         min-height: 550px;
+        margin-bottom: 60px;   /* footer එකට ඉඩ දෙන්න */
     }
 }
 
@@ -97,7 +85,6 @@ body.gallery-page {
     height: 0;
     transform-style: preserve-3d;
 }
-
 .gallery-ring {
     position: absolute;
     width: 0;
@@ -106,19 +93,13 @@ body.gallery-page {
     animation: ringRotate 40s linear infinite;
     will-change: transform;
 }
-
-.gallery-ring.paused {
-    animation-play-state: paused;
-}
+.gallery-ring.paused { animation-play-state: paused; }
 
 @keyframes ringRotate {
     from { transform: rotateY(0deg); }
     to   { transform: rotateY(360deg); }
 }
 
-/* ==========================================================
-   GALLERY ITEM
-   ========================================================== */
 .gallery-item {
     position: absolute;
     border-radius: 18px;
@@ -127,32 +108,27 @@ body.gallery-page {
     transform-style: preserve-3d;
     backface-visibility: hidden;
     background: linear-gradient(135deg, #1a1a1a, #0f0f0f);
-    box-shadow: 
+    box-shadow:
         0 20px 60px rgba(0, 0, 0, 0.7),
         0 0 0 1px rgba(255, 255, 255, 0.06),
         inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    transition: 
+    transition:
         transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
         box-shadow 0.5s ease,
         filter 0.5s ease;
     will-change: transform;
 }
-
 .gallery-item::after {
     content: '';
     position: absolute;
     inset: 0;
     border-radius: 18px;
     pointer-events: none;
-    background: linear-gradient(180deg, transparent 60%, rgba(0, 0, 0, 0.5) 100%);
+    background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.5) 100%);
     opacity: 0;
     transition: opacity 0.4s ease;
 }
-
-.gallery-item:hover::after {
-    opacity: 1;
-}
-
+.gallery-item:hover::after { opacity: 1; }
 .gallery-item img {
     width: 100%;
     height: 100%;
@@ -162,16 +138,14 @@ body.gallery-page {
     user-select: none;
     -webkit-user-drag: none;
 }
-
 .gallery-item:hover {
     filter: brightness(1.15) saturate(1.1);
-    box-shadow: 
+    box-shadow:
         0 30px 80px rgba(220, 38, 38, 0.55),
         0 0 0 2px rgba(234, 179, 8, 0.7),
         0 0 40px rgba(220, 38, 38, 0.4);
 }
 
-/* Desktop Sizing (3D ring) */
 @media (min-width: 768px) {
     .gallery-item {
         width: 220px;
@@ -181,7 +155,6 @@ body.gallery-page {
     }
 }
 
-/* No-image placeholder */
 .gallery-item.no-image {
     display: flex;
     align-items: center;
@@ -194,15 +167,9 @@ body.gallery-page {
     font-size: 0.8rem;
     letter-spacing: 1px;
 }
+.gallery-item.no-image i { font-size: 2rem; opacity: 0.7; }
 
-.gallery-item.no-image i {
-    font-size: 2rem;
-    opacity: 0.7;
-}
-
-/* ==========================================================
-   LOADING STATE
-   ========================================================== */
+/* Loading */
 .gallery-loading {
     position: absolute;
     left: -100px;
@@ -218,14 +185,9 @@ body.gallery-page {
     font-weight: 600;
     letter-spacing: 1px;
 }
+.gallery-loading i { font-size: 2rem; }
 
-.gallery-loading i {
-    font-size: 2rem;
-}
-
-/* ==========================================================
-   NAVIGATION ARROWS (Desktop only)
-   ========================================================== */
+/* Nav Arrows (Desktop only) */
 .gallery-nav {
     position: absolute;
     top: 50%;
@@ -247,26 +209,17 @@ body.gallery-page {
     z-index: 20;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
 }
-
 .gallery-nav:hover {
     background: linear-gradient(135deg, #dc2626, #b91c1c);
     border-color: rgba(234, 179, 8, 0.7);
     transform: translateY(-50%) scale(1.1);
-    box-shadow: 
-        0 12px 30px rgba(185, 28, 28, 0.5),
-        0 0 20px rgba(234, 179, 8, 0.3);
+    box-shadow: 0 12px 30px rgba(185,28,28,0.5), 0 0 20px rgba(234,179,8,0.3);
 }
-
-.gallery-nav:active {
-    transform: translateY(-50%) scale(0.95);
-}
-
+.gallery-nav:active { transform: translateY(-50%) scale(0.95); }
 .gallery-nav-prev { left: 20px; }
 .gallery-nav-next { right: 20px; }
 
-/* ==========================================================
-   HINT TEXT
-   ========================================================== */
+/* Hint */
 .gallery-hint {
     display: flex;
     align-items: center;
@@ -283,23 +236,18 @@ body.gallery-page {
     font-weight: 600;
     letter-spacing: 0.5px;
     z-index: 15;
-    animation: hintPulse 3s ease-in-out infinite;
     pointer-events: none;
 }
-
 @media (min-width: 768px) {
     .gallery-hint {
         position: absolute;
         bottom: 20px;
         left: 50%;
         transform: translateX(-50%);
+        animation: hintPulse 3s ease-in-out infinite;
     }
 }
-
-.gallery-hint i {
-    color: #f59e0b;
-    font-size: 0.8rem;
-}
+.gallery-hint i { color: #f59e0b; font-size: 0.8rem; }
 
 @keyframes hintPulse {
     0%, 100% { opacity: 0.6; transform: translateX(-50%) scale(1); }
@@ -307,7 +255,7 @@ body.gallery-page {
 }
 
 /* ==========================================================
-   🖼️ LIGHTBOX MODAL
+   4. 🖼️ LIGHTBOX MODAL
    ========================================================== */
 .gallery-modal {
     position: fixed;
@@ -323,93 +271,74 @@ body.gallery-page {
     opacity: 0;
     transition: opacity 0.4s ease;
 }
-
-.gallery-modal.active {
-    display: flex;
-    opacity: 1;
-}
+.gallery-modal.active { display: flex; opacity: 1; }
 
 .gallery-modal-close {
     position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 48px;
-    height: 48px;
+    top: 20px; right: 20px;
+    width: 48px; height: 48px;
     border-radius: 50%;
     background: rgba(220, 38, 38, 0.15);
     border: 1px solid rgba(220, 38, 38, 0.4);
     color: #f87171;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     font-size: 1.2rem;
     z-index: 100001;
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 }
-
 .gallery-modal-close:hover {
     background: #dc2626;
     color: #ffffff;
     transform: rotate(90deg) scale(1.1);
-    box-shadow: 0 0 30px rgba(220, 38, 38, 0.6);
+    box-shadow: 0 0 30px rgba(220,38,38,0.6);
 }
 
 .gallery-modal-nav {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    width: 52px;
-    height: 52px;
+    width: 52px; height: 52px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255,255,255,0.08);
     border: 1px solid rgba(234, 179, 8, 0.4);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     color: #ffffff;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     font-size: 1.1rem;
     z-index: 100001;
     transition: all 0.3s ease;
 }
-
 .gallery-modal-nav:hover {
     background: linear-gradient(135deg, #dc2626, #b91c1c);
     border-color: rgba(234, 179, 8, 0.8);
     transform: translateY(-50%) scale(1.1);
-    box-shadow: 0 0 25px rgba(220, 38, 38, 0.5);
+    box-shadow: 0 0 25px rgba(220,38,38,0.5);
 }
-
 .gallery-modal-prev { left: 20px; }
 .gallery-modal-next { right: 20px; }
 
 .gallery-modal-inner {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 0;
     width: 100%;
     max-width: 1100px;
     max-height: 90vh;
-    background: linear-gradient(135deg, rgba(18, 26, 43, 0.98), rgba(15, 23, 42, 0.98));
-    border: 1px solid rgba(234, 179, 8, 0.35);
+    background: linear-gradient(135deg, rgba(18,26,43,0.98), rgba(15,23,42,0.98));
+    border: 1px solid rgba(234,179,8,0.35);
     border-radius: 24px;
     overflow: hidden;
-    box-shadow: 
-        0 30px 80px rgba(0, 0, 0, 0.8),
-        0 0 60px rgba(220, 38, 38, 0.15);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.8), 0 0 60px rgba(220,38,38,0.15);
     transform: scale(0.9) translateY(20px);
     opacity: 0;
-    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-                opacity 0.4s ease;
+    transition: transform 0.5s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s ease;
     position: relative;
     z-index: 100000;
 }
-
 .gallery-modal.active .gallery-modal-inner {
     transform: scale(1) translateY(0);
     opacity: 1;
@@ -421,34 +350,27 @@ body.gallery-page {
     min-height: 280px;
     max-height: 55vh;
     overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
 }
-
 .gallery-modal-media img {
-    width: 100%;
-    height: 100%;
+    width: 100%; height: 100%;
     max-height: 55vh;
     object-fit: contain;
     display: block;
-    animation: modalImgIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: modalImgIn 0.6s cubic-bezier(0.34,1.56,0.64,1);
 }
-
 @keyframes modalImgIn {
     from { opacity: 0; transform: scale(1.05); filter: blur(10px); }
     to   { opacity: 1; transform: scale(1); filter: blur(0); }
 }
-
 .modal-counter {
     position: absolute;
-    top: 16px;
-    right: 16px;
+    top: 16px; right: 16px;
     padding: 6px 14px;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0,0,0,0.7);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(234, 179, 8, 0.4);
+    border: 1px solid rgba(234,179,8,0.4);
     border-radius: 50px;
     color: #f59e0b;
     font-size: 0.72rem;
@@ -456,25 +378,19 @@ body.gallery-page {
     letter-spacing: 0.5px;
     z-index: 3;
 }
-
 .gallery-modal-content {
     padding: 26px 22px 30px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    display: flex; flex-direction: column; justify-content: center;
     gap: 12px;
-    background: rgba(15, 23, 42, 0.4);
+    background: rgba(15,23,42,0.4);
     position: relative;
     overflow-y: auto;
 }
-
 .modal-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
+    display: inline-flex; align-items: center; gap: 8px;
     padding: 5px 14px;
-    background: linear-gradient(135deg, rgba(220, 38, 38, 0.15), rgba(234, 179, 8, 0.15));
-    border: 1px solid rgba(234, 179, 8, 0.4);
+    background: linear-gradient(135deg, rgba(220,38,38,0.15), rgba(234,179,8,0.15));
+    border: 1px solid rgba(234,179,8,0.4);
     border-radius: 50px;
     color: #f59e0b;
     font-size: 0.7rem;
@@ -484,11 +400,7 @@ body.gallery-page {
     align-self: flex-start;
     width: fit-content;
 }
-
-.modal-badge i {
-    font-size: 0.75rem;
-}
-
+.modal-badge i { font-size: 0.75rem; }
 .modal-title {
     font-size: 1.35rem;
     font-weight: 800;
@@ -497,22 +409,18 @@ body.gallery-page {
     margin: 0;
     letter-spacing: 0.2px;
 }
-
 .modal-line {
-    height: 4px;
-    width: 70px;
+    height: 4px; width: 70px;
     border-radius: 4px;
     background: linear-gradient(90deg, #dc2626, #f59e0b, #dc2626);
     background-size: 200% 100%;
     animation: modalLineFlow 3s ease infinite;
-    box-shadow: 0 2px 10px rgba(220, 38, 38, 0.5);
+    box-shadow: 0 2px 10px rgba(220,38,38,0.5);
 }
-
 @keyframes modalLineFlow {
     0%, 100% { background-position: 0% 50%; }
     50%      { background-position: 100% 50%; }
 }
-
 .modal-desc {
     font-size: 0.92rem;
     color: #cbd5e1;
@@ -522,98 +430,92 @@ body.gallery-page {
 }
 
 /* ==========================================================
-   📱 MOBILE RESPONSIVE (2D Perfect Center Swipe Gallery)
+   5. 📱 MOBILE — 2D Swipe Gallery
    ========================================================== */
 @media (max-width: 767.98px) {
 
-    /* -----------------------------------------
-       📱 Mobile 2D Center Snapping Swipe Gallery
-       ----------------------------------------- */
     .gallery-stage {
-        perspective: none;
-        overflow-x: auto;
-        overflow-y: hidden;
-        display: block;
+        perspective: none !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        display: block !important;
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
         scroll-behavior: smooth;
-        padding: 12px 0 25px;
-        margin: 0 0 40px 0; /* Pushes the footer down naturally */
-        min-height: auto;
-        max-height: none;
+        padding: 12px 0 25px !important;
+        margin: 0 0 30px 0 !important;
+        min-height: auto !important;
+        max-height: none !important;
+        height: auto !important;
         scroll-padding-inline: calc(50vw - min(38vw, 145px));
         touch-action: pan-x pan-y;
+        transform: none !important;
     }
-
-    .gallery-stage::-webkit-scrollbar {
-        display: none;
-    }
+    .gallery-stage::-webkit-scrollbar { display: none; }
 
     .gallery-container {
-        position: relative;
-        top: auto;
-        left: auto;
-        width: max-content;
-        height: auto;
-        display: flex;
-        transform-style: flat;
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        width: max-content !important;
+        height: auto !important;
+        display: flex !important;
+        transform-style: flat !important;
+        transform: none !important;
     }
 
     .gallery-ring {
-        position: relative;
-        display: flex;
+        position: relative !important;
+        display: flex !important;
         gap: 16px;
         padding: 0 calc(50vw - min(38vw, 145px));
         animation: none !important;
         transform: none !important;
-        transform-style: flat;
-        width: max-content;
+        transform-style: flat !important;
+        width: max-content !important;
+        height: auto !important;
+        top: auto !important;
+        left: auto !important;
     }
 
-    .gallery-item {
-        position: relative;
-        left: auto;
-        top: auto;
-        width: min(76vw, 290px);
-        height: min(46vh, 350px);
-        flex-shrink: 0;
+    /* !!! Inline JS styles එක්ක ගැටෙන තැන — !important අනිවාර්යයි !!! */
+    .gallery-ring .gallery-item {
+        position: relative !important;
+        left: auto !important;
+        top: auto !important;
+        transform: none !important;
+        width: min(76vw, 290px) !important;
+        height: min(46vh, 350px) !important;
+        flex: 0 0 auto !important;
         scroll-snap-align: center;
         scroll-snap-stop: always;
         border-radius: 18px;
-        transform: none !important;
+        margin: 0 !important;
     }
-
     .gallery-item:hover {
         filter: none;
-        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+        box-shadow: 0 15px 45px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08);
     }
 
-    /* Hide Navigation Arrows on Mobile */
-    .gallery-nav {
-        display: none;
-    }
+    /* Arrows mobile වලට ඕන නෑ */
+    .gallery-nav { display: none !important; }
 
-    /* Hint Text */
+    /* Hint */
     .gallery-hint {
-        position: relative;
-        bottom: auto;
-        left: auto;
-        transform: none;
-        margin: 10px auto 14px;
+        position: relative !important;
+        bottom: auto !important;
+        left: auto !important;
+        transform: none !important;
+        margin: 10px auto 14px !important;
         font-size: 0.68rem;
         padding: 6px 14px;
-        animation: none;
+        animation: none !important;
         width: fit-content;
     }
 
-    /* Modal */
-    .gallery-modal {
-        padding: 16px;
-        align-items: center;
-        justify-content: center;
-    }
-
+    /* Modal mobile */
+    .gallery-modal { padding: 16px; }
     .gallery-modal-inner {
         max-width: 100%;
         width: 100%;
@@ -624,111 +526,39 @@ body.gallery-page {
         display: flex;
         flex-direction: column;
     }
-
-    .gallery-modal-media {
-        min-height: 40vh;
-        max-height: 55vh;
-        flex: 1;
-    }
-
-    .gallery-modal-media img {
-        max-height: 55vh;
-        width: 100%;
-        object-fit: contain;
-    }
-
-    .gallery-modal-content {
-        padding: 18px 20px 24px;
-        gap: 8px;
-        max-height: 35vh;
-    }
-
-    .modal-title {
-        font-size: 1.1rem;
-    }
-
-    .modal-desc {
-        font-size: 0.82rem;
-        line-height: 1.5;
-    }
-
-    .gallery-modal-close {
-        top: 12px;
-        right: 12px;
-        width: 36px;
-        height: 36px;
-        font-size: 1rem;
-    }
-
-    .gallery-modal-nav {
-        display: none;
-    }
-
-    .modal-counter {
-        top: 12px;
-        right: 12px;
-        padding: 4px 10px;
-        font-size: 0.65rem;
-    }
+    .gallery-modal-media { min-height: 40vh; max-height: 55vh; flex: 1; }
+    .gallery-modal-media img { max-height: 55vh; width: 100%; object-fit: contain; }
+    .gallery-modal-content { padding: 18px 20px 24px; gap: 8px; max-height: 35vh; }
+    .modal-title { font-size: 1.1rem; }
+    .modal-desc { font-size: 0.82rem; line-height: 1.5; }
+    .gallery-modal-close { top: 12px; right: 12px; width: 36px; height: 36px; font-size: 1rem; }
+    .gallery-modal-nav { display: none !important; }
+    .modal-counter { top: 12px; right: 12px; padding: 4px 10px; font-size: 0.65rem; }
 }
 
-/* ==========================================================
-   🖥️ DESKTOP — Modal side by side
-   ========================================================== */
+/* Desktop modal side-by-side */
 @media (min-width: 768px) {
-
-    .gallery-modal-inner {
-        grid-template-columns: 1.35fr 1fr;
-    }
-
+    .gallery-modal-inner { grid-template-columns: 1.35fr 1fr; }
     .gallery-modal-media {
         min-height: 500px;
         max-height: 80vh;
-        border-right: 1px solid rgba(255, 255, 255, 0.06);
+        border-right: 1px solid rgba(255,255,255,0.06);
     }
-
-    .gallery-modal-media img {
-        max-height: 80vh;
-    }
-
-    .gallery-modal-content {
-        padding: 40px 36px;
-    }
-
-    .modal-title {
-        font-size: 1.6rem;
-    }
-
-    .modal-desc {
-        font-size: 0.95rem;
-        line-height: 1.75;
-    }
+    .gallery-modal-media img { max-height: 80vh; }
+    .gallery-modal-content { padding: 40px 36px; }
+    .modal-title { font-size: 1.6rem; }
+    .modal-desc { font-size: 0.95rem; line-height: 1.75; }
 }
-
 @media (min-width: 1200px) {
-    .gallery-modal-content {
-        padding: 50px 44px;
-    }
-
-    .modal-title {
-        font-size: 1.75rem;
-    }
+    .gallery-modal-content { padding: 50px 44px; }
+    .modal-title { font-size: 1.75rem; }
 }
 
-/* ==========================================================
-   ♿ REDUCED MOTION
-   ========================================================== */
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-    .gallery-ring {
-        animation: none !important;
-    }
-
-    .gallery-item,
-    .gallery-nav,
-    .gallery-modal-inner,
-    .gallery-modal-media img,
-    .modal-line,
-    .gallery-hint {
+    .gallery-ring { animation: none !important; }
+    .gallery-item, .gallery-nav, .gallery-modal-inner,
+    .gallery-modal-media img, .modal-line, .gallery-hint {
         animation: none !important;
         transition-duration: 0.01ms !important;
     }
