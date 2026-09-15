@@ -281,3 +281,59 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     });
+document.addEventListener('DOMContentLoaded', () => {
+    const images = document.querySelectorAll('.hero-slider-img');
+    const overlays = document.querySelectorAll('.hero-slider-overlay');
+    const container = document.querySelector('.hero-slider-container');
+    
+    if (!images.length) return;
+
+    let currentIndex = 0;
+    let slideInterval = null;
+    const DISPLAY_TIME = 3500; // පින්තූරයක් පෙනී සිටින කාලය (මිලිසෙනපරි 3500 = තත්පර 3.5)
+
+    function showSlide(index) {
+        images.forEach((img, i) => {
+            img.classList.toggle('active', i === index);
+        });
+        overlays.forEach((overlay, i) => {
+            overlay.classList.toggle('active', i === index);
+        });
+    }
+
+    function nextSlide() {
+        currentIndex = (currentIndex + 1) % images.length;
+        showSlide(currentIndex);
+    }
+
+    function startAutoSlide() {
+        stopAutoSlide(); // කලින් තිබූ interval එක clean කරයි
+        slideInterval = setInterval(nextSlide, DISPLAY_TIME);
+    }
+
+    function stopAutoSlide() {
+        if (slideInterval) {
+            clearInterval(slideInterval);
+            slideInterval = null;
+        }
+    }
+
+    // Hover කළ විට නතර කර Mouse එක අයින් කළ විට නැවත Start කිරීම
+    if (container) {
+        container.addEventListener('mouseenter', stopAutoSlide);
+        container.addEventListener('mouseleave', startAutoSlide);
+    }
+
+    // Browser tab එක වෙනස් කර නැවත පැමිණීමේදී Freeze වීම වැළැක්වීම
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            stopAutoSlide();
+        } else {
+            startAutoSlide();
+        }
+    });
+
+    // ආරම්භ කිරීම
+    showSlide(currentIndex);
+    startAutoSlide();
+});
