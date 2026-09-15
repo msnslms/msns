@@ -82,10 +82,15 @@ header {
     letter-spacing: 1.5px;
     text-align: left;
 }
-
 /* ==========================================================
    🖼️ HERO SLIDER (උඩම වැටෙන පින්තූර Slider එක)
    ========================================================== */
+
+/* 1. Body එකට සුදු පාට බලෙන්ම දීම (මේක උඩම දාන්න) */
+body {
+    background-color: #ffffff !important;
+    background-image: none !important; /* අනිත් පාට ඉවත් කිරීමට */
+}
 
 .hero-slider-container {
     position: relative;
@@ -95,7 +100,10 @@ header {
     border-radius: 20px;
     overflow: hidden;
     border: 1px solid rgba(0, 0, 0, 0.08);
-    background: rgba(254, 252, 232, 0.6);
+    
+    /* ✅ මෙතන තමයි වෙනස් කරේ: සුදු පාටම දාන්න */
+    background: #ffffff !important; 
+    
     box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.12);
     margin-bottom: 30px;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -196,6 +204,7 @@ header {
     font-size: 0.85rem;
     font-weight: 700;
     z-index: 5;
+    background: #ffffff !important; /* Loading වෙද්දීත් සුදු පාටම වෙන්න */
 }
 
 .hero-loading-state i {
