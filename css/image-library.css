@@ -23,25 +23,27 @@ body.gallery-page {
     }
 }
 
-/* Mobile: let page scroll naturally (header + banner + gallery + footer) */
+/* Mobile: clean natural page scroll without header/footer conflicts */
 @media (max-width: 767.98px) {
     body.gallery-page {
         display: block;
-        overflow-x: hidden;
-        overflow-y: auto;
+        width: 100%;
         min-height: 100vh;
         min-height: 100dvh;
+        height: auto;
+        overflow-x: hidden;
+        overflow-y: auto;
     }
 }
 
 /* ==========================================================
-   GALLERY TITLE (fallback if news-banner not used)
+   GALLERY TITLE
    ========================================================== */
 .gallery-title-wrap {
     position: relative;
     z-index: 10;
     text-align: center;
-    padding: 4px 20px 0;
+    padding: 10px 20px 0;
     pointer-events: none;
 }
 
@@ -521,29 +523,30 @@ body.gallery-page {
 }
 
 /* ==========================================================
-   📱 MOBILE RESPONSIVE (2D Swipe Gallery)
+   📱 MOBILE RESPONSIVE (2D Perfect Center Swipe Gallery)
    ========================================================== */
 @media (max-width: 767.98px) {
 
     /* -----------------------------------------
-       📱 Mobile 2D Swipe Gallery
+       📱 Mobile 2D Center Snapping Swipe Gallery
        ----------------------------------------- */
     .gallery-stage {
         perspective: none;
         overflow-x: auto;
         overflow-y: hidden;
-        display: flex;
-        align-items: flex-start;
+        display: block;
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
         scroll-behavior: smooth;
-        /* 🔥 REDUCED padding — images come up closer to banner */
-        padding: 6px 0 0;
+        padding: 12px 0;
         margin: 0;
         min-height: auto;
         max-height: none;
-        scroll-padding: 0 calc(50vw - min(40vw, 160px));
+        /* Card width එක min(76vw, 290px) නිසා half width = min(38vw, 145px) වේ. 
+           50vw - 38vw මගින් ඡායාරූපය හරියටම Screen එකේ CENTER සෙට් වේ */
+        scroll-padding-inline: calc(50vw - min(38vw, 145px));
+        touch-action: pan-x pan-y;
     }
 
     .gallery-stage::-webkit-scrollbar {
@@ -563,8 +566,9 @@ body.gallery-page {
     .gallery-ring {
         position: relative;
         display: flex;
-        gap: 14px;
-        padding: 0 calc(50vw - min(40vw, 160px));
+        gap: 16px;
+        /* Container padding එකත් scroll-padding එකට සමානව සෙට් කර ඇත */
+        padding: 0 calc(50vw - min(38vw, 145px));
         animation: none !important;
         transform: none !important;
         transform-style: flat;
@@ -575,19 +579,19 @@ body.gallery-page {
         position: relative;
         left: auto;
         top: auto;
-        width: min(78vw, 300px);
-        /* 🔥 Smaller height so it fits nicely */
-        height: min(48vh, 360px);
+        /* Card එකේ width එක */
+        width: min(76vw, 290px);
+        height: min(46vh, 350px);
         flex-shrink: 0;
         scroll-snap-align: center;
         scroll-snap-stop: always;
-        border-radius: 16px;
+        border-radius: 18px;
         transform: none !important;
     }
 
     .gallery-item:hover {
         filter: none;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.06);
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
     }
 
     /* Hide Navigation Arrows on Mobile */
