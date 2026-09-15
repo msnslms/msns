@@ -8,17 +8,34 @@ body.gallery-page {
         radial-gradient(circle at 20% 30%, rgba(220, 38, 38, 0.15) 0%, transparent 50%),
         radial-gradient(circle at 80% 70%, rgba(234, 179, 8, 0.1) 0%, transparent 50%);
     background-attachment: fixed;
-    overflow: hidden;
-    height: 100vh;
-    height: 100dvh;
     padding: 0;
     margin: 0;
-    display: flex;
-    flex-direction: column;
+}
+
+/* Desktop only: lock body to viewport for 3D ring */
+@media (min-width: 768px) {
+    body.gallery-page {
+        overflow: hidden;
+        height: 100vh;
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+/* Mobile: let page scroll naturally (header + banner + gallery + footer) */
+@media (max-width: 767.98px) {
+    body.gallery-page {
+        display: block;
+        overflow-x: hidden;
+        overflow-y: auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
 }
 
 /* ==========================================================
-   GALLERY TITLE
+   GALLERY TITLE (fallback if news-banner not used)
    ========================================================== */
 .gallery-title-wrap {
     position: relative;
@@ -54,15 +71,21 @@ body.gallery-page {
 }
 
 /* ==========================================================
-   GALLERY STAGE (3D Scene)
+   GALLERY STAGE (3D Scene — Desktop)
    ========================================================== */
 .gallery-stage {
     position: relative;
-    flex: 1;
     width: 100%;
     overflow: hidden;
     perspective: 2200px;
     perspective-origin: 50% 50%;
+}
+
+@media (min-width: 768px) {
+    .gallery-stage {
+        flex: 1;
+        min-height: 520px;
+    }
 }
 
 .gallery-container {
@@ -93,7 +116,7 @@ body.gallery-page {
 }
 
 /* ==========================================================
-   GALLERY ITEM (Each Image on the Ring)
+   GALLERY ITEM
    ========================================================== */
 .gallery-item {
     position: absolute;
@@ -147,12 +170,14 @@ body.gallery-page {
         0 0 40px rgba(220, 38, 38, 0.4);
 }
 
-/* Desktop Sizing */
-.gallery-item {
-    width: 220px;
-    height: 300px;
-    left: -110px;
-    top: -150px;
+/* Desktop Sizing (3D ring) */
+@media (min-width: 768px) {
+    .gallery-item {
+        width: 220px;
+        height: 300px;
+        left: -110px;
+        top: -150px;
+    }
 }
 
 /* No-image placeholder */
@@ -198,7 +223,7 @@ body.gallery-page {
 }
 
 /* ==========================================================
-   NAVIGATION ARROWS
+   NAVIGATION ARROWS (Desktop only)
    ========================================================== */
 .gallery-nav {
     position: absolute;
@@ -242,12 +267,9 @@ body.gallery-page {
    HINT TEXT
    ========================================================== */
 .gallery-hint {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     padding: 8px 18px;
     background: rgba(255, 255, 255, 0.08);
@@ -262,6 +284,15 @@ body.gallery-page {
     z-index: 15;
     animation: hintPulse 3s ease-in-out infinite;
     pointer-events: none;
+}
+
+@media (min-width: 768px) {
+    .gallery-hint {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
 }
 
 .gallery-hint i {
@@ -280,7 +311,7 @@ body.gallery-page {
 .gallery-modal {
     position: fixed;
     inset: 0;
-    z-index: 9999;
+    z-index: 99999;
     background: rgba(0, 0, 0, 0.94);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
@@ -297,7 +328,6 @@ body.gallery-page {
     opacity: 1;
 }
 
-/* Close Button */
 .gallery-modal-close {
     position: absolute;
     top: 20px;
@@ -313,7 +343,7 @@ body.gallery-page {
     align-items: center;
     justify-content: center;
     font-size: 1.2rem;
-    z-index: 10001;
+    z-index: 100001;
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -326,7 +356,6 @@ body.gallery-page {
     box-shadow: 0 0 30px rgba(220, 38, 38, 0.6);
 }
 
-/* Modal Nav Buttons */
 .gallery-modal-nav {
     position: absolute;
     top: 50%;
@@ -344,7 +373,7 @@ body.gallery-page {
     align-items: center;
     justify-content: center;
     font-size: 1.1rem;
-    z-index: 10001;
+    z-index: 100001;
     transition: all 0.3s ease;
 }
 
@@ -358,7 +387,6 @@ body.gallery-page {
 .gallery-modal-prev { left: 20px; }
 .gallery-modal-next { right: 20px; }
 
-/* Modal Inner Container */
 .gallery-modal-inner {
     display: grid;
     grid-template-columns: 1fr;
@@ -378,7 +406,7 @@ body.gallery-page {
     transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
                 opacity 0.4s ease;
     position: relative;
-    z-index: 10000;
+    z-index: 100000;
 }
 
 .gallery-modal.active .gallery-modal-inner {
@@ -386,7 +414,6 @@ body.gallery-page {
     opacity: 1;
 }
 
-/* Media Section */
 .gallery-modal-media {
     position: relative;
     background: #000;
@@ -412,7 +439,6 @@ body.gallery-page {
     to   { opacity: 1; transform: scale(1); filter: blur(0); }
 }
 
-/* Counter Badge */
 .modal-counter {
     position: absolute;
     top: 16px;
@@ -430,7 +456,6 @@ body.gallery-page {
     z-index: 3;
 }
 
-/* Content Section */
 .gallery-modal-content {
     padding: 26px 22px 30px;
     display: flex;
@@ -500,31 +525,29 @@ body.gallery-page {
    ========================================================== */
 @media (max-width: 767.98px) {
 
-    body.gallery-page {
-        padding: 0;
-        overflow-y: auto;
-    }
-
     /* -----------------------------------------
-       📱 Mobile 2D Swipe Gallery Styles
+       📱 Mobile 2D Swipe Gallery
        ----------------------------------------- */
     .gallery-stage {
-        perspective: none; /* 3D off */
+        perspective: none;
         overflow-x: auto;
         overflow-y: hidden;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
-        scrollbar-width: none; /* Firefox */
-        scroll-behavior: smooth; /* JS auto slide smooth */
-        padding: 20px 0;
-        /* Center calculation for scroll container */
+        scrollbar-width: none;
+        scroll-behavior: smooth;
+        /* 🔥 REDUCED padding — images come up closer to banner */
+        padding: 6px 0 0;
+        margin: 0;
+        min-height: auto;
+        max-height: none;
         scroll-padding: 0 calc(50vw - min(40vw, 160px));
     }
 
     .gallery-stage::-webkit-scrollbar {
-        display: none; /* Chrome/Safari */
+        display: none;
     }
 
     .gallery-container {
@@ -540,26 +563,26 @@ body.gallery-page {
     .gallery-ring {
         position: relative;
         display: flex;
-        gap: 16px;
-        /* 🔥 FIX: Exact center calculation for the first and last images */
-        padding: 0 calc(50vw - min(40vw, 160px)); 
-        animation: none !important; /* Rotation off */
+        gap: 14px;
+        padding: 0 calc(50vw - min(40vw, 160px));
+        animation: none !important;
         transform: none !important;
         transform-style: flat;
         width: max-content;
     }
 
     .gallery-item {
-        position: relative; /* Not absolute anymore */
+        position: relative;
         left: auto;
         top: auto;
-        width: min(80vw, 320px);
-        height: min(60vh, 420px);
+        width: min(78vw, 300px);
+        /* 🔥 Smaller height so it fits nicely */
+        height: min(48vh, 360px);
         flex-shrink: 0;
         scroll-snap-align: center;
-        scroll-snap-stop: always; /* Ensure it stops exactly on each item */
+        scroll-snap-stop: always;
         border-radius: 16px;
-        transform: none !important; /* No 3D translation */
+        transform: none !important;
     }
 
     .gallery-item:hover {
@@ -567,7 +590,7 @@ body.gallery-page {
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.06);
     }
 
-    /* Hide Navigation Arrows on Mobile (Use Swipe instead) */
+    /* Hide Navigation Arrows on Mobile */
     .gallery-nav {
         display: none;
     }
@@ -576,18 +599,19 @@ body.gallery-page {
     .gallery-hint {
         position: relative;
         bottom: auto;
-        margin: 10px auto 20px;
-        font-size: 0.7rem;
-        padding: 8px 16px;
+        left: auto;
+        transform: none;
+        margin: 10px auto 14px;
+        font-size: 0.68rem;
+        padding: 6px 14px;
         animation: none;
+        width: fit-content;
     }
 
-    /* -----------------------------------------
-       📱 Mobile Modal Fix (Centered & Large)
-       ----------------------------------------- */
+    /* Modal */
     .gallery-modal {
         padding: 16px;
-        align-items: center; /* Center vertically */
+        align-items: center;
         justify-content: center;
     }
 
@@ -709,4 +733,4 @@ body.gallery-page {
         animation: none !important;
         transition-duration: 0.01ms !important;
     }
-                     }
+}
