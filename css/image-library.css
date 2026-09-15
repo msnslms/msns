@@ -1,5 +1,5 @@
 /* ==========================================================
-   🎨 SCHOOL GALLERY — 3D Image Ring
+   🎨 SCHOOL GALLERY — 3D Image Ring (PC) + 2D Swipe (Mobile)
    ========================================================== */
 
 body.gallery-page {
@@ -496,12 +496,13 @@ body.gallery-page {
 }
 
 /* ==========================================================
-   📱 MOBILE RESPONSIVE
+   📱 MOBILE RESPONSIVE (2D Swipe Gallery)
    ========================================================== */
 @media (max-width: 767.98px) {
 
     body.gallery-page {
         padding: 0;
+        overflow-y: auto;
     }
 
     /* Header */
@@ -542,85 +543,143 @@ body.gallery-page {
         font-size: 0.72rem;
     }
 
-    /* Ring Items (smaller) */
+    /* -----------------------------------------
+       📱 Mobile 2D Swipe Gallery Styles
+       ----------------------------------------- */
+    .gallery-stage {
+        perspective: none; /* 3D off */
+        overflow-x: auto;
+        overflow-y: hidden;
+        display: flex;
+        align-items: center;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox */
+        padding: 20px 0;
+    }
+
+    .gallery-stage::-webkit-scrollbar {
+        display: none; /* Chrome/Safari */
+    }
+
+    .gallery-container {
+        position: relative;
+        top: auto;
+        left: auto;
+        width: max-content;
+        height: auto;
+        display: flex;
+        transform-style: flat;
+    }
+
+    .gallery-ring {
+        position: relative;
+        display: flex;
+        gap: 16px;
+        padding: 0 20px;
+        animation: none !important; /* Rotation off */
+        transform: none !important;
+        transform-style: flat;
+        width: max-content;
+    }
+
     .gallery-item {
-        width: 140px;
-        height: 200px;
-        left: -70px;
-        top: -100px;
-        border-radius: 14px;
+        position: relative; /* Not absolute anymore */
+        left: auto;
+        top: auto;
+        width: min(80vw, 320px);
+        height: min(60vh, 420px);
+        flex-shrink: 0;
+        scroll-snap-align: center;
+        border-radius: 16px;
+        transform: none !important; /* No 3D translation */
     }
 
-    /* Nav arrows (smaller) */
+    .gallery-item:hover {
+        filter: none;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+
+    /* Hide Navigation Arrows on Mobile (Use Swipe instead) */
     .gallery-nav {
-        width: 38px;
-        height: 38px;
-        font-size: 0.85rem;
+        display: none;
     }
 
-    .gallery-nav-prev { left: 12px; }
-    .gallery-nav-next { right: 12px; }
-
-    /* Hint */
+    /* Hint Text */
     .gallery-hint {
-        font-size: 0.65rem;
-        padding: 6px 14px;
-        bottom: 14px;
+        position: relative;
+        bottom: auto;
+        margin: 10px auto 20px;
+        font-size: 0.7rem;
+        padding: 8px 16px;
+        animation: none;
     }
 
-    /* Modal (Mobile stack) */
+    /* -----------------------------------------
+       📱 Mobile Modal Fix (Centered & Large)
+       ----------------------------------------- */
     .gallery-modal {
-        padding: 0;
-        align-items: flex-end;
+        padding: 16px; /* Space around modal */
+        align-items: center; /* Center vertically */
+        justify-content: center;
     }
 
     .gallery-modal-inner {
         max-width: 100%;
-        max-height: 92vh;
-        border-radius: 24px 24px 0 0;
+        width: 100%;
+        max-height: 90vh;
+        border-radius: 20px; /* Not sticking to bottom */
         grid-template-columns: 1fr;
         margin: 0;
+        display: flex;
+        flex-direction: column;
     }
 
     .gallery-modal-media {
-        min-height: 200px;
-        max-height: 45vh;
+        min-height: 40vh;
+        max-height: 55vh; /* Image takes good space */
+        flex: 1;
     }
 
     .gallery-modal-media img {
-        max-height: 45vh;
+        max-height: 55vh;
+        width: 100%;
+        object-fit: contain;
     }
 
     .gallery-modal-content {
-        padding: 22px 20px 30px;
-        gap: 10px;
+        padding: 18px 20px 24px;
+        gap: 8px;
+        max-height: 35vh;
     }
 
     .modal-title {
-        font-size: 1.15rem;
+        font-size: 1.1rem;
     }
 
     .modal-desc {
-        font-size: 0.85rem;
-        line-height: 1.6;
+        font-size: 0.82rem;
+        line-height: 1.5;
     }
 
     .gallery-modal-close {
-        top: 14px;
-        right: 14px;
-        width: 40px;
-        height: 40px;
+        top: 12px;
+        right: 12px;
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
     }
 
+    /* Hide Modal Nav Arrows on Mobile (Swipe supported or just tap) */
     .gallery-modal-nav {
-        display: none; /* Mobile: swipe-style, no arrows */
+        display: none;
     }
 
     .modal-counter {
         top: 12px;
         right: 12px;
-        padding: 5px 12px;
-        font-size: 0.68rem;
+        padding: 4px 10px;
+        font-size: 0.65rem;
     }
 }
 
