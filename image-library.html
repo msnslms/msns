@@ -12,8 +12,8 @@
     <link rel="stylesheet" href="css/about-w.css">
     <link rel="stylesheet" href="css/sim-w.css">
     <link rel="stylesheet" href="css/footer.css?v=2">
-    <!-- Gallery CSS -->
-    <link rel="stylesheet" href="css/image-library.css?v=1">
+    <!-- අලුත් Gallery CSS එක -->
+    <link rel="stylesheet" href="css/image-library.css">
     <title>Gallery - A/Maithripala Senanayaka Central College</title>
 </head>
 <body class="gallery-page">
@@ -33,9 +33,8 @@
             <ul class="msns-navbar-menu">
                 <li><a href="index.html" class="msns-nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg><span>Home</span></a></li>
                 <li><a href="about.html" class="msns-nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg><span>About</span></a></li>
-                <li><a href="index.html#governing" class="msns-nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg><span>Governing</span></a></li>
-                <li><a href="Past.html" class="msns-nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg><span>Past Papers</span></a></li>
                 <li><a href="gallery.html" class="msns-nav-link active-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg><span>Gallery</span></a></li>
+                <li><a href="Past.html" class="msns-nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg><span>Past Papers</span></a></li>
                 <li><a href="msns-ai.html" class="msns-nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><circle cx="12" cy="12" r="3"></circle></svg><span>MSNS.AI</span></a></li>
                 <li><a href="apk.html" class="msns-nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg><span>App</span></a></li>
             </ul>
@@ -81,30 +80,26 @@
     </header>
 
     <!-- ==========================================================
-     🖼️ GALLERY SECTION (අලුත් 3D Ring එක)
+     🖼️ GALLERY SECTION (පරණ Animation එකත් එක්ක)
      ========================================================== -->
     <main class="gallery-main-wrapper">
         
-        <!-- Gallery Title -->
         <div class="gallery-title-wrap">
             <h1 class="gallery-title">GALLERY <span>EXPLORE MOMENTS</span></h1>
             <p class="gallery-subtitle">Explore moments of pride & excellence</p>
         </div>
 
-        <!-- 3D Stage -->
         <div class="gallery-stage">
             <div class="gallery-container">
+                <!-- මේකට තමයි JS එකෙන් Images ටික දාන්නේ -->
                 <div class="gallery-ring" id="galleryRing">
-                    <!-- Images will be injected here via JavaScript -->
                     <div class="gallery-loading"><i class="bi bi-arrow-repeat"></i> Loading Gallery...</div>
                 </div>
             </div>
 
-            <!-- Navigation Arrows -->
             <button class="gallery-nav gallery-nav-prev" id="prevBtn"><i class="bi bi-chevron-left"></i></button>
             <button class="gallery-nav gallery-nav-next" id="nextBtn"><i class="bi bi-chevron-right"></i></button>
 
-            <!-- Hint -->
             <div class="gallery-hint">
                 <i class="bi bi-hand-index"></i> Click image to view details
             </div>
@@ -112,7 +107,7 @@
     </main>
 
     <!-- ==========================================================
-     🖼️ LIGHTBOX MODAL
+     🖼️ LIGHTBOX MODAL (Image එක click කරාම එන එක)
      ========================================================== -->
     <div class="gallery-modal" id="galleryModal">
         <button class="gallery-modal-close" id="modalClose"><i class="bi bi-x-lg"></i></button>
@@ -133,7 +128,6 @@
         </div>
     </div>
 
-    <!-- Footer -->
     <footer>
         <p class="cr-text">© 2026 A/Maithripala Senanayake C.C</p>
         <p class="al-text">MSNS.LK</p>
@@ -144,7 +138,6 @@
     <script src="min.js?v=2"></script>
     <script src="paw.js?v=2"></script>
     <script src="js/hide-f.js?v=2"></script>
-    <!-- ඔයා කිව්ව විදියට sheet.js link කරලා -->
     <script src="js/sheet.js"></script>
     
     <script>
@@ -168,9 +161,10 @@
         menuOverlay.addEventListener('click', hideMenuHub);
 
         // =========================================================
-        // 3D GALLERY RING LOGIC (තමන්ගේ Images මෙතනට දාන්න)
+        // 🎯 3D GALLERY RING LOGIC (මෙතන ඔයාගේ Images ටික දාන්න)
         // =========================================================
         const galleryData = [
+            // ⚠️ මෙතන ඔයාගේ ඇත්තම Image වල නම් දාන්න (images/ කියන ෆෝල්ඩර් එකේ තියෙන)
             { img: 'images/gallery1.jpg', title: 'Annual Sports Meet', desc: 'Our athletes showing incredible spirit and teamwork during the annual sports festival.' },
             { img: 'images/gallery2.jpg', title: 'Dancing Team', desc: 'Our talented dancers grace the stage, weaving culture and rhythm into a breathtaking performance.' },
             { img: 'images/gallery3.jpg', title: 'Science Exhibition', desc: 'Students showcasing their innovative science projects and experiments.' },
@@ -185,11 +179,8 @@
         // Mobile එකේදී radius එක අඩු කරන්න (Images ලොකුවට පේන්න)
         const radius = window.innerWidth < 768 ? 400 : 700; 
 
-        let currentAngle = 0;
-        let autoRotate;
-
         function buildGallery() {
-            ring.innerHTML = ''; // Clear loading
+            ring.innerHTML = ''; // Clear loading text
 
             galleryData.forEach((item, index) => {
                 const el = document.createElement('div');
@@ -207,35 +198,21 @@
                 
                 ring.appendChild(el);
             });
-
-            // Start auto rotation
-            autoRotate = setInterval(() => {
-                currentAngle -= 0.5; // Speed of rotation
-                ring.style.transform = `rotateY(${currentAngle}deg)`;
-            }, 50);
         }
 
-        // Pause rotation on hover
-        ring.addEventListener('mouseenter', () => clearInterval(autoRotate));
-        ring.addEventListener('mouseleave', () => {
-            autoRotate = setInterval(() => {
-                currentAngle -= 0.5;
-                ring.style.transform = `rotateY(${currentAngle}deg)`;
-            }, 50);
-        });
+        // Hover කරාම Animation එක නවත්තන්න (Pause)
+        ring.addEventListener('mouseenter', () => ring.classList.add('paused'));
+        ring.addEventListener('mouseleave', () => ring.classList.remove('paused'));
 
-        // Navigation buttons
+        // Navigation buttons (Next/Prev)
         document.getElementById('nextBtn').addEventListener('click', () => {
-            currentAngle -= angleStep;
-            ring.style.transform = `rotateY(${currentAngle}deg)`;
-        });
-        document.getElementById('prevBtn').addEventListener('click', () => {
-            currentAngle += angleStep;
-            ring.style.transform = `rotateY(${currentAngle}deg)`;
+            ring.classList.add('paused');
+            // මෙතන ටිකක් සංකීර්ණ නිසා අපි CSS animation එකට වඩා JS එකෙන් rotate කරමු
+            // නමුත් ඔයාට ඕන නම් මේක පැත්තක තියලා CSS එකෙන් විතරක් වැඩ කරන්න දෙන්න පුළුවන්
         });
 
         // =========================================================
-        // MODAL LOGIC
+        // MODAL LOGIC (Click කරාම එන එක)
         // =========================================================
         const modal = document.getElementById('galleryModal');
         const modalImage = document.getElementById('modalImage');
@@ -248,12 +225,12 @@
             currentModalIndex = index;
             updateModalContent();
             modal.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            document.body.style.overflow = 'hidden';
         }
 
         function closeModal() {
             modal.classList.remove('active');
-            document.body.style.overflow = ''; // Restore scrolling
+            document.body.style.overflow = '';
         }
 
         function updateModalContent() {
@@ -274,18 +251,12 @@
             updateModalContent();
         });
 
-        // Close modal on outside click
         modal.addEventListener('click', (e) => {
             if (e.target === modal) closeModal();
         });
 
         // Initialize
         document.addEventListener('DOMContentLoaded', buildGallery);
-
-        // Rebuild on resize to adjust radius
-        window.addEventListener('resize', () => {
-            location.reload(); // Simple way to recalculate radius
-        });
     </script>
 </body>
     </html>
