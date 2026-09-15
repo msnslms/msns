@@ -28,42 +28,6 @@
    <link rel="stylesheet" href="css/image-library.css?v=2"> 
     <!-- Layout tweaks so footer + gallery both fit -->
     <style>
-        body.gallery-page {
-            overflow-x: hidden !important;
-            overflow-y: auto !important;
-            height: auto !important;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        body.gallery-page .gallery-stage {
-            flex: 1 1 auto;
-            min-height: 500px;
-            max-height: 800px;
-            margin-bottom: 10px;
-        }
-
-        body.gallery-page footer {
-            margin-top: auto;
-        }
-
-        /* Hide desktop navbar on mobile */
-        @media (max-width: 767.98px) {
-            body.gallery-page .msns-desktop-navbar {
-                display: none !important;
-            }
-        }
-
-        /* Hide mobile header + sidebar on desktop */
-        @media (min-width: 768px) {
-            body.gallery-page header#top,
-            body.gallery-page .sidebar,
-            body.gallery-page .menu-overlay {
-                display: none !important;
-            }
-        }
-    </style>
 </head>
 
 <body class="gallery-page">
@@ -297,6 +261,7 @@
          SCRIPTS
          ========================================================== -->
     <script src="js/sheet.js?v=1"></script>
+    <script src="min.js?v=1"></script>
 </body>
 
 </html>
