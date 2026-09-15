@@ -202,30 +202,27 @@
     <script>
 document.addEventListener("DOMContentLoaded", function () {
     const galleryStage = document.querySelector('.gallery-stage');
+    const items = document.querySelectorAll('.gallery-item');
     let autoSlideInterval;
     let isUserInteracting = false;
+    let currentIndex = 0;
 
     function startAutoSlide() {
         // මොබයිල් වලට විතරක් (767px ට අඩු)
-        if (window.innerWidth > 767.98) return;
+        if (window.innerWidth > 767.98 || items.length === 0) return;
 
         autoSlideInterval = setInterval(() => {
-            // යූසර් ස්වයිප් කරන අතරතුර නම් ඕටෝ ස්ලයිඩ් නවත්තන්න
             if (isUserInteracting || !galleryStage) return;
 
-            const firstItem = galleryStage.querySelector('.gallery-item');
-            if (!firstItem) return;
+            currentIndex = (currentIndex + 1) % items.length;
+            const targetItem = items[currentIndex];
 
-            const itemWidth = firstItem.offsetWidth;
-            const gap = 16; // CSS එකේ තියෙන gap එක
-            const scrollAmount = itemWidth + gap;
-
-            // අන්තිමට ආවම ආයෙත් මුලට යන්න
-            if (galleryStage.scrollLeft + galleryStage.clientWidth >= galleryStage.scrollWidth - 10) {
-                galleryStage.scrollTo({ left: 0, behavior: 'smooth' });
-            } else {
-                galleryStage.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-            }
+            // 🔥 FIX: මේකෙන් ෆොටෝ එක හරියටම මැදට එනවා
+            targetItem.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'nearest', 
+                inline: 'center' 
+            });
         }, 3000); // තත්පර 3කට වරක් මාරු වේ
     }
 
@@ -242,8 +239,8 @@ document.addEventListener("DOMContentLoaded", function () {
         startAutoSlide();
     });
 
-    // යූසර් ඇඟිල්ල තට්ටු කරාම හෝ ස්වයිප් කරාම ඕටෝ ස්ලයිඩ් නවත්තන්න
     if (galleryStage) {
+        // යූසර් ඇඟිල්ල තට්ටු කරාම හෝ ස්වයිප් කරාම ඕටෝ ස්ලයිඩ් නවත්තන්න
         galleryStage.addEventListener('touchstart', () => {
             isUserInteracting = true;
             stopAutoSlide();
@@ -251,7 +248,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
         galleryStage.addEventListener('touchend', () => {
             isUserInteracting = false;
-            // යූසර් අත අයින් කරලා තත්පර 3කට පස්සේ ආයෙත් ඕටෝ ස්ලයිඩ් පටන් ගන්න
+            
+            // යූසර් ස්වයිප් කරලා නැවැත්තුවට පස්සේ, එයා බලන් ඉන්න ෆොටෝ එකේ ඉඳන් ආයෙත් ඕටෝ ස්ලයිඩ් පටන් ගන්න
+            const scrollCenter = galleryStage.scrollLeft + galleryStage.clientWidth / 2;
+            let minDistance = Infinity;
+            
+            items.forEach((item, index) => {
+                const itemCenter = item.offsetLeft + item.offsetWidth / 2;
+                const distance = Math.abs(itemCenter - scrollCenter);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    currentIndex = index;
+                }
+            });
+
+            // තත්පර 3කට පස්සේ ආයෙත් ඕටෝ ස්ලයිඩ් පටන් ගන්න
             setTimeout(startAutoSlide, 3000);
         });
     }
