@@ -140,11 +140,7 @@
     <div class="gallery-stage" id="galleryStage">
         <div class="gallery-container">
             <div class="gallery-ring" id="galleryRing">
-                <!-- Images injected by JS -->
-                <div class="gallery-loading" id="galleryLoading">
-                    <i class="fa-solid fa-circle-notch fa-spin"></i>
-                    <span>Loading gallery...</span>
-                </div>
+                <!-- Items injected by JS -->
             </div>
         </div>
 
@@ -199,75 +195,6 @@
          SCRIPTS
          ========================================================== -->
     <script src="js/sheet.js?v=1"></script>
-    <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const galleryStage = document.querySelector('.gallery-stage');
-    const items = document.querySelectorAll('.gallery-item');
-    let autoSlideInterval;
-    let isUserInteracting = false;
-    let currentIndex = 0;
-
-    function startAutoSlide() {
-        // මොබයිල් වලට විතරක් (767px ට අඩු)
-        if (window.innerWidth > 767.98 || items.length === 0) return;
-
-        autoSlideInterval = setInterval(() => {
-            if (isUserInteracting || !galleryStage) return;
-
-            currentIndex = (currentIndex + 1) % items.length;
-            const targetItem = items[currentIndex];
-
-            // 🔥 FIX: මේකෙන් ෆොටෝ එක හරියටම මැදට එනවා
-            targetItem.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'nearest', 
-                inline: 'center' 
-            });
-        }, 3000); // තත්පර 3කට වරක් මාරු වේ
-    }
-
-    function stopAutoSlide() {
-        clearInterval(autoSlideInterval);
-    }
-
-    // පේජ් එක ලෝඩ් වෙද්දී ස්ටාර්ට් කරන්න
-    startAutoSlide();
-
-    // ස්ක්‍රීන් සයිස් එක වෙනස් වෙද්දී රීසෙට් කරන්න
-    window.addEventListener('resize', () => {
-        stopAutoSlide();
-        startAutoSlide();
-    });
-
-    if (galleryStage) {
-        // යූසර් ඇඟිල්ල තට්ටු කරාම හෝ ස්වයිප් කරාම ඕටෝ ස්ලයිඩ් නවත්තන්න
-        galleryStage.addEventListener('touchstart', () => {
-            isUserInteracting = true;
-            stopAutoSlide();
-        }, { passive: true });
-
-        galleryStage.addEventListener('touchend', () => {
-            isUserInteracting = false;
-            
-            // යූසර් ස්වයිප් කරලා නැවැත්තුවට පස්සේ, එයා බලන් ඉන්න ෆොටෝ එකේ ඉඳන් ආයෙත් ඕටෝ ස්ලයිඩ් පටන් ගන්න
-            const scrollCenter = galleryStage.scrollLeft + galleryStage.clientWidth / 2;
-            let minDistance = Infinity;
-            
-            items.forEach((item, index) => {
-                const itemCenter = item.offsetLeft + item.offsetWidth / 2;
-                const distance = Math.abs(itemCenter - scrollCenter);
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    currentIndex = index;
-                }
-            });
-
-            // තත්පර 3කට පස්සේ ආයෙත් ඕටෝ ස්ලයිඩ් පටන් ගන්න
-            setTimeout(startAutoSlide, 3000);
-        });
-    }
-});
-    </script>
+    <script src="js/image-library.js?v=1"></script>
 </body>
-
 </html>
