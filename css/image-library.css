@@ -505,44 +505,6 @@ body.gallery-page {
         overflow-y: auto;
     }
 
-    /* Header */
-    header#top {
-        padding: 12px 16px;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        position: relative;
-        z-index: 20;
-    }
-
-    header#top .header-title {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #ffffff;
-        display: flex;
-        align-items: center;
-        -webkit-text-fill-color: #ffffff;
-        background: none;
-    }
-
-    header#top .nav-icon {
-        color: #f59e0b;
-    }
-
-    /* Title */
-    .gallery-title-wrap {
-        padding: 16px 20px 4px;
-    }
-
-    .gallery-title {
-        font-size: 1.2rem;
-    }
-
-    .gallery-subtitle {
-        font-size: 0.72rem;
-    }
-
     /* -----------------------------------------
        📱 Mobile 2D Swipe Gallery Styles
        ----------------------------------------- */
