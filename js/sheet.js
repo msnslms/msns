@@ -1,22 +1,31 @@
 /* ==========================================================
    🖼️ MSNS SCHOOL GALLERY — Responsive Grid (FIXED VERSION)
-   Sheet: mini-image-library
-   Columns: url | titel | discretion
+   Data Fetching & Parsing Logic from the Working System
+   Sheet: mini-image-library | Columns: url | titel | discretion
    ========================================================== */
 
 (function () {
     'use strict';
 
+    /* ==========================================================
+       📌 CONFIGURATION
+       ========================================================== */
     const CONFIG = {
         sheetId: '1mN5jfN4P3FFevv2Aq0ygWmTzrF7-dVWfdy-8cDFa7ro',
         sheetName: 'mini-image-library',
         maxItems: 60
     };
 
-    // සම්පූර්ණ HTML Page එක Load වුණාට පස්සෙ JS එක රන් වෙන්න ඕන නිසා DOMContentLoaded දානවා
-    document.addEventListener('DOMContentLoaded', () => {
-        /* DOM */
+    /* ==========================================================
+       🎯 GLOBAL STATE & DOM ELEMENTS
+       ========================================================== */
+    let items = [];
+    let modalIndex = 0;
+
+    function initGallery() {
+        // Elements
         const grid       = document.getElementById('galleryGrid');
+        const loading    = document.getElementById('galleryLoading'); // Loading spinner
         const modal      = document.getElementById('galleryModal');
         const modalImg   = document.getElementById('modalImage');
         const modalTitle = document.getElementById('modalTitle');
@@ -31,10 +40,9 @@
             return;
         }
 
-        let items = [];
-        let modalIndex = 0;
-
-        /* ---------- URL Normalizer (පරණ කෝඩ් එකේ විදියටම) ---------- */
+        /* ==========================================================
+           🎨 URL NORMALIZER (Working Logic)
+           ========================================================== */
         function normalizeUrl(rawUrl) {
             if (!rawUrl) return '';
             let url = rawUrl.trim().replace(/^["']|["']$/g, '');
@@ -46,16 +54,20 @@
             return url;
         }
 
-        /* ---------- Fetch Sheet ---------- */
-        async function fetchSheet() {
+        /* ==========================================================
+           📥 FETCH DATA FROM GOOGLE SHEETS (Working Logic)
+           ========================================================== */
+        async function fetchSheetData() {
             const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(CONFIG.sheetName)}`;
-            const res = await fetch(url);
-            if (!res.ok) throw new Error('Sheet fetch failed');
-            const csv = await res.text();
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Sheet fetch failed: ' + response.status);
+            const csv = await response.text();
             return parseCSV(csv);
         }
 
-        /* ---------- Parse CSV (පරණ වැඩකරපු Logic එක) ---------- */
+        /* ==========================================================
+           🧩 PARSE CSV (Working Logic)
+           ========================================================== */
         function parseCSV(csv) {
             const rows = [];
             let row = [], field = '', inQuotes = false;
@@ -86,7 +98,7 @@
 
             const headers = rows[0].map(h => h.trim().toLowerCase());
             
-            // Headers හරියටම අඳුරගන්න පරණ කෝඩ් එකේ matchers ටික මෙතනට දැම්මා
+            // Header Checkers (පරණ කෝඩ් එකේ විදියටම)
             const urlIdx = headers.findIndex(h => h === 'url' || h.includes('url') || h === 'image');
             const titleIdx = headers.findIndex(h => h === 'titel' || h === 'title' || h.includes('tit') || h === 'heading');
             const descIdx = headers.findIndex(h => h.includes('discre') || h.includes('desc') || h.includes('text') || h === 'discretion');
@@ -94,9 +106,9 @@
             const data = [];
             for (let i = 1; i < rows.length && data.length < CONFIG.maxItems; i++) {
                 const r = rows[i];
-                const url   = urlIdx !== -1 ? (r[urlIdx] || '').trim() : '';
+                const url = urlIdx !== -1 ? (r[urlIdx] || '').trim() : '';
                 const title = titleIdx !== -1 ? (r[titleIdx] || '').trim() : '';
-                const desc  = descIdx !== -1 ? (r[descIdx] || '').trim() : '';
+                const desc = descIdx !== -1 ? (r[descIdx] || '').trim() : '';
 
                 if (!url && !title && !desc) continue;
 
@@ -110,7 +122,9 @@
             return data;
         }
 
-        /* ---------- Render Grid ---------- */
+        /* ==========================================================
+           🖼️ RENDER GRID 
+           ========================================================== */
         function renderGrid() {
             if (items.length === 0) {
                 grid.innerHTML = `
@@ -131,12 +145,12 @@
                 }
                 return `
                     <div class="gallery-card" data-index="${i}">
-                        <img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.title)}" loading="lazy">
-                        <div class="gallery-card-title">${escapeHtml(item.title)}</div>
+                        <img src="${escapeHTML(item.url)}" alt="${escapeHTML(item.title)}" loading="lazy">
+                        <div class="gallery-card-title">${escapeHTML(item.title)}</div>
                     </div>`;
             }).join('');
 
-            // Image Error Handling එක clean විදියට JS වලින්ම දෙනවා
+            // Fallback for broken images
             grid.querySelectorAll('.gallery-card img').forEach(img => {
                 img.addEventListener('error', function() {
                     const parentCard = this.parentElement;
@@ -145,15 +159,19 @@
                 });
             });
 
+            // Click event for Modal
             grid.querySelectorAll('.gallery-card').forEach(card => {
                 card.addEventListener('click', () => {
+                    if(card.classList.contains('no-image')) return; // Don't open modal if no image
                     const idx = parseInt(card.dataset.index, 10);
                     openModal(idx);
                 });
             });
         }
 
-        /* ---------- Modal ---------- */
+        /* ==========================================================
+           🔍 MODAL LOGIC (Lightbox)
+           ========================================================== */
         function openModal(index) {
             if (!modal || index < 0 || index >= items.length) return;
             modalIndex = index;
@@ -172,7 +190,7 @@
             if (modalCount) modalCount.textContent = `${index + 1} / ${items.length}`;
 
             modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
+            document.body.style.overflow = 'hidden'; // Stop background scrolling
         }
 
         function closeModal() {
@@ -191,6 +209,7 @@
             openModal((modalIndex + 1) % items.length);
         }
 
+        // Modal Event Listeners
         modalClose?.addEventListener('click', (e) => { e.stopPropagation(); closeModal(); });
         modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
         modalPrev?.addEventListener('click', (e) => { e.stopPropagation(); modalPrevSlide(); });
@@ -203,7 +222,7 @@
             if (e.key === 'ArrowRight') modalNextSlide();
         });
 
-        /* Touch swipe */
+        /* Touch Swipe Support */
         let touchStartX = 0;
         modal?.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
         modal?.addEventListener('touchend', (e) => {
@@ -212,8 +231,10 @@
             delta > 0 ? modalPrevSlide() : modalNextSlide();
         }, { passive: true });
 
-        /* ---------- Helpers ---------- */
-        function escapeHtml(str) {
+        /* ==========================================================
+           🔒 UTILS
+           ========================================================== */
+        function escapeHTML(str) {
             if (!str) return '';
             return String(str)
                 .replace(/&/g, '&amp;')
@@ -223,24 +244,38 @@
                 .replace(/'/g, '&#39;');
         }
 
-        /* ---------- Init ---------- */
-        (async function init() {
+        /* ==========================================================
+           🚀 SYSTEM START
+           ========================================================== */
+        (async function start() {
             try {
-                console.log('🖼️ Loading MSNS 2D Grid Gallery...');
-                items = await fetchSheet();
+                console.log('🖼️ MSNS Grid Gallery Loading...');
+                items = await fetchSheetData();
                 console.log('✅ Loaded', items.length, 'items');
+                
+                // Remove Loading Spinner if it exists
+                if (loading) loading.style.display = 'none';
+                
                 renderGrid();
             } catch (err) {
                 console.error('❌ Gallery error:', err);
+                if (loading) loading.style.display = 'none';
                 if (grid) {
                     grid.innerHTML = `
                         <div class="gallery-empty-state">
                             <i class="fa-solid fa-triangle-exclamation"></i>
-                            <span>Failed to load gallery</span>
+                            <span>Failed to load gallery. Please check your connection.</span>
                         </div>`;
                 }
             }
         })();
+    }
 
-    }); // End DOMContentLoaded
+    // Bulletproof Initialization (Fixes the infinite loading issue)
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initGallery);
+    } else {
+        initGallery();
+    }
+
 })();
