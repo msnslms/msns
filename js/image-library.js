@@ -36,17 +36,36 @@ const modalPrev = document.getElementById('modalPrev');
 const modalNext = document.getElementById('modalNext');
 
 /* ==========================================
-   1. UTILITIES (Google Drive Links & CSV Parser)
+   1. UTILITIES (Google Drive & ImgBB Links Parser)
    ========================================== */
 
-// Google Drive link එක direct image link එකක් බවට පත් කිරීම
+// Google Drive හා ImgBB links නිවැරදිව direct image links බවට පත් කිරීම
 function fixImageUrl(url) {
     if (!url) return '';
-    const driveRegex = /drive\.google\.com\/file\/d\/([^\/]+)/;
-    const match = url.match(driveRegex);
-    if (match && match[1]) {
-        return `https://drive.google.com/uc?id=${match[1]}`;
+    url = url.trim();
+
+    // 1. ImgBB වගේ සයිට් වලින් HTML Code එකක් වැරදිලා paste කරලා තිබ්බොත් ඒකෙන් src ලින්ක් එක විතරක් ගන්නවා
+    const imgTagRegex = /<img[^>]+src=["']([^"']+)["']/;
+    const htmlMatch = url.match(imgTagRegex);
+    if (htmlMatch && htmlMatch[1]) {
+        url = htmlMatch[1];
     }
+
+    // 2. Google Drive - /file/d/ format එක
+    const driveRegex = /drive\.google\.com\/file\/d\/([^\/]+)/;
+    const driveMatch = url.match(driveRegex);
+    if (driveMatch && driveMatch[1]) {
+        return `https://drive.google.com/uc?export=view&id=${driveMatch[1]}`;
+    }
+
+    // 3. Google Drive - open?id= format එක
+    const driveOpenRegex = /drive\.google\.com\/open\?id=([^&]+)/;
+    const driveOpenMatch = url.match(driveOpenRegex);
+    if (driveOpenMatch && driveOpenMatch[1]) {
+        return `https://drive.google.com/uc?export=view&id=${driveOpenMatch[1]}`;
+    }
+
+    // 4. ImgBB direct link එකක් නම් (https://i.ibb.co/...) හෝ වෙනත් සාමාන්‍ය ලින්ක් එකක් නම් කෙලින්ම දෙනවා
     return url;
 }
 
@@ -320,4 +339,3 @@ modal.addEventListener('click', (e) => {
 // 🚀 INITIATE FETCH ON LOAD
 // ==========================================
 fetchGalleryData();
-
