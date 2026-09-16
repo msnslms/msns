@@ -1,6 +1,6 @@
 /* ==========================================================
    🎡 MSNS ALL-IN-ONE GALLERY SYSTEM
-   Hero Banner | Mini Card Gallery | 3D Ring Gallery | Modal View
+   Hero Banner | Mini Card Gallery | Grid Gallery | Modal View
    Sheet: mini-image-library
    Columns: url | titel | discretion | home | home-heder
    ========================================================== */
@@ -16,25 +16,21 @@
         sheetName: 'mini-image-library',
         autoRotateMs: 5000,         // Hero & Mini Gallery interval (5s)
         transitionMs: 700,          // Transition duration
-        ringAutoRotateSpeed: 30,    // 3D Ring rotation speed (seconds per 360 deg)
-        maxItems: 50                // Max items to fetch
+        maxItems: 60                // Max items to fetch
     };
 
     /* ==========================================================
        📌 DOM ELEMENTS DETECT
        ========================================================== */
-    // Hero Banner Elements
+    // Hero Banner
     const heroContainer = document.getElementById('heroSliderContainer');
 
-    // Mini Gallery Elements
+    // Mini Card Gallery
     const milContainer  = document.getElementById('milContainer');
     const milDotsWrap   = document.getElementById('milDots');
 
-    // 3D Ring Gallery Elements
-    const ring          = document.getElementById('galleryRing');
-    const loading       = document.getElementById('galleryLoading');
-    const ringPrevBtn   = document.getElementById('galleryPrev');
-    const ringNextBtn   = document.getElementById('galleryNext');
+    // Grid Gallery (image-library.html)
+    const gridContainer = document.getElementById('galleryGrid');
 
     // Modal Elements
     const modal         = document.getElementById('galleryModal');
@@ -46,8 +42,8 @@
     const modalPrev     = document.getElementById('modalPrev');
     const modalNext     = document.getElementById('modalNext');
 
-    // Early return if no components exist on the current page
-    if (!heroContainer && !milContainer && !ring) return;
+    // Early return if no gallery components on this page
+    if (!heroContainer && !milContainer && !gridContainer) return;
 
     /* ==========================================================
        🎯 GLOBAL STATE
@@ -55,7 +51,7 @@
     let allItems = [];
     let heroItems = [];
     let miniItems = [];
-    let ringItems = [];
+    let gridItems = [];
 
     // Hero state
     let heroCurrentIndex = 0;
@@ -67,17 +63,12 @@
     let miniAutoTimer = null;
     let isMiniAnimating = false;
 
-    // 3D Ring state
-    let ringRadius = 500;
-    let currentRingAngle = 0;
-    let manualRingRotation = false;
-    let ringRotationTimer = null;
-
-    // Modal state
+    // Modal state - which gallery opened it
+    let modalSourceItems = [];
     let modalIndex = 0;
 
     /* ==========================================================
-       🎨 URL NORMALIZER (Google Drive & Direct Links)
+       🎨 URL NORMALIZER
        ========================================================== */
     function normalizeUrl(rawUrl) {
         if (!rawUrl) return '';
@@ -91,7 +82,7 @@
     }
 
     /* ==========================================================
-       📥 FETCH DATA FROM GOOGLE SHEETS
+       📥 FETCH SHEET DATA
        ========================================================== */
     async function fetchSheetData() {
         const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(CONFIG.sheetName)}`;
@@ -137,19 +128,19 @@
 
         const headers = rows[0].map(h => h.trim().toLowerCase());
 
-        const urlIdx = headers.findIndex(h => h === 'url' || h.includes('url') || h === 'image');
-        const titleIdx = headers.findIndex(h => h === 'titel' || h === 'title' || h.includes('tit') || h === 'heading');
-        const descIdx = headers.findIndex(h => h.includes('discre') || h.includes('desc') || h.includes('text') || h === 'discretion');
-        
+        const urlIdx    = headers.findIndex(h => h === 'url' || h.includes('url') || h === 'image');
+        const titleIdx  = headers.findIndex(h => h === 'titel' || h === 'title' || h.includes('tit') || h === 'heading');
+        const descIdx   = headers.findIndex(h => h.includes('discre') || h.includes('desc') || h.includes('text') || h === 'discretion');
+
         const homeHeaderIdx = headers.findIndex(h => h === 'home-heder' || h === 'home-header' || h.includes('heder') || h.includes('header') || h === 'hero');
-        const homeIdx = headers.findIndex((h, idx) => (h === 'home' || h.trim() === 'home') && idx !== homeHeaderIdx);
+        const homeIdx       = headers.findIndex((h, idx) => (h === 'home' || h.trim() === 'home') && idx !== homeHeaderIdx);
 
         const data = [];
         for (let i = 1; i < rows.length && data.length < CONFIG.maxItems; i++) {
             const r = rows[i];
-            const url = (r[urlIdx] || '').trim();
-            const title = (r[titleIdx] || '').trim();
-            const desc = (r[descIdx] || '').trim();
+            const url    = (r[urlIdx] || '').trim();
+            const title  = (r[titleIdx] || '').trim();
+            const desc   = (r[descIdx] || '').trim();
 
             let isHomeGallery = false;
             if (homeIdx !== -1) {
@@ -200,7 +191,7 @@
         }).join('');
 
         const initialTitle = heroItems[0]?.title ? escapeHTML(heroItems[0].title) : '';
-        const initialDesc = heroItems[0]?.desc ? escapeHTML(heroItems[0].desc) : '';
+        const initialDesc  = heroItems[0]?.desc ? escapeHTML(heroItems[0].desc) : '';
 
         heroContainer.innerHTML = `
             ${imagesHTML}
@@ -235,8 +226,8 @@
         isHeroAnimating = true;
         resetHeroAutoRotate();
 
-        const title = document.getElementById('heroTitle');
-        const desc = document.getElementById('heroDesc');
+        const title   = document.getElementById('heroTitle');
+        const desc    = document.getElementById('heroDesc');
         const overlay = document.getElementById('heroOverlay');
 
         if (overlay) overlay.classList.remove('active');
@@ -249,7 +240,7 @@
             if (nextImg) nextImg.classList.add('active');
 
             const newTitle = heroItems[index].title;
-            const newDesc = heroItems[index].desc;
+            const newDesc  = heroItems[index].desc;
 
             if (overlay) {
                 if (!newTitle && !newDesc) {
@@ -257,7 +248,7 @@
                 } else {
                     overlay.style.display = 'block';
                     if (title) title.textContent = newTitle;
-                    if (desc) desc.textContent = newDesc;
+                    if (desc)  desc.textContent  = newDesc;
                 }
             }
 
@@ -379,8 +370,8 @@
         resetMiniAutoRotate();
 
         const content = document.getElementById('milContent');
-        const title = document.getElementById('milTitle');
-        const desc = document.getElementById('milDesc');
+        const title   = document.getElementById('milTitle');
+        const desc    = document.getElementById('milDesc');
         const counter = document.getElementById('milCounter');
 
         if (content) content.classList.add('mil-fading');
@@ -392,8 +383,8 @@
             const nextImg = milContainer.querySelector(`.mil-img[data-index="${index}"]`);
             if (nextImg) nextImg.classList.add('active');
 
-            if (title) title.textContent = miniItems[index].title;
-            if (desc) desc.textContent = miniItems[index].desc;
+            if (title)   title.textContent   = miniItems[index].title;
+            if (desc)    desc.textContent    = miniItems[index].desc;
             if (counter) counter.textContent = `${index + 1} / ${miniItems.length}`;
 
             milDotsWrap?.querySelectorAll('.mil-dot').forEach((d, i) => {
@@ -435,114 +426,65 @@
     }
 
     /* ==========================================================
-       🎬 3. 3D RING GALLERY LOGIC
+       🎬 3. GRID GALLERY LOGIC (image-library.html)
        ========================================================== */
-    function calcRingRadius() {
-        const isMobile = window.innerWidth <= 767;
-        const itemW = isMobile ? 140 : 220;
-        const n = ringItems.length || 1;
-        const idealR = itemW / (2 * Math.tan(Math.PI / n));
-        const minR = isMobile ? 320 : 480;
-        ringRadius = Math.max(minR, idealR * 1.25);
-        return ringRadius;
-    }
+    function renderGridGallery() {
+        if (!gridContainer) return;
 
-    function build3DRing() {
-        if (!ring) return;
+        // Show all items (or only isHome ones — let's use all)
+        gridItems = allItems;
 
-        ringItems = allItems; // Displays all items in the 3D gallery
-
-        if (ringItems.length === 0) {
-            ring.innerHTML = `
-                <div style="position:absolute; left:-150px; top:-30px; width:300px; text-align:center; color:#94a3b8; display:flex; flex-direction:column; align-items:center; gap:14px;">
-                    <i class="fa-regular fa-images" style="font-size:2.5rem; color:#f59e0b; opacity:0.6;"></i>
-                    <span style="font-weight:600; font-size:0.9rem;">No images available</span>
+        if (gridItems.length === 0) {
+            gridContainer.innerHTML = `
+                <div class="gallery-empty-state">
+                    <i class="fa-regular fa-images"></i>
+                    <span>No images available</span>
                 </div>
             `;
             return;
         }
 
-        calcRingRadius();
-
-        const n = ringItems.length;
-        const angleStep = 360 / n;
-        let html = '';
-
-        ringItems.forEach((item, i) => {
-            const angle = i * angleStep;
-            const transform = `rotateY(${angle}deg) translateZ(${ringRadius}px)`;
-
+        gridContainer.innerHTML = gridItems.map((item, i) => {
             if (!item.hasImage) {
-                html += `
-                    <div class="gallery-item no-image" data-index="${i}" style="transform: ${transform};">
+                return `
+                    <div class="gallery-card no-image" data-index="${i}">
                         <i class="fa-regular fa-image"></i>
                         <span>No Image</span>
                     </div>
                 `;
-            } else {
-                html += `
-                    <div class="gallery-item" data-index="${i}" style="transform: ${transform};">
-                        <img src="${escapeHTML(item.url)}" alt="${escapeHTML(item.title)}" loading="lazy"
-                             onerror="this.closest('.gallery-item').classList.add('no-image'); this.closest('.gallery-item').innerHTML='<i class=&quot;fa-regular fa-image&quot;></i><span>No Image</span>';">
-                    </div>
-                `;
             }
-        });
+            return `
+                <div class="gallery-card" data-index="${i}">
+                    <img src="${escapeHTML(item.url)}" 
+                         alt="${escapeHTML(item.title)}" 
+                         loading="lazy"
+                         onerror="this.parentElement.classList.add('no-image'); this.parentElement.innerHTML='<i class=&quot;fa-regular fa-image&quot;></i><span>No Image</span>';">
+                    <div class="gallery-card-title">${escapeHTML(item.title)}</div>
+                </div>
+            `;
+        }).join('');
 
-        ring.innerHTML = html;
-
-        ring.addEventListener('mouseenter', () => ring.classList.add('paused'));
-        ring.addEventListener('mouseleave', () => ring.classList.remove('paused'));
-
-        ring.querySelectorAll('.gallery-item').forEach(el => {
-            el.addEventListener('click', () => {
-                const idx = parseInt(el.dataset.index, 10);
-                openModal(idx);
+        // Card click → open modal (with gridItems as source)
+        gridContainer.querySelectorAll('.gallery-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const idx = parseInt(card.dataset.index, 10);
+                openModal(idx, gridItems);
             });
         });
     }
 
-    function rotateRingBy(deg) {
-        if (!ring) return;
-        manualRingRotation = true;
-        ring.classList.add('paused');
-        currentRingAngle += deg;
-
-        if (ringItems.length === 0) return;
-
-        ring.style.animation = 'none';
-        ring.style.transform = `rotateY(${currentRingAngle}deg)`;
-
-        clearTimeout(ringRotationTimer);
-        ringRotationTimer = setTimeout(resumeRingRotation, 4000);
-    }
-
-    function resumeRingRotation() {
-        if (!ring || ringItems.length === 0) return;
-        manualRingRotation = false;
-
-        const normalized = ((currentRingAngle % 360) + 360) % 360;
-        const duration = (CONFIG.ringAutoRotateSpeed * (360 - normalized)) / 360;
-
-        ring.style.animation = 'none';
-        ring.style.transform = `rotateY(${normalized}deg)`;
-        ring.classList.remove('paused');
-
-        void ring.offsetWidth; // Force reflow
-        ring.style.animation = `ringRotate ${duration}s linear 1 forwards, ringRotate ${CONFIG.ringAutoRotateSpeed}s linear ${duration}s infinite`;
-    }
-
-    ringPrevBtn?.addEventListener('click', () => rotateRingBy(36));
-    ringNextBtn?.addEventListener('click', () => rotateRingBy(-36));
-
     /* ==========================================================
-       🖼️ 4. MODAL LOGIC (Full Screen Lightbox)
+       🖼️ 4. MODAL LOGIC (Works with Mini + Grid)
        ========================================================== */
-    function openModal(index) {
-        if (!modal || index < 0 || index >= ringItems.length) return;
+    function openModal(index, sourceItems) {
+        if (!modal) return;
+        if (!sourceItems || sourceItems.length === 0) return;
+        if (index < 0 || index >= sourceItems.length) return;
+
+        modalSourceItems = sourceItems;
         modalIndex = index;
 
-        const item = ringItems[index];
+        const item = modalSourceItems[index];
 
         if (modalImg) {
             modalImg.style.animation = 'none';
@@ -554,9 +496,7 @@
 
         if (modalTitle) modalTitle.textContent = item.title || 'Untitled';
         if (modalDesc)  modalDesc.textContent  = item.desc  || 'No description available.';
-        if (modalCount) modalCount.textContent = `${index + 1} / ${ringItems.length}`;
-
-        if (ring) ring.classList.add('paused');
+        if (modalCount) modalCount.textContent = `${index + 1} / ${modalSourceItems.length}`;
 
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -566,20 +506,18 @@
         if (!modal) return;
         modal.classList.remove('active');
         document.body.style.overflow = '';
-        if (ring) ring.classList.remove('paused');
-        if (!manualRingRotation) resumeRingRotation();
     }
 
     function modalPrevSlide() {
-        if (ringItems.length === 0) return;
-        const newIdx = (modalIndex - 1 + ringItems.length) % ringItems.length;
-        openModal(newIdx);
+        if (modalSourceItems.length === 0) return;
+        const newIdx = (modalIndex - 1 + modalSourceItems.length) % modalSourceItems.length;
+        openModal(newIdx, modalSourceItems);
     }
 
     function modalNextSlide() {
-        if (ringItems.length === 0) return;
-        const newIdx = (modalIndex + 1) % ringItems.length;
-        openModal(newIdx);
+        if (modalSourceItems.length === 0) return;
+        const newIdx = (modalIndex + 1) % modalSourceItems.length;
+        openModal(newIdx, modalSourceItems);
     }
 
     modalClose?.addEventListener('click', (e) => { e.stopPropagation(); closeModal(); });
@@ -594,6 +532,7 @@
         if (e.key === 'ArrowRight') modalNextSlide();
     });
 
+    // Touch swipe on modal
     let touchStartX = 0;
     modal?.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
     modal?.addEventListener('touchend', (e) => {
@@ -604,7 +543,7 @@
     }, { passive: true });
 
     /* ==========================================================
-       🔒 UTILS & RESIZE
+       🔒 HELPERS
        ========================================================== */
     function escapeHTML(str) {
         if (!str) return '';
@@ -616,14 +555,9 @@
             .replace(/'/g, '&#39;');
     }
 
-    let resizeTimer;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-            if (ring) build3DRing();
-        }, 200);
-    });
-
+    /* ==========================================================
+       🔁 VISIBILITY
+       ========================================================== */
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
             stopHeroAutoRotate();
@@ -643,16 +577,13 @@
             allItems = await fetchSheetData();
             console.log('✅ Loaded total items:', allItems.length);
 
-            if (loading) loading.remove();
-
-            // Render whatever components exist on the active DOM page
+            // Render whichever components exist on the current page
             renderHeroSlider();
             renderMiniCard();
-            build3DRing();
+            renderGridGallery();
 
         } catch (err) {
             console.error('❌ Gallery initialization error:', err);
-            if (loading) loading.remove();
 
             if (heroContainer) {
                 heroContainer.innerHTML = `<div style="padding:20px; text-align:center; color:#ef4444; font-weight:bold;">Failed to load hero banner</div>`;
@@ -660,11 +591,11 @@
             if (milContainer) {
                 milContainer.innerHTML = `<div class="mil-empty"><i class="fa-solid fa-triangle-exclamation"></i><span>Failed to load mini gallery</span></div>`;
             }
-            if (ring) {
-                ring.innerHTML = `
-                    <div style="position:absolute; left:-160px; top:-30px; width:320px; text-align:center; color:#ef4444; display:flex; flex-direction:column; align-items:center; gap:14px;">
-                        <i class="fa-solid fa-triangle-exclamation" style="font-size:2.5rem;"></i>
-                        <span style="font-weight:600; font-size:0.9rem;">Failed to load 3D gallery</span>
+            if (gridContainer) {
+                gridContainer.innerHTML = `
+                    <div class="gallery-empty-state">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>Failed to load gallery</span>
                     </div>
                 `;
             }
@@ -672,4 +603,3 @@
     })();
 
 })();
-
