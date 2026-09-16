@@ -44,28 +44,21 @@ function fixImageUrl(url) {
     if (!url) return '';
     url = url.trim();
 
-    // 1. ImgBB වගේ සයිට් වලින් HTML Code එකක් වැරදිලා paste කරලා තිබ්බොත් ඒකෙන් src ලින්ක් එක විතරක් ගන්නවා
+    // 1. ImgBB වගේ සයිට් වලින් HTML Code එකක් (Embed code) වැරදිලා paste කරලා තිබ්බොත් ඒකෙන් src ලින්ක් එක විතරක් ගන්නවා
     const imgTagRegex = /<img[^>]+src=["']([^"']+)["']/;
     const htmlMatch = url.match(imgTagRegex);
     if (htmlMatch && htmlMatch[1]) {
-        url = htmlMatch[1];
+        return htmlMatch[1];
     }
 
-    // 2. Google Drive - /file/d/ format එක
-    const driveRegex = /drive\.google\.com\/file\/d\/([^\/]+)/;
+    // 2. Google Drive Links (file/d/ ID හෝ open?id= ID) ඔටෝම direct link බවට පත් කිරීම
+    const driveRegex = /(?:drive\.google\.com\/file\/d\/|drive\.google\.com\/open\?id=)([a-zA-Z0-9_-]+)/;
     const driveMatch = url.match(driveRegex);
     if (driveMatch && driveMatch[1]) {
         return `https://drive.google.com/uc?export=view&id=${driveMatch[1]}`;
     }
 
-    // 3. Google Drive - open?id= format එක
-    const driveOpenRegex = /drive\.google\.com\/open\?id=([^&]+)/;
-    const driveOpenMatch = url.match(driveOpenRegex);
-    if (driveOpenMatch && driveOpenMatch[1]) {
-        return `https://drive.google.com/uc?export=view&id=${driveOpenMatch[1]}`;
-    }
-
-    // 4. ImgBB direct link එකක් නම් (https://i.ibb.co/...) හෝ වෙනත් සාමාන්‍ය ලින්ක් එකක් නම් කෙලින්ම දෙනවා
+    // 3. වෙනත් සාමාන්‍ය ලින්ක් එකක් නම් (Direct ImgBB link වගේ) කෙලින්ම දෙනවා
     return url;
 }
 
@@ -111,7 +104,7 @@ function parseCSV(text) {
 
 async function fetchGalleryData() {
     try {
-        // 1. Fetch All Photos
+        // 1. Fetch All Photos (mini-image-library)
         const allRes = await fetch(ALL_PHOTOS_URL);
         const allText = await allRes.text();
         const allRows = parseCSV(allText);
@@ -129,17 +122,17 @@ async function fetchGalleryData() {
             }
         }
 
-        // 2. Fetch Albums
+        // 2. Fetch Albums (and merge them into allPhotosData)
         const albumRes = await fetch(ALBUMS_URL);
         const albumText = await albumRes.text();
         const albumRows = parseCSV(albumText);
         
         albumsData = {};
-        if (albumRows.length > 2) {
-            const albumNamesRow = albumRows[0];
+        if (albumRows.length > 2) { // අවම වශයෙන් Row 1 (Name), Row 2 (Headers), Row 3 (Data) තියෙන්න ඕනේ
+            const albumNamesRow = albumRows[0]; // පලවෙනි පේළියේ ඇල්බම් නම් තියෙනවා
             const albumCols = [];
 
-            // A1, D1, G1 වගේ තැන් වල Album Names තියෙනවා කියලා හිතමු (3 column groups)
+            // කොලම් 3න් 3ට ඇල්බම් නම් හොයාගන්නවා
             for (let i = 0; i < albumNamesRow.length; i += 3) {
                 let name = albumNamesRow[i];
                 if (name && name.trim() !== "") {
@@ -148,7 +141,7 @@ async function fetchGalleryData() {
                 }
             }
 
-            // Row 3 (index 2) ඉඳන් Data කියවීම
+            // Row 3 (index 2) ඉඳන් Data කියවීම. (Index 1 එකේ තියෙන url, titel, text header එක අතාරිනවා)
             for (let r = 2; r < albumRows.length; r++) {
                 const row = albumRows[r];
                 albumCols.forEach(album => {
@@ -157,11 +150,17 @@ async function fetchGalleryData() {
                     const desc = row[album.startIdx + 2];
 
                     if (url && url.trim() !== "") {
-                        albumsData[album.name].push({
+                        const photoObj = {
                             url: fixImageUrl(url),
-                            title: title || 'MSNS Gallery',
+                            title: title || album.name, // Title එකක් නැත්තන් Album නම දානවා
                             desc: desc || ''
-                        });
+                        };
+
+                        // Album එකට එකතු කරනවා
+                        albumsData[album.name].push(photoObj);
+                        
+                        // All Photos වලටත් අලුතින් එකතු කරනවා
+                        allPhotosData.push(photoObj);
                     }
                 });
             }
@@ -254,6 +253,9 @@ tabAll.addEventListener('click', () => {
     galleryGrid.style.display = 'grid';
     albumListGrid.style.display = 'none';
     albumViewContainer.style.display = 'none';
+
+    // All photos tab එකට එනකොට අලුත් data එක්ක render වෙන්න
+    renderGrid(allPhotosData, galleryGrid);
 });
 
 tabAlbums.addEventListener('click', () => {
