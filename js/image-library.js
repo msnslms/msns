@@ -39,26 +39,52 @@ const modalNext = document.getElementById('modalNext');
    1. UTILITIES (Google Drive & ImgBB Links Parser)
    ========================================== */
 
+// ✅ Google Drive File ID එකක් තියෙනවද කියලා බලලා ID එක විතරක් ගන්නවා
+function extractDriveId(url) {
+    if (!url) return null;
+
+    // Patterns:
+    // 1. https://drive.google.com/file/d/ FILE_ID /view?usp=...
+    // 2. https://drive.google.com/open?id= FILE_ID
+    // 3. https://drive.google.com/uc?id= FILE_ID
+    // 4. https://drive.google.com/uc?export=view&id= FILE_ID
+    // 5. https://drive.google.com/thumbnail?id= FILE_ID
+    // 6. https://lh3.googleusercontent.com/d/ FILE_ID
+    const patterns = [
+        /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]{20,})/,
+        /drive\.google\.com\/open\?id=([a-zA-Z0-9_-]{20,})/,
+        /drive\.google\.com\/uc\?(?:export=[a-z]+&)?id=([a-zA-Z0-9_-]{20,})/,
+        /drive\.google\.com\/thumbnail\?id=([a-zA-Z0-9_-]{20,})/,
+        /lh3\.googleusercontent\.com\/d\/([a-zA-Z0-9_-]{20,})/
+    ];
+
+    for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) return match[1];
+    }
+    return null;
+}
+
 // Google Drive හා ImgBB links නිවැරදිව direct image links බවට පත් කිරීම
 function fixImageUrl(url) {
     if (!url) return '';
     url = url.trim();
 
-    // 1. ImgBB වගේ සයිට් වලින් HTML Code එකක් (Embed code) වැරදිලා paste කරලා තිබ්බොත් ඒකෙන් src ලින්ක් එක විතරක් ගන්නවා
+    // 1. HTML Code එකක් (Embed code) වැරදිලා paste කරලා තිබ්බොත් ඒකෙන් src ලින්ක් එක විතරක් ගන්නවා
     const imgTagRegex = /<img[^>]+src=["']([^"']+)["']/;
     const htmlMatch = url.match(imgTagRegex);
     if (htmlMatch && htmlMatch[1]) {
-        return htmlMatch[1];
+        url = htmlMatch[1].trim();
     }
 
-    // 2. Google Drive Links (file/d/ ID හෝ open?id= ID) ඔටෝම direct link බවට පත් කිරීම
-    const driveRegex = /(?:drive\.google\.com\/file\/d\/|drive\.google\.com\/open\?id=)([a-zA-Z0-9_-]+)/;
-    const driveMatch = url.match(driveRegex);
-    if (driveMatch && driveMatch[1]) {
-        return `https://drive.google.com/uc?export=view&id=${driveMatch[1]}`;
+    // 2. Google Drive ID එකක් තියෙනවනම් thumbnail format එකට convert කරනවා
+    //    ✅ මේක තමයි දැන් හොඳටම වැඩ කරන format එක
+    const driveId = extractDriveId(url);
+    if (driveId) {
+        return `https://drive.google.com/thumbnail?id=${driveId}&sz=w1600`;
     }
 
-    // 3. වෙනත් සාමාන්‍ය ලින්ක් එකක් නම් (Direct ImgBB link වගේ) කෙලින්ම දෙනවා
+    // 3. වෙනත් සාමාන්‍ය ලින්ක් (ImgBB වගේ) කෙලින්ම දෙනවා
     return url;
 }
 
@@ -129,7 +155,7 @@ async function fetchGalleryData() {
         
         albumsData = {};
         if (albumRows.length > 2) { // අවම වශයෙන් Row 1 (Name), Row 2 (Headers), Row 3 (Data) තියෙන්න ඕනේ
-            const albumNamesRow = albumRows[0]; // පලවෙනි පේළියේ ඇල්බම් නම් තියෙනවා
+            const albumNamesRow = albumRows[0];
             const albumCols = [];
 
             // කොලම් 3න් 3ට ඇල්බම් නම් හොයාගන්නවා
@@ -141,7 +167,7 @@ async function fetchGalleryData() {
                 }
             }
 
-            // Row 3 (index 2) ඉඳන් Data කියවීම. (Index 1 එකේ තියෙන url, titel, text header එක අතාරිනවා)
+            // Row 3 (index 2) ඉඳන් Data කියවීම
             for (let r = 2; r < albumRows.length; r++) {
                 const row = albumRows[r];
                 albumCols.forEach(album => {
@@ -152,7 +178,7 @@ async function fetchGalleryData() {
                     if (url && url.trim() !== "") {
                         const photoObj = {
                             url: fixImageUrl(url),
-                            title: title || album.name, // Title එකක් නැත්තන් Album නම දානවා
+                            title: title || album.name,
                             desc: desc || ''
                         };
 
@@ -183,6 +209,32 @@ async function fetchGalleryData() {
    3. RENDERING
    ========================================== */
 
+// ✅ Image Error Fallback එකක් එකතු කරා - Thumbnail fail උනොත් ආයෙ try කරනවා
+function attachImageFallback(imgEl, originalUrl) {
+    imgEl.onerror = function () {
+        // මුලින්ම fail උනොත් alternative format එකක් try කරනවා
+        if (this.dataset.tried === '1') {
+            // දෙවෙනි වරටත් fail උනොත් placeholder පෙන්නනවා
+            this.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+                `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
+                    <rect width="100%" height="100%" fill="#1a1a2e"/>
+                    <text x="50%" y="50%" fill="#888" font-size="16" text-anchor="middle" dy=".3em" font-family="sans-serif">Image Unavailable</text>
+                </svg>`
+            );
+            this.onerror = null;
+        } else {
+            this.dataset.tried = '1';
+            // Google Drive ID එකක් නම් lh3 format එක try කරනවා
+            const driveId = extractDriveId(originalUrl);
+            if (driveId) {
+                this.src = `https://lh3.googleusercontent.com/d/${driveId}=w1600`;
+            } else {
+                this.src = originalUrl;
+            }
+        }
+    };
+}
+
 // සාමාන්‍ය ෆොටෝ ග්‍රිඩ් එකක් හැදීම (All Photos / Album Photos)
 function renderGrid(dataArray, container) {
     if (dataArray.length === 0) {
@@ -198,10 +250,21 @@ function renderGrid(dataArray, container) {
     dataArray.forEach((item, index) => {
         const card = document.createElement('div');
         card.className = 'gallery-card';
-        card.innerHTML = `
-            <img src="${item.url}" alt="${item.title}" loading="lazy">
-            <div class="gallery-card-title">${item.title}</div>
-        `;
+        
+        const img = document.createElement('img');
+        img.src = item.url;
+        img.alt = item.title;
+        img.loading = 'lazy';
+        img.referrerPolicy = 'no-referrer'; // ✅ Google Drive block වෙන එක නවත්තන්න
+        attachImageFallback(img, item.url);
+
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'gallery-card-title';
+        titleDiv.textContent = item.title;
+
+        card.appendChild(img);
+        card.appendChild(titleDiv);
+
         // ෆොටෝ එක Click කරාම Modal එක ඕපන් වෙන්න
         card.addEventListener('click', () => openModal(dataArray, index));
         container.appendChild(card);
@@ -230,11 +293,25 @@ function renderAlbumsList() {
 
         const card = document.createElement('div');
         card.className = 'gallery-card album-card';
-        card.innerHTML = `
-            <div class="album-count-badge"><i class="fa-solid fa-images"></i> ${photosInAlbum.length}</div>
-            <img src="${coverPhoto}" alt="${albumName}" loading="lazy">
-            <div class="gallery-card-title album-card-title">${albumName}</div>
-        `;
+        
+        const badge = document.createElement('div');
+        badge.className = 'album-count-badge';
+        badge.innerHTML = `<i class="fa-solid fa-images"></i> ${photosInAlbum.length}`;
+
+        const img = document.createElement('img');
+        img.src = coverPhoto;
+        img.alt = albumName;
+        img.loading = 'lazy';
+        img.referrerPolicy = 'no-referrer';
+        attachImageFallback(img, coverPhoto);
+
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'gallery-card-title album-card-title';
+        titleDiv.textContent = albumName;
+
+        card.appendChild(badge);
+        card.appendChild(img);
+        card.appendChild(titleDiv);
         
         // Album එක ක්ලික් කරාම ඒක ඇතුලට යන්න
         card.addEventListener('click', () => openAlbumView(albumName, photosInAlbum));
@@ -290,11 +367,13 @@ function openModal(dataArray, index) {
     currentImageIndex = index;
     updateModalContent();
     modal.classList.add('active');
-    document.body.style.overflow = 'hidden'; // යටින් Page එක scroll වෙන එක නවත්තන්න
+    document.body.style.overflow = 'hidden';
 }
 
 function updateModalContent() {
     const item = currentModalPhotos[currentImageIndex];
+    modalImg.referrerPolicy = 'no-referrer';
+    attachImageFallback(modalImg, item.url);
     modalImg.src = item.url;
     modalTitle.innerText = item.title;
     modalDesc.innerText = item.desc || '';
@@ -303,8 +382,8 @@ function updateModalContent() {
 
 function closeModal() {
     modal.classList.remove('active');
-    document.body.style.overflow = ''; // Scroll එක ආපහු දෙන්න
-    setTimeout(() => { modalImg.src = ''; }, 300); // Animation එක ඉවර උනාම Image එක අයින් කරන්න
+    document.body.style.overflow = '';
+    setTimeout(() => { modalImg.src = ''; }, 300);
 }
 
 function showNext() {
