@@ -433,58 +433,107 @@
         milContainer.addEventListener('mouseenter', stopMiniAutoRotate);
         milContainer.addEventListener('mouseleave', () => { if (miniItems.length > 1) resetMiniAutoRotate(); });
     }
+
     /* ==========================================================
-       🖼️ 2D GALLERY GRID LOGIC
+       🎬 3. 3D RING GALLERY LOGIC
        ========================================================== */
-    const galleryGrid = document.getElementById('galleryGrid');
+    function calcRingRadius() {
+        const isMobile = window.innerWidth <= 767;
+        const itemW = isMobile ? 140 : 220;
+        const n = ringItems.length || 1;
+        const idealR = itemW / (2 * Math.tan(Math.PI / n));
+        const minR = isMobile ? 320 : 480;
+        ringRadius = Math.max(minR, idealR * 1.25);
+        return ringRadius;
+    }
 
-    function renderGalleryGrid() {
-        if (!galleryGrid) return;
+    function build3DRing() {
+        if (!ring) return;
 
-        // ringItems වෙනුවට මෙතන අපි කෙලින්ම allItems පාවිච්චි කරනවා
-        if (allItems.length === 0) {
-            galleryGrid.innerHTML = `
-                <div class="gallery-empty-state" style="grid-column: 1 / -1; text-align: center; padding: 50px; color: #94a3b8;">
-                    <i class="fa-regular fa-images" style="font-size: 3rem; color: #f59e0b; margin-bottom: 15px;"></i>
-                    <h5>No images available</h5>
+        ringItems = allItems; // Displays all items in the 3D gallery
+
+        if (ringItems.length === 0) {
+            ring.innerHTML = `
+                <div style="position:absolute; left:-150px; top:-30px; width:300px; text-align:center; color:#94a3b8; display:flex; flex-direction:column; align-items:center; gap:14px;">
+                    <i class="fa-regular fa-images" style="font-size:2.5rem; color:#f59e0b; opacity:0.6;"></i>
+                    <span style="font-weight:600; font-size:0.9rem;">No images available</span>
                 </div>
             `;
             return;
         }
 
+        calcRingRadius();
+
+        const n = ringItems.length;
+        const angleStep = 360 / n;
         let html = '';
 
-        allItems.forEach((item, index) => {
+        ringItems.forEach((item, i) => {
+            const angle = i * angleStep;
+            const transform = `rotateY(${angle}deg) translateZ(${ringRadius}px)`;
+
             if (!item.hasImage) {
                 html += `
-                    <div class="gallery-item no-image" data-index="${index}">
+                    <div class="gallery-item no-image" data-index="${i}" style="transform: ${transform};">
                         <i class="fa-regular fa-image"></i>
                         <span>No Image</span>
                     </div>
                 `;
             } else {
                 html += `
-                    <div class="gallery-item" data-index="${index}">
+                    <div class="gallery-item" data-index="${i}" style="transform: ${transform};">
                         <img src="${escapeHTML(item.url)}" alt="${escapeHTML(item.title)}" loading="lazy"
                              onerror="this.closest('.gallery-item').classList.add('no-image'); this.closest('.gallery-item').innerHTML='<i class=&quot;fa-regular fa-image&quot;></i><span>No Image</span>';">
-                        <div class="gallery-item-overlay">
-                            <h6 class="gallery-item-title">${escapeHTML(item.title)}</h6>
-                        </div>
                     </div>
                 `;
             }
         });
 
-        galleryGrid.innerHTML = html;
+        ring.innerHTML = html;
 
-        // Grid එකේ පින්තූරයක් ක්ලික් කළාම Modal එක ඕපන් වෙන්න
-        galleryGrid.querySelectorAll('.gallery-item').forEach(el => {
+        ring.addEventListener('mouseenter', () => ring.classList.add('paused'));
+        ring.addEventListener('mouseleave', () => ring.classList.remove('paused'));
+
+        ring.querySelectorAll('.gallery-item').forEach(el => {
             el.addEventListener('click', () => {
                 const idx = parseInt(el.dataset.index, 10);
-                openModal(idx); // Modal එකේ පරණ logic එකටම පාස් කරනවා
+                openModal(idx);
             });
         });
     }
+
+    function rotateRingBy(deg) {
+        if (!ring) return;
+        manualRingRotation = true;
+        ring.classList.add('paused');
+        currentRingAngle += deg;
+
+        if (ringItems.length === 0) return;
+
+        ring.style.animation = 'none';
+        ring.style.transform = `rotateY(${currentRingAngle}deg)`;
+
+        clearTimeout(ringRotationTimer);
+        ringRotationTimer = setTimeout(resumeRingRotation, 4000);
+    }
+
+    function resumeRingRotation() {
+        if (!ring || ringItems.length === 0) return;
+        manualRingRotation = false;
+
+        const normalized = ((currentRingAngle % 360) + 360) % 360;
+        const duration = (CONFIG.ringAutoRotateSpeed * (360 - normalized)) / 360;
+
+        ring.style.animation = 'none';
+        ring.style.transform = `rotateY(${normalized}deg)`;
+        ring.classList.remove('paused');
+
+        void ring.offsetWidth; // Force reflow
+        ring.style.animation = `ringRotate ${duration}s linear 1 forwards, ringRotate ${CONFIG.ringAutoRotateSpeed}s linear ${duration}s infinite`;
+    }
+
+    ringPrevBtn?.addEventListener('click', () => rotateRingBy(36));
+    ringNextBtn?.addEventListener('click', () => rotateRingBy(-36));
 
     /* ==========================================================
        🖼️ 4. MODAL LOGIC (Full Screen Lightbox)
@@ -585,7 +634,7 @@
         }
     });
 
-        /* ==========================================================
+    /* ==========================================================
        🚀 INITIALIZATION
        ========================================================== */
     (async function init() {
@@ -594,20 +643,33 @@
             allItems = await fetchSheetData();
             console.log('✅ Loaded total items:', allItems.length);
 
-            // Loading icon එක අයින් කිරීම
-            const loading = document.querySelector('.gallery-loading-state');
             if (loading) loading.remove();
 
-            // 2D Grid එකට පින්තූර ටික දානවා
-            renderGalleryGrid();
+            // Render whatever components exist on the active DOM page
+            renderHeroSlider();
+            renderMiniCard();
+            build3DRing();
 
         } catch (err) {
             console.error('❌ Gallery initialization error:', err);
-            if (galleryGrid) {
-                galleryGrid.innerHTML = `
-                    <div style="grid-column: 1/-1; padding:20px; text-align:center; color:#ef4444; font-weight:bold;">
-                        <i class="fa-solid fa-triangle-exclamation"></i> Failed to load gallery
-                    </div>`;
+            if (loading) loading.remove();
+
+            if (heroContainer) {
+                heroContainer.innerHTML = `<div style="padding:20px; text-align:center; color:#ef4444; font-weight:bold;">Failed to load hero banner</div>`;
+            }
+            if (milContainer) {
+                milContainer.innerHTML = `<div class="mil-empty"><i class="fa-solid fa-triangle-exclamation"></i><span>Failed to load mini gallery</span></div>`;
+            }
+            if (ring) {
+                ring.innerHTML = `
+                    <div style="position:absolute; left:-160px; top:-30px; width:320px; text-align:center; color:#ef4444; display:flex; flex-direction:column; align-items:center; gap:14px;">
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size:2.5rem;"></i>
+                        <span style="font-weight:600; font-size:0.9rem;">Failed to load 3D gallery</span>
+                    </div>
+                `;
             }
         }
     })();
+
+})();
+
