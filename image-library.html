@@ -179,17 +179,39 @@
          ========================================================== -->
     <div class="content-wrapper">
 
-        <section id="gallery-section">
-            <div class="section-title"><span>All Photos</span></div>
+           <section id="gallery-section">
+            
+            <div class="gallery-tabs-container">
+                <button class="gallery-tab-btn active" id="tabAll">
+                    <i class="fa-solid fa-images"></i> All Photos
+                </button>
+                <button class="gallery-tab-btn" id="tabAlbums">
+                    <i class="fa-solid fa-folder-open"></i> Albums
+                </button>
+            </div>
 
+            <!-- All Photos පෙන්නන ග්‍රිඩ් එක -->
             <div class="gallery-grid" id="galleryGrid">
                 <div class="gallery-loading-state">
                     <i class="fa-solid fa-circle-notch fa-spin"></i>
-                    <span>Loading gallery...</span>
+                    <span>Loading Photos...</span>
                 </div>
             </div>
-        </section>
+            <div class="gallery-grid" id="albumListGrid" style="display: none;">
+            </div>
+            <div id="albumViewContainer" style="display: none;">
+                <div class="album-header">
+                    <button class="album-back-btn" id="btnBackToAlbums">
+                        <i class="fa-solid fa-arrow-left-long"></i> Back to Albums
+                    </button>
+                    <h3 class="current-album-title" id="currentAlbumTitle">Album Name</h3>
+                </div>
+                <div class="gallery-grid" id="albumPhotosGrid">
+                    <!-- Album එකේ ෆොටෝස් මෙතනට Load වෙයි -->
+                </div>
+            </div>
 
+        </section>
         <!-- Footer -->
         <footer>
             <p class="cr-text">© 2026 A/Maithripala Senanayake C.C</p>
