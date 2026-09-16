@@ -39,36 +39,10 @@ const modalNext = document.getElementById('modalNext');
    1. UTILITIES (Google Drive & ImgBB Links Parser)
    ========================================== */
 
-// ✅ Google Drive File ID එකක් තියෙනවද කියලා බලලා ID එක විතරක් ගන්නවා
-function extractDriveId(url) {
-    if (!url) return null;
-
-    // Patterns:
-    // 1. https://drive.google.com/file/d/ FILE_ID /view?usp=...
-    // 2. https://drive.google.com/open?id= FILE_ID
-    // 3. https://drive.google.com/uc?id= FILE_ID
-    // 4. https://drive.google.com/uc?export=view&id= FILE_ID
-    // 5. https://drive.google.com/thumbnail?id= FILE_ID
-    // 6. https://lh3.googleusercontent.com/d/ FILE_ID
-    const patterns = [
-        /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]{20,})/,
-        /drive\.google\.com\/open\?id=([a-zA-Z0-9_-]{20,})/,
-        /drive\.google\.com\/uc\?(?:export=[a-z]+&)?id=([a-zA-Z0-9_-]{20,})/,
-        /drive\.google\.com\/thumbnail\?id=([a-zA-Z0-9_-]{20,})/,
-        /lh3\.googleusercontent\.com\/d\/([a-zA-Z0-9_-]{20,})/
-    ];
-
-    for (const pattern of patterns) {
-        const match = url.match(pattern);
-        if (match && match[1]) return match[1];
-    }
-    return null;
-}
-
-// Google Drive හා ImgBB links නිවැරදිව direct image links බවට පත් කිරීම
-function fixImageUrl(url) {
-    if (!url) return '';
-    url = url.trim();
+// ✅ Google Drive හා වෙනත් links නිවැරදිව direct image links බවට පත් කිරීම (දෙවෙනි කෝඩ් එකේ සාර්ථක ක්‍රමය)
+function fixImageUrl(rawUrl) {
+    if (!rawUrl) return '';
+    let url = rawUrl.trim().replace(/^["']|["']$/g, '');
 
     // 1. HTML Code එකක් (Embed code) වැරදිලා paste කරලා තිබ්බොත් ඒකෙන් src ලින්ක් එක විතරක් ගන්නවා
     const imgTagRegex = /<img[^>]+src=["']([^"']+)["']/;
@@ -77,11 +51,10 @@ function fixImageUrl(url) {
         url = htmlMatch[1].trim();
     }
 
-    // 2. Google Drive ID එකක් තියෙනවනම් thumbnail format එකට convert කරනවා
-    //    ✅ මේක තමයි දැන් හොඳටම වැඩ කරන format එක
-    const driveId = extractDriveId(url);
-    if (driveId) {
-        return `https://drive.google.com/thumbnail?id=${driveId}&sz=w1600`;
+    // 2. Google Drive Link එකක් නම් lh3 format එකට convert කරනවා (මෙය හොඳින්ම වැඩ කරයි)
+    const driveMatch = url.match(/(?:\/file\/d\/|id=|uc\?.*id=|\/d\/)([a-zA-Z0-9_-]+)/);
+    if ((url.includes('drive.google.com') || url.includes('docs.google.com')) && driveMatch) {
+        return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
     }
 
     // 3. වෙනත් සාමාන්‍ය ලින්ක් (ImgBB වගේ) කෙලින්ම දෙනවා
@@ -154,11 +127,10 @@ async function fetchGalleryData() {
         const albumRows = parseCSV(albumText);
         
         albumsData = {};
-        if (albumRows.length > 2) { // අවම වශයෙන් Row 1 (Name), Row 2 (Headers), Row 3 (Data) තියෙන්න ඕනේ
+        if (albumRows.length > 2) { 
             const albumNamesRow = albumRows[0];
             const albumCols = [];
 
-            // කොලම් 3න් 3ට ඇල්බම් නම් හොයාගන්නවා
             for (let i = 0; i < albumNamesRow.length; i += 3) {
                 let name = albumNamesRow[i];
                 if (name && name.trim() !== "") {
@@ -167,7 +139,6 @@ async function fetchGalleryData() {
                 }
             }
 
-            // Row 3 (index 2) ඉඳන් Data කියවීම
             for (let r = 2; r < albumRows.length; r++) {
                 const row = albumRows[r];
                 albumCols.forEach(album => {
@@ -182,10 +153,7 @@ async function fetchGalleryData() {
                             desc: desc || ''
                         };
 
-                        // Album එකට එකතු කරනවා
                         albumsData[album.name].push(photoObj);
-                        
-                        // All Photos වලටත් අලුතින් එකතු කරනවා
                         allPhotosData.push(photoObj);
                     }
                 });
@@ -209,29 +177,16 @@ async function fetchGalleryData() {
    3. RENDERING
    ========================================== */
 
-// ✅ Image Error Fallback එකක් එකතු කරා - Thumbnail fail උනොත් ආයෙ try කරනවා
-function attachImageFallback(imgEl, originalUrl) {
+// ✅ Image Error Fallback එකක් එකතු කරා (Image එක ලෝඩ් වුණේ නැත්නම් පෙන්නනවා)
+function attachImageFallback(imgEl) {
     imgEl.onerror = function () {
-        // මුලින්ම fail උනොත් alternative format එකක් try කරනවා
-        if (this.dataset.tried === '1') {
-            // දෙවෙනි වරටත් fail උනොත් placeholder පෙන්නනවා
-            this.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(
-                `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
-                    <rect width="100%" height="100%" fill="#1a1a2e"/>
-                    <text x="50%" y="50%" fill="#888" font-size="16" text-anchor="middle" dy=".3em" font-family="sans-serif">Image Unavailable</text>
-                </svg>`
-            );
-            this.onerror = null;
-        } else {
-            this.dataset.tried = '1';
-            // Google Drive ID එකක් නම් lh3 format එක try කරනවා
-            const driveId = extractDriveId(originalUrl);
-            if (driveId) {
-                this.src = `https://lh3.googleusercontent.com/d/${driveId}=w1600`;
-            } else {
-                this.src = originalUrl;
-            }
-        }
+        this.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+            `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
+                <rect width="100%" height="100%" fill="#1a1a2e"/>
+                <text x="50%" y="50%" fill="#888" font-size="16" text-anchor="middle" dy=".3em" font-family="sans-serif">Image Unavailable</text>
+            </svg>`
+        );
+        this.onerror = null; // Prevent infinite loops
     };
 }
 
@@ -256,7 +211,7 @@ function renderGrid(dataArray, container) {
         img.alt = item.title;
         img.loading = 'lazy';
         img.referrerPolicy = 'no-referrer'; // ✅ Google Drive block වෙන එක නවත්තන්න
-        attachImageFallback(img, item.url);
+        attachImageFallback(img); // ලින්ක් එක වැඩ නැත්නම් Default image එක දානවා
 
         const titleDiv = document.createElement('div');
         titleDiv.className = 'gallery-card-title';
@@ -303,7 +258,7 @@ function renderAlbumsList() {
         img.alt = albumName;
         img.loading = 'lazy';
         img.referrerPolicy = 'no-referrer';
-        attachImageFallback(img, coverPhoto);
+        attachImageFallback(img);
 
         const titleDiv = document.createElement('div');
         titleDiv.className = 'gallery-card-title album-card-title';
@@ -373,7 +328,7 @@ function openModal(dataArray, index) {
 function updateModalContent() {
     const item = currentModalPhotos[currentImageIndex];
     modalImg.referrerPolicy = 'no-referrer';
-    attachImageFallback(modalImg, item.url);
+    attachImageFallback(modalImg);
     modalImg.src = item.url;
     modalTitle.innerText = item.title;
     modalDesc.innerText = item.desc || '';
