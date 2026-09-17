@@ -19,8 +19,7 @@
         '.governing-slider', '.section-title', '.hero-banner', '.hero-caption',
         '.news-banner', '.main-news-card', '.news-grid-item', '.news-grid-section',
         '.news-card', '.news-slider-container', '.quick-tab-card', '.quick-tabs-grid',
-       '.section-title','.mil-container','.mil-loading','.fa-solid','.fa-circle-notch',
-       '.fa-spin','.mil-dots','.mil-more-wrapper','.mil-more-btn'
+        '.mil-container', '.mil-dots', '.mil-more-wrapper', '.mil-more-btn',   // ✅ comma එක දැම්මා
 
         // About / Developer
         '.profile-container', '.bio-card', '.skill-card', '.chart-card',
@@ -39,7 +38,7 @@
         // Quiz / Exam
         '.qz-card', '.qz-news-card', '.qz-card-grid', '.qz-news-grid',
         '.qz-teacher-header', '.qz-student-header', '.qz-tabs', '.qz-empty-state',
-        '.exam-page-header', '.exam-search-card', '.exam-state-card', '.exam-tabs',
+        '.exam-page-header', '.exam-search-card', '.exam-state-card',
         '.summary-stat-card', '.analysis-summary-grid', '.exam-chart-card',
         '.charts-grid-exam', '.exam-table-card', '.print-actions',
 
@@ -55,8 +54,7 @@
     const SKIP_ANCESTORS = [
         'header', 'footer', 'aside.sidebar', '.sidebar', '.menu-overlay',
         '.qz-modal-overlay', '.modal-backdrop', '.paper-modal-overlay',
-        '.pdf-preview-overlay', '.preview-overlay', '.image-modal',
-        '.exam-tabs'
+        '.pdf-preview-overlay', '.preview-overlay', '.image-modal'
     ];
 
     function shouldSkip(el) {
@@ -129,7 +127,6 @@
             if (index >= 0) {
                 const delay = Math.min(index + 1, 8);
                 el.classList.add('delay-' + delay);
-                // Mobile වල delay අඩු කරනවා
                 if (DELAY_FACTOR < 1) {
                     el.style.transitionDelay = (delay * 0.05 * DELAY_FACTOR) + 's';
                 }
@@ -141,16 +138,12 @@
     function revealElement(el) {
         if (el.classList.contains('is-visible')) return;
 
-        // GPU layer එක කලින් activate කරනවා
         el.classList.add('reveal-prep');
 
-        // Next frame එකේ visible කරනවා (smoother transition)
         requestAnimationFrame(() => {
             el.classList.add('is-visible');
         });
 
-        // Animation ඉවර වුනාම GPU layer එක release කරනවා
-        // (මේක තමයි mobile lag fix කරන ප්‍රධාන කරුණ)
         const cleanupDelay = REVEAL_DURATION + 400;
         setTimeout(() => {
             el.classList.add('reveal-done');
@@ -163,7 +156,7 @@
         elementsToReveal.forEach(el => {
             el.classList.add('is-visible', 'reveal-done');
         });
-        return; // Observer setup අවශ්‍ය නැහැ
+        return;
     }
 
     /* ---------- 11. Intersection Observer ---------- */
@@ -188,7 +181,6 @@
             if (el.classList.contains('is-visible')) return;
             const rect = el.getBoundingClientRect();
             if (rect.top < vh * 0.9 && rect.bottom > 0) {
-                // Mobile වලට ටිකක් ඉක්මනට
                 const delay = isMobile ? 30 : 80;
                 setTimeout(() => {
                     revealElement(el);
@@ -213,7 +205,6 @@
             if (shouldSkip(el)) return;
             el.classList.add('scroll-reveal');
 
-            // Variant
             for (const [vSel, variant] of Object.entries(VARIANT_MAP)) {
                 if (el.matches(vSel)) {
                     el.classList.add(variant);
@@ -223,7 +214,6 @@
 
             observer.observe(el);
 
-            // දැනටමත් viewport එකේ තියෙනවා නම් ඉක්මනට reveal
             const rect = el.getBoundingClientRect();
             if (rect.top < window.innerHeight * 0.9 && rect.bottom > 0) {
                 setTimeout(() => {
@@ -252,7 +242,6 @@
             });
         });
 
-        // Debounce — batch process කරනවා (mobile performance)
         clearTimeout(mutationTimeout);
         mutationTimeout = setTimeout(processPendingNodes, isMobile ? 120 : 60);
     });
