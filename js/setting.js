@@ -15,7 +15,7 @@ const doNotTranslateList = [
   '#menuToggle',
   '#msnsLangFloat',
   '#msnsLangPopup',
-  '.grid-container',
+  '#co',
    '#backToTop'
 ];
 
