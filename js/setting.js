@@ -14,14 +14,20 @@ const doNotTranslateList = [
   '#closeMenu',
   '#menuToggle',
   '#msnsLangFloat',
-  '#msnsLangPopup',
-  '.cr-text',
-  '
-
+  '#msnsLangPopup'
 ];
 
-/* 2. STYLES INJECT කිරීම (සියලු CSS JS එක ඇතුළෙම) */
+/* 2. STYLES & FONTS INJECT කිරීම */
 function injectLanguageStyles() {
+  // Load Google Fonts dynamically for proper liquid glass styling
+  if (!document.getElementById('msns-lang-fonts-link')) {
+    const fontLink = document.createElement('link');
+    fontLink.id = 'msns-lang-fonts-link';
+    fontLink.rel = 'stylesheet';
+    fontLink.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap';
+    document.head.appendChild(fontLink);
+  }
+
   if (document.getElementById('msns-lang-styles')) return;
   const style = document.createElement('style');
   style.id = 'msns-lang-styles';
@@ -31,7 +37,7 @@ function injectLanguageStyles() {
       position: fixed;
       bottom: 24px;
       left: 20px;
-      z-index: 99998;
+      z-index: 999998;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -119,7 +125,7 @@ function injectLanguageStyles() {
       position: fixed;
       bottom: 90px;
       left: 20px;
-      z-index: 99999;
+      z-index: 999999;
       min-width: 210px;
       padding: 8px;
       background: rgba(255, 255, 255, 0.94);
@@ -193,7 +199,7 @@ function injectLanguageStyles() {
         left: 12px;
         min-width: 180px;
       }
-      .msns-lang-hint { display: none; } /* mobile = no hover */
+      .msns-lang-hint { display: none; }
     }
     @media (max-width: 360px) {
       .msns-lang-btn { width: 44px; height: 44px; }
@@ -288,7 +294,7 @@ function injectLanguageUI() {
     }
   });
 
-  /* Scroll කරාමත් Close (mobile UX) */
+  /* Scroll කරාමත් Close */
   window.addEventListener('scroll', () => popup.classList.remove('show'), { passive: true });
 
   updateActiveLangItem();
@@ -310,7 +316,6 @@ function selectLanguage(langCode, langName) {
 
   setGoogleTranslateCookie(langCode);
 
-  // English = original page reload
   if (langCode === 'en') {
     window.location.reload();
     return;
@@ -348,33 +353,30 @@ function triggerGoogleTranslate(langCode) {
   }, 100);
 }
 
-/* 8. Google Translate Callback */
-function googleTranslateElementInit() {
+/* 8. Google Translate Callback (Exposed Globally) */
+window.googleTranslateElementInit = function() {
   new google.translate.TranslateElement({
     pageLanguage: 'en',
     autoDisplay: false
   }, 'google_translate_element');
 
-  /* Google top bar එක body එක තල්ලු කිරීම වැළැක්වීම */
   setInterval(() => {
-    if (document.body.style.top && document.body.style.top !== '0px') {
+    if (document.body && document.body.style.top && document.body.style.top !== '0px') {
       document.body.style.top = '0px';
     }
   }, 200);
 
-  /* Save වී ඇති Language Auto Load */
   const savedLang = localStorage.getItem('msns_lang');
   if (savedLang && savedLang !== 'en') {
     triggerGoogleTranslate(savedLang);
     applyFontStyles(savedLang);
   }
-}
+};
 
 /* 9. Google Translate Script Dynamic Load */
 function loadGoogleTranslateScript() {
   if (document.getElementById('google-translate-script')) return;
 
-  // Hidden container
   if (!document.getElementById('google_translate_element')) {
     const el = document.createElement('div');
     el.id = 'google_translate_element';
@@ -400,7 +402,7 @@ function applyFontStyles(langCode) {
   if (langCode === 'si') {
     styleTag.innerHTML = `
       body, p, a, span, button, h1, h2, h3, h4, li {
-        font-family: 'Noto Sans Sinhala', 'Iskoola Pota', sans-serif !important;
+        font-family: 'Noto Sans Sinhala', sans-serif !important;
       }
       p, li, span { font-size: 0.95em !important; line-height: 1.65 !important; }
     `;
@@ -420,9 +422,8 @@ function applyFontStyles(langCode) {
   }
 }
 
-/* 11. INIT */
-document.addEventListener('DOMContentLoaded', () => {
-  /* notranslate යෙදීම */
+/* 11. SAFE INIT (DOM state එක පරික්ෂා කර ධාවනය කිරීම) */
+function initMSNSLanguage() {
   doNotTranslateList.forEach(selector => {
     try {
       document.querySelectorAll(selector).forEach(el => {
@@ -438,4 +439,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const savedLang = localStorage.getItem('msns_lang') || 'en';
   applyFontStyles(savedLang);
-});
+}
+
+// HTML එක load වී අවසන් වුවත් නැතත් ස්වයංක්‍රීයව ක්‍රියාත්මක වේ
+if (document.readyState === 'interactive' || document.readyState === 'complete') {
+  initMSNSLanguage();
+} else {
+  document.addEventListener('DOMContentLoaded', initMSNSLanguage);
+}
