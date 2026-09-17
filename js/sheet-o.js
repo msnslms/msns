@@ -1,5 +1,5 @@
 /* ==========================================================
-   📊 FULL-SCREEN SHEET FOLDER MODAL (Updated)
+   📊 FULL-SCREEN SHEET FOLDER MODAL (UPDATED)
    Google Drive Folder Embed
    ========================================================== */
 
@@ -11,9 +11,10 @@
        ========================================================== */
     const CONFIG = {
         folderId: '1SrM4SxX4XkDtW8GHgTfKEDULDNqth4vn',
-        // 'list' view එක grid එකට වඩා phone/pc දෙකටම ලස්සනට පේනවා 
-        // ඔයාට Grid ම ඕනේ නම් අගට #grid කියලා වෙනස් කරන්න.
-        folderUrl: 'https://drive.google.com/embeddedfolderview?id=1SrM4SxX4XkDtW8GHgTfKEDULDNqth4vn#list',
+        // Google Drive embedded folder view (grid layout)
+        folderUrl: 'https://drive.google.com/embeddedfolderview?id=1SrM4SxX4XkDtW8GHgTfKEDULDNqth4vn#grid',
+        // Direct link for fallback (If iframe fails)
+        directUrl: 'https://drive.google.com/drive/folders/1SrM4SxX4XkDtW8GHgTfKEDULDNqth4vn',
         title: 'Term Test Results'
     };
 
@@ -27,11 +28,10 @@
     const btnBack      = document.getElementById('sheetModalBack');
     const btnClose     = document.getElementById('sheetModalClose');
 
-    if (!modal || !iframe) return;
+    // ඔයාගේ HTML එකේ මේ ID එකත් තියෙනවා නම් විතරක් වැඩ කරයි (Loading Spinner එකක් සඳහා)
+    const spinner      = document.getElementById('sheetLoadingSpinner');
 
-    // iframe එකට අවශ්‍ය security permissions මෙතනින් දෙනවා (Sheets open වෙන්න)
-    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox');
-    iframe.setAttribute('allow', 'autoplay; fullscreen');
+    if (!modal || !iframe) return;
 
     /* ==========================================================
        🎯 STATE
@@ -49,7 +49,16 @@
         // Save scroll position
         previousScrollY = window.scrollY || window.pageYOffset || 0;
 
+        // Show loading spinner (if exists)
+        if (spinner) spinner.style.display = 'block';
+
+        // iframe එක ලෝඩ් වෙනකොට ස්පිනර් එක හයිඩ් කරන්න
+        iframe.onload = function() {
+            if (spinner) spinner.style.display = 'none';
+        };
+
         // Load folder in iframe
+        // මෙතන #grid කෝඩ් එක තියෙන්න ඕනේ හරියට grid view එකට එන්න
         iframe.src = CONFIG.folderUrl;
 
         // Show modal
@@ -88,9 +97,10 @@
         // Restore scroll position
         window.scrollTo(0, previousScrollY);
 
-        // Reset iframe after animation
+        // Reset iframe after animation (මෙකෙන් බැක්ග්‍රවුන්ඩ් ලෝඩින් නවත්තනවා)
         setTimeout(() => {
             if (iframe) iframe.src = 'about:blank';
+            if (spinner) spinner.style.display = 'none';
         }, 400);
 
         console.log('📊 Sheet folder modal closed');
@@ -102,13 +112,15 @@
     function goBackToFolder() {
         if (!iframe) return;
 
-        // Reload folder embed (this "resets" the view to root folder listing)
+        if (spinner) spinner.style.display = 'block';
+
+        // Reload folder embed (this "resets" the view to folder listing)
         iframe.src = 'about:blank';
         setTimeout(() => {
             iframe.src = CONFIG.folderUrl;
         }, 100);
 
-        console.log('⬅️ Reset to root folder view');
+        console.log('⬅️ Reset to folder view');
     }
 
     /* ==========================================================
