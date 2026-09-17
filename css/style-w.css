@@ -3832,4 +3832,309 @@ html, body {
         transition: none !important;
         animation: none !important;
     }
-                                }
+     }
+/* ==========================================================
+   📊 FULL-SCREEN SHEET FOLDER MODAL
+   ========================================================== */
+
+.sheet-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sheet-modal.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ---------- Blurred Backdrop ---------- */
+.sheet-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transition: opacity 0.35s ease;
+    cursor: pointer;
+}
+
+/* ---------- White Window ---------- */
+.sheet-modal-window {
+    position: relative;
+    width: 100%;
+    max-width: 1280px;
+    height: 90vh;
+    max-height: 90vh;
+    background: #ffffff;
+    border-radius: 24px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 
+        0 30px 80px rgba(0, 0, 0, 0.4),
+        0 0 60px rgba(220, 38, 38, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transform: scale(0.92) translateY(20px);
+    opacity: 0;
+    transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+                opacity 0.4s ease;
+    will-change: transform, opacity;
+}
+
+.sheet-modal.active .sheet-modal-window {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+/* ---------- Header Bar ---------- */
+.sheet-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #ffffff 0%, #fefce8 100%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    position: relative;
+    flex-shrink: 0;
+}
+
+/* Red-Gold gradient line at top */
+.sheet-modal-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #dc2626, #f59e0b, #dc2626);
+    background-size: 200% 100%;
+    animation: sheetLineFlow 4s ease infinite;
+}
+
+@keyframes sheetLineFlow {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+}
+
+/* ---------- Modal Buttons ---------- */
+.sheet-modal-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: #ffffff;
+    color: #334155;
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-family: inherit;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+}
+
+.sheet-modal-btn svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+/* Back button */
+.sheet-modal-back {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.12);
+    color: #334155;
+}
+
+.sheet-modal-back:hover {
+    background: #fef2f2;
+    border-color: rgba(220, 38, 38, 0.4);
+    color: #b91c1c;
+    transform: translateX(-2px);
+}
+
+/* Close button (circular, red) */
+.sheet-modal-close {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    background: rgba(220, 38, 38, 0.1);
+    border-color: rgba(220, 38, 38, 0.35);
+    color: #dc2626;
+}
+
+.sheet-modal-close:hover {
+    background: #dc2626;
+    color: #ffffff;
+    border-color: #dc2626;
+    transform: rotate(90deg) scale(1.08);
+    box-shadow: 0 0 20px rgba(220, 38, 38, 0.5);
+}
+
+/* ---------- Modal Title (center) ---------- */
+.sheet-modal-title {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #0f172a;
+    font-size: 0.92rem;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 10px;
+}
+
+.sheet-modal-title svg {
+    width: 16px;
+    height: 16px;
+    color: #b91c1c;
+    flex-shrink: 0;
+}
+
+/* ---------- Body / Iframe ---------- */
+.sheet-modal-body {
+    flex: 1;
+    position: relative;
+    background: #f8fafc;
+    overflow: hidden;
+}
+
+.sheet-modal-body iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: #ffffff;
+}
+
+/* ---------- Loading Spinner (behind iframe) ---------- */
+.sheet-modal-body::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    margin: -20px 0 0 -20px;
+    border: 3px solid rgba(220, 38, 38, 0.15);
+    border-top-color: #dc2626;
+    border-radius: 50%;
+    animation: sheetSpin 0.9s linear infinite;
+    z-index: 0;
+}
+
+@keyframes sheetSpin {
+    100% { transform: rotate(360deg); }
+}
+
+.sheet-modal-body iframe { z-index: 1; }
+
+/* ==========================================================
+   📱 MOBILE RESPONSIVE
+   ========================================================== */
+@media (max-width: 767.98px) {
+
+    .sheet-modal {
+        padding: 0;
+        align-items: stretch;
+        justify-content: stretch;
+    }
+
+    .sheet-modal-window {
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        max-width: 100%;
+        max-height: 100%;
+        border-radius: 0;
+        border: none;
+    }
+
+    .sheet-modal-header {
+        padding: 12px 14px;
+        gap: 8px;
+    }
+
+    .sheet-modal-btn {
+        height: 38px;
+        padding: 0 12px;
+        font-size: 0.75rem;
+        border-radius: 10px;
+    }
+
+    .sheet-modal-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .sheet-modal-close {
+        width: 38px;
+        height: 38px;
+        padding: 0;
+    }
+
+    /* Hide "Back" text on very small screens */
+    .sheet-modal-back span {
+        display: none;
+    }
+
+    .sheet-modal-back {
+        padding: 0;
+        width: 38px;
+    }
+
+    .sheet-modal-title {
+        font-size: 0.82rem;
+    }
+
+    .sheet-modal-title span {
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+/* ==========================================================
+   🖥️ DESKTOP — Bigger
+   ========================================================== */
+@media (min-width: 992px) {
+    .sheet-modal-window {
+        height: 88vh;
+        max-height: 88vh;
+    }
+}
+
+/* ==========================================================
+   ♿ REDUCED MOTION
+   ========================================================== */
+@media (prefers-reduced-motion: reduce) {
+    .sheet-modal,
+    .sheet-modal-window,
+    .sheet-modal-header::before,
+    .sheet-modal-body::before {
+        animation: none !important;
+        transition-duration: 0.01ms !important;
+    }
+       }
