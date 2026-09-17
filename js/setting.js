@@ -15,8 +15,8 @@ const doNotTranslateList = [
   '#menuToggle',
   '#msnsLangFloat',
   '#msnsLangPopup',
-  'info-card',
-   'card-text',
+  '.info-card',
+   '.card-text',
    '#backToTop'
 ];
 
@@ -38,7 +38,7 @@ function injectLanguageStyles() {
     /* --- Floating Button --- */
     .msns-lang-float {
       position: fixed;
-      bottom: 24px;
+      bottom: 40px; /* පොඩ්ඩක් උඩට ගත්තා (24px -> 40px) */
       left: 20px;
       z-index: 999998;
       display: flex;
@@ -49,8 +49,8 @@ function injectLanguageStyles() {
       -webkit-tap-highlight-color: transparent;
     }
     .msns-lang-btn {
-      width: 54px;
-      height: 54px;
+      width: 60px; /* සාමාන්‍ය ප්‍රමාණයකට ලොකු කළා (54px -> 60px) */
+      height: 60px; /* සාමාන්‍ය ප්‍රමාණයකට ලොකු කළා (54px -> 60px) */
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.82);
       backdrop-filter: blur(22px) saturate(180%);
@@ -82,8 +82,8 @@ function injectLanguageStyles() {
       pointer-events: none;
     }
     .msns-lang-btn svg {
-      width: 26px;
-      height: 26px;
+      width: 28px; /* අයිකන් එකත් ටිකක් ලොකු කළා (26px -> 28px) */
+      height: 28px;
       position: relative;
       z-index: 1;
     }
@@ -126,7 +126,7 @@ function injectLanguageStyles() {
     /* --- Popup --- */
     .msns-lang-popup {
       position: fixed;
-      bottom: 90px;
+      bottom: 110px; /* Button එක උඩට ගිය නිසා Popup එකත් උඩට ගත්තා (90px -> 110px) */
       left: 20px;
       z-index: 999999;
       min-width: 210px;
@@ -194,18 +194,18 @@ function injectLanguageStyles() {
 
     /* --- 📱 Mobile Responsive --- */
     @media (max-width: 640px) {
-      .msns-lang-float { bottom: 16px; left: 12px; gap: 0; }
-      .msns-lang-btn { width: 48px; height: 48px; }
-      .msns-lang-btn svg { width: 22px; height: 22px; }
+      .msns-lang-float { bottom: 30px; left: 12px; gap: 0; }
+      .msns-lang-btn { width: 54px; height: 54px; }
+      .msns-lang-btn svg { width: 24px; height: 24px; }
       .msns-lang-popup {
-        bottom: 76px;
+        bottom: 95px;
         left: 12px;
         min-width: 180px;
       }
       .msns-lang-hint { display: none; }
     }
     @media (max-width: 360px) {
-      .msns-lang-btn { width: 44px; height: 44px; }
+      .msns-lang-btn { width: 50px; height: 50px; }
     }
   `;
   document.head.appendChild(style);
@@ -450,3 +450,14 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
 } else {
   document.addEventListener('DOMContentLoaded', initMSNSLanguage);
 }
+
+/* 12. BFCache Handler (Back Button එකෙන් එද්දි Translation එක තියාගැනීම) */
+window.addEventListener('pageshow', function(event) {
+  if (event.persisted) {
+    const savedLang = localStorage.getItem('msns_lang');
+    if (savedLang && savedLang !== 'en') {
+      triggerGoogleTranslate(savedLang);
+      applyFontStyles(savedLang);
+    }
+  }
+});
