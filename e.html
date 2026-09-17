@@ -367,14 +367,69 @@
         </svg>
         <span>Term Test Results Student Analysis</span>
     </a>
-        <!-- Google sheet Button -->
-    <a href="e-sheet.html" class="ex">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
-            <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
-        </svg>
-        <span>Term Test Results(Documents)</span>
-    </a>
+        <!-- Google Sheet Button — Opens Folder Modal -->
+<a href="javascript:void(0)" class="ex" id="termSheetBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+        <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+    </svg>
+    <span>Term Test Results (Documents)</span>
+</a>
+</div>
+    <!-- ==========================================================
+     📊 FULL-SCREEN SHEET FOLDER MODAL
+     ========================================================== -->
+<div class="sheet-modal" id="sheetModal" aria-hidden="true">
+    
+    <!-- Blurred Backdrop -->
+    <div class="sheet-modal-backdrop" id="sheetModalBackdrop"></div>
+
+    <!-- White Window -->
+    <div class="sheet-modal-window" role="dialog" aria-modal="true">
+        
+        <!-- Header Bar -->
+        <div class="sheet-modal-header">
+            
+            <!-- Back Button -->
+            <button class="sheet-modal-btn sheet-modal-back" id="sheetModalBack" aria-label="Back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                <span>Back</span>
+            </button>
+
+            <!-- Title -->
+            <div class="sheet-modal-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                <span>Term Test Results</span>
+            </div>
+
+            <!-- Close Button -->
+            <button class="sheet-modal-btn sheet-modal-close" id="sheetModalClose" aria-label="Close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Body / Iframe -->
+        <div class="sheet-modal-body">
+            <iframe 
+                id="sheetModalIframe" 
+                src="about:blank" 
+                frameborder="0" 
+                allowfullscreen
+                allow="autoplay; fullscreen"
+                referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+        </div>
+
+    </div>
 </div>
 <!-- Scroll To Top Button -->
     <button id="backToTop" title="Go to top">↑</button>
@@ -426,6 +481,7 @@
         });
     </script>
     <script src="paw.js?v=2"></script>
+    <script src="sheet-o.js?v=2"></script>
     <script src="js/hide-f.js?v=2"></script>
     <script src="js/scroll-reveal.js?v=1"></script>
 </body>
