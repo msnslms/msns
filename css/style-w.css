@@ -4138,3 +4138,43 @@ html, body {
         transition-duration: 0.01ms !important;
     }
        }
+/* ==========================================================================
+   GOOGLE TRANSLATE TOP BAR & IFRAME HIDER (COMPLETE FIX)
+   ========================================================================== */
+
+/* 1. Google Translate මගින් සාදන සියලුම Top Banner / Dynamic Iframe Hide කිරීම */
+.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
+iframe.skiptranslate,
+iframe[id^=":"],
+iframe[src*="translate.googleapis.com"],
+iframe[src*="translate.google.com"],
+.VIpgJd-yA0Tne-SK102c,
+.VIpgJd-yA0Tne-SK102c-i5102x,
+.VIpgJd-yA0Tne-SK102c-M9Bg4e {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+}
+
+/* 2. Banner එක නිසා Body එක පහළට බැසීම සම්පූර්ණයෙන්ම නැවැත්වීම */
+html, body {
+    top: 0px !important;
+    position: static !important;
+    margin-top: 0px !important;
+}
+
+/* 3. වචන උඩට Mouse/Touch කළ විට එන Tooltip Popup Hide කිරීම */
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-tooltip {
+    display: none !important;
+}
+
+/* 4. Translate වූ වචන වල Highlight එක ඉවත් කිරීම */
+.goog-text-highlight {
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
