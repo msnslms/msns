@@ -371,6 +371,56 @@ modal.addEventListener('click', (e) => {
     }
 });
 
+/* ==========================================
+   6. 📱 MOBILE SWIPE (TOUCH) SUPPORT FOR MODAL
+   ========================================== */
+
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+const SWIPE_THRESHOLD = 50; // අඩුම pixel ගාන swipe එකක් විදියට සලකන්න
+
+// Touch එක පටන් ගන්නා තැන
+modal.addEventListener('touchstart', (e) => {
+    if (!modal.classList.contains('active')) return;
+    const touch = e.changedTouches[0];
+    touchStartX = touch.screenX;
+    touchStartY = touch.screenY;
+    touchEndX = touch.screenX;
+    touchEndY = touch.screenY;
+}, { passive: true });
+
+// ඇඟිල්ල තියාගෙන තියෙද්දි position එක update කරනවා
+modal.addEventListener('touchmove', (e) => {
+    if (!modal.classList.contains('active')) return;
+    const touch = e.changedTouches[0];
+    touchEndX = touch.screenX;
+    touchEndY = touch.screenY;
+}, { passive: true });
+
+// ඇඟිල්ල ගත්තාට පස්සේ swipe එකක්ද කියලා check කරනවා
+modal.addEventListener('touchend', (e) => {
+    if (!modal.classList.contains('active')) return;
+
+    const diffX = touchEndX - touchStartX; // තිරස් (horizontal) දුර
+    const diffY = touchEndY - touchStartY; // සිරස් (vertical) දුර
+
+    // Vertical swipe එකක් නම් (උඩ/පහළ) මොකුත් කරන්නේ නෑ
+    if (Math.abs(diffY) > Math.abs(diffX)) return;
+
+    // Horizontal swipe එකක් තිබ්බොත් විතරයි වැඩ කරන්නේ
+    if (Math.abs(diffX) > SWIPE_THRESHOLD) {
+        if (diffX < 0) {
+            // 👈 වමට swipe කරා = Next image
+            showNext();
+        } else {
+            // 👉 දකුණට swipe කරා = Previous image
+            showPrev();
+        }
+    }
+}, { passive: true });
+
 // ==========================================
 // 🚀 INITIATE FETCH ON LOAD
 // ==========================================
