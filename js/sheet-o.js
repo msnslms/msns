@@ -1,5 +1,5 @@
 /* ==========================================================
-   📊 FULL-SCREEN SHEET FOLDER MODAL
+   📊 FULL-SCREEN SHEET FOLDER MODAL (Updated)
    Google Drive Folder Embed
    ========================================================== */
 
@@ -11,8 +11,9 @@
        ========================================================== */
     const CONFIG = {
         folderId: '1SrM4SxX4XkDtW8GHgTfKEDULDNqth4vn',
-        // Google Drive embedded folder view (grid layout)
-        folderUrl: 'https://drive.google.com/embeddedfolderview?id=1SrM4SxX4XkDtW8GHgTfKEDULDNqth4vn#grid',
+        // 'list' view එක grid එකට වඩා phone/pc දෙකටම ලස්සනට පේනවා 
+        // ඔයාට Grid ම ඕනේ නම් අගට #grid කියලා වෙනස් කරන්න.
+        folderUrl: 'https://drive.google.com/embeddedfolderview?id=1SrM4SxX4XkDtW8GHgTfKEDULDNqth4vn#list',
         title: 'Term Test Results'
     };
 
@@ -27,6 +28,10 @@
     const btnClose     = document.getElementById('sheetModalClose');
 
     if (!modal || !iframe) return;
+
+    // iframe එකට අවශ්‍ය security permissions මෙතනින් දෙනවා (Sheets open වෙන්න)
+    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox');
+    iframe.setAttribute('allow', 'autoplay; fullscreen');
 
     /* ==========================================================
        🎯 STATE
@@ -97,13 +102,13 @@
     function goBackToFolder() {
         if (!iframe) return;
 
-        // Reload folder embed (this "resets" the view to folder listing)
+        // Reload folder embed (this "resets" the view to root folder listing)
         iframe.src = 'about:blank';
         setTimeout(() => {
             iframe.src = CONFIG.folderUrl;
         }, 100);
 
-        console.log('⬅️ Reset to folder view');
+        console.log('⬅️ Reset to root folder view');
     }
 
     /* ==========================================================
