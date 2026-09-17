@@ -19,6 +19,7 @@
         '.governing-slider', '.section-title', '.hero-banner', '.hero-caption',
         '.news-banner', '.main-news-card', '.news-grid-item', '.news-grid-section',
         '.news-card', '.news-slider-container', '.quick-tab-card', '.quick-tabs-grid',
+       'section-title','mil-container','mil-loading','fa-solid','fa-circle-notch','fa-spin','mil-dots','mil-more-wrapper','mil-more-btn'
 
         // About / Developer
         '.profile-container', '.bio-card', '.skill-card', '.chart-card',
