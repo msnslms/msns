@@ -16,7 +16,9 @@ const doNotTranslateList = [
   '#msnsLangFloat',
   '#msnsLangPopup',
   '#contact-info',
-   '#backToTop'
+   '#backToTop',
+   '.msns-navbar-brand-name',
+   '.msns-navbar-brand-sub'
 ];
 
 /* 2. STYLES & FONTS INJECT කිරීම */
@@ -327,15 +329,35 @@ function selectLanguage(langCode, langName) {
   applyFontStyles(langCode);
 }
 
-/* 6. Google Translate Cookie */
+/* 6. Google Translate Cookie (Robust — subdomain + root domain support) */
 function setGoogleTranslateCookie(langCode) {
-  const domain = window.location.hostname;
+  const host = window.location.hostname;
+
+  // Root domain එක හදාගැනීම (www.example.com -> .example.com)
+  const parts = host.split('.');
+  let rootDomain = null;
+  if (parts.length > 2) {
+    rootDomain = '.' + parts.slice(-2).join('.');
+  } else if (parts.length === 2) {
+    rootDomain = '.' + host;
+  }
+
+  // හැකි හැම path/domain combo එකකටම cookie එක set කරනවා
+  const targets = ['path=/'];
+  if (host && host !== 'localhost') targets.push(`path=/; domain=${host}`);
+  if (rootDomain) targets.push(`path=/; domain=${rootDomain}`);
+
   if (langCode === 'en') {
-    document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-    document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${domain}`;
+    // English = translation එක අයින් කිරීම
+    targets.forEach(t => {
+      document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; ${t}`;
+      document.cookie = `googtrans=/en/en; expires=Thu, 01 Jan 1970 00:00:00 UTC; ${t}`;
+    });
   } else {
-    document.cookie = `googtrans=/en/${langCode}; path=/;`;
-    document.cookie = `googtrans=/en/${langCode}; path=/; domain=${domain}`;
+    const val = `/en/${langCode}`;
+    targets.forEach(t => {
+      document.cookie = `googtrans=${val}; ${t}`;
+    });
   }
 }
 
@@ -359,7 +381,8 @@ function triggerGoogleTranslate(langCode) {
 window.googleTranslateElementInit = function() {
   new google.translate.TranslateElement({
     pageLanguage: 'en',
-    autoDisplay: false
+    autoDisplay: false,
+    includedLanguages: 'en,si,ta'
   }, 'google_translate_element');
 
   setInterval(() => {
@@ -368,9 +391,22 @@ window.googleTranslateElementInit = function() {
     }
   }, 200);
 
+  // Cookie එකෙන් auto-translate නොවුනොත් force trigger කරනවා
   const savedLang = localStorage.getItem('msns_lang');
   if (savedLang && savedLang !== 'en') {
-    triggerGoogleTranslate(savedLang);
+    let tries = 0;
+    const t = setInterval(() => {
+      tries++;
+      const combo = document.querySelector('.goog-te-combo');
+      if (combo) {
+        combo.value = savedLang;
+        combo.dispatchEvent(new Event('change'));
+        clearInterval(t);
+      } else if (tries >= 30) {
+        clearInterval(t);
+      }
+    }, 200);
+
     applyFontStyles(savedLang);
   }
 };
@@ -437,9 +473,12 @@ function initMSNSLanguage() {
 
   injectLanguageStyles();
   injectLanguageUI();
-  loadGoogleTranslateScript();
 
+  // ⭐ වැදගත්ම වෙනස්කම: GT script එක load කරන්න කලින් cookie එක set කරනවා
   const savedLang = localStorage.getItem('msns_lang') || 'en';
+  setGoogleTranslateCookie(savedLang);
+
+  loadGoogleTranslateScript();
   applyFontStyles(savedLang);
 }
 
