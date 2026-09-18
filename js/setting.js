@@ -321,11 +321,15 @@ function injectLanguageUI() {
     }, 3000);
   });
 
-  // වෙනත් ඕනෑම user interaction එකකදී (click, move, scroll) timer එක reset වේ
+  // ⭐ Button එක ඔබද්දී විතරක් opacity එක වැඩි වීමට (Click සහ Touch)
   floatBtn.addEventListener('click', resetIdleTimer);
-  document.addEventListener('mousemove', resetIdleTimer, { passive: true });
-  document.addEventListener('touchstart', resetIdleTimer, { passive: true });
-  document.addEventListener('scroll', resetIdleTimer, { passive: true });
+  floatBtn.addEventListener('touchstart', resetIdleTimer, { passive: true });
+  
+  /* ⭐ වෙනස්කම: කලින් තිබ්බ පහත document මට්ටමේ event listeners ඉවත් කරන ලදී 
+     (කොහේ හරි එබුවම හෝ මවුස් එක චලනය කරාම opacity වැඩි වීම නවත්වන්න) */
+  // document.addEventListener('mousemove', resetIdleTimer, { passive: true });
+  // document.addEventListener('touchstart', resetIdleTimer, { passive: true });
+  // document.addEventListener('scroll', resetIdleTimer, { passive: true });
   /* ========================================================= */
 
   /* Button Click → Popup Toggle */
@@ -350,14 +354,16 @@ function injectLanguageUI() {
     if (!e.target.closest('#msnsLangFloat') &&
         !e.target.closest('#msnsLangPopup')) {
       popup.classList.remove('show');
-      resetIdleTimer(); // Popup එක close වූ පසු නැවත timer එක start කරයි
+      // Popup එක close වූ පසු නැවත timer එක start කරයි (කොහෙවත් එබුවම opacity වැඩි නොවී, නැවත තත්පර 3න් fade වේ)
+      resetIdleTimer(); 
     }
   });
 
   /* Scroll කරාමත් Close */
   window.addEventListener('scroll', () => {
     popup.classList.remove('show');
-    resetIdleTimer(); // Scroll කළ පසු නැවත timer එක start කරයි
+    // Scroll කළ පසු නැවත timer එක start කරයි
+    resetIdleTimer(); 
   }, { passive: true });
 
   updateActiveLangItem();
