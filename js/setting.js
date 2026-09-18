@@ -489,11 +489,18 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
   document.addEventListener('DOMContentLoaded', initMSNSLanguage);
 }
 
-/* 12. BFCache Handler (Back Button එකෙන් එද්දි Translation එක තියාගැනීම) */
+/* 12. BFCache & History Navigation Handler (Back Button Fix) */
 window.addEventListener('pageshow', function(event) {
+  const savedLang = localStorage.getItem('msns_lang');
+  
+  // Page එක BFCache (Back/Forward Button) හරහා load වුණා නම්
+  // page එක සම්පූර්ණයෙන්ම refresh කරලා translation එක හරියටම ගන්නවා (DOM corruption නැතිවෙන්න)
   if (event.persisted) {
-    const savedLang = localStorage.getItem('msns_lang');
+    window.location.reload();
+  } else {
+    // සාමාන්‍ය Back navigation එකකදී fallback එකක් විදියට check කරලා apply කරනවා
     if (savedLang && savedLang !== 'en') {
+      setGoogleTranslateCookie(savedLang);
       triggerGoogleTranslate(savedLang);
       applyFontStyles(savedLang);
     }
