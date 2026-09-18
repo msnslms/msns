@@ -292,19 +292,19 @@ function injectLanguageUI() {
   document.body.appendChild(popup);
 
   /* =========================================================
-     ⭐ අලුතින් එකතු කළ කොටස: Auto Fade Logic (තත්පර 3කට පසු)
+     ⭐ අලුතින් එකතු කළ කොටස: Auto Fade Logic (තත්පර 1.5කට පසු)
      ========================================================= */
   let idleTimer;
   const resetIdleTimer = () => {
     if (idleTimer) clearTimeout(idleTimer);
     floatBtn.classList.remove('idle-fade');
     
-    // Popup එක open කර නැත්නම් විතරක් තත්පර 3කට පසු fade වෙන්න සකසයි
+    // Popup එක open කර නැත්නම් විතරක් තත්පර 1.5කට පසු fade වෙන්න සකසයි
     idleTimer = setTimeout(() => {
       if (!popup.classList.contains('show')) {
         floatBtn.classList.add('idle-fade');
       }
-    }, 3000); // තත්පර 3 (3000 milliseconds)
+    }, 1500); // තත්පර 1.5 (1500 milliseconds)
   };
 
   // පලමු වරට page එක load වූ විට timer එක start කිරීම
@@ -318,7 +318,7 @@ function injectLanguageUI() {
       if (!popup.classList.contains('show')) {
         floatBtn.classList.add('idle-fade');
       }
-    }, 3000);
+    }, 1500); // තත්පර 1.5 (1500 milliseconds)
   });
 
   // ⭐ Button එක ඔබද්දී විතරක් opacity එක වැඩි වීමට (Click සහ Touch)
@@ -354,7 +354,7 @@ function injectLanguageUI() {
     if (!e.target.closest('#msnsLangFloat') &&
         !e.target.closest('#msnsLangPopup')) {
       popup.classList.remove('show');
-      // Popup එක close වූ පසු නැවත timer එක start කරයි (කොහෙවත් එබුවම opacity වැඩි නොවී, නැවත තත්පර 3න් fade වේ)
+      // Popup එක close වූ පසු නැවත timer එක start කරයි (කොහෙවත් එබුවම opacity වැඩි නොවී, නැවත තත්පර 1.5න් fade වේ)
       resetIdleTimer(); 
     }
   });
