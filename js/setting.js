@@ -18,7 +18,16 @@ const doNotTranslateList = [
   '#contact-info',
    '#backToTop',
    '.msns-navbar-brand-name',
-   '.msns-navbar-brand-sub'
+   '.msns-navbar-brand-sub',
+   '.idEmail',
+   '.roleBadge',
+   '.idEmail',
+   '.idAvatar',
+   '.msns-nav-link active-link',
+   '.msns-nav-link',
+   '.msns-navbar-menu',
+   '.msns-navbar-inner',
+   '.msns-desktop-navbar'
 ];
 
 /* 2. STYLES & FONTS INJECT කිරීම */
