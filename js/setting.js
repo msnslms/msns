@@ -57,6 +57,15 @@ function injectLanguageStyles() {
       cursor: pointer;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.8s ease; /* Auto fade වීමට transition එක */
+    }
+    /* Auto fade වූ විට opacity අඩු වීම */
+    .msns-lang-float.idle-fade {
+      opacity: 0.15;
+    }
+    /* Hover හෝ Click කළ විට නැවත පැහැදිලි වීම */
+    .msns-lang-float:hover, .msns-lang-float:active {
+      opacity: 1 !important;
     }
     .msns-lang-btn {
       width: 60px; /* සාමාන්‍ය ප්‍රමාණයකට ලොකු කළා (54px -> 60px) */
@@ -282,6 +291,43 @@ function injectLanguageUI() {
   document.body.appendChild(floatBtn);
   document.body.appendChild(popup);
 
+  /* =========================================================
+     ⭐ අලුතින් එකතු කළ කොටස: Auto Fade Logic (තත්පර 3කට පසු)
+     ========================================================= */
+  let idleTimer;
+  const resetIdleTimer = () => {
+    if (idleTimer) clearTimeout(idleTimer);
+    floatBtn.classList.remove('idle-fade');
+    
+    // Popup එක open කර නැත්නම් විතරක් තත්පර 3කට පසු fade වෙන්න සකසයි
+    idleTimer = setTimeout(() => {
+      if (!popup.classList.contains('show')) {
+        floatBtn.classList.add('idle-fade');
+      }
+    }, 3000); // තත්පර 3 (3000 milliseconds)
+  };
+
+  // පලමු වරට page එක load වූ විට timer එක start කිරීම
+  resetIdleTimer();
+
+  // Button එක මතට mouse එක ගෙන ආ විට හා ඉවත් කළ විට
+  floatBtn.addEventListener('mouseenter', resetIdleTimer);
+  floatBtn.addEventListener('mouseleave', () => {
+    if (idleTimer) clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      if (!popup.classList.contains('show')) {
+        floatBtn.classList.add('idle-fade');
+      }
+    }, 3000);
+  });
+
+  // වෙනත් ඕනෑම user interaction එකකදී (click, move, scroll) timer එක reset වේ
+  floatBtn.addEventListener('click', resetIdleTimer);
+  document.addEventListener('mousemove', resetIdleTimer, { passive: true });
+  document.addEventListener('touchstart', resetIdleTimer, { passive: true });
+  document.addEventListener('scroll', resetIdleTimer, { passive: true });
+  /* ========================================================= */
+
   /* Button Click → Popup Toggle */
   floatBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -304,11 +350,15 @@ function injectLanguageUI() {
     if (!e.target.closest('#msnsLangFloat') &&
         !e.target.closest('#msnsLangPopup')) {
       popup.classList.remove('show');
+      resetIdleTimer(); // Popup එක close වූ පසු නැවත timer එක start කරයි
     }
   });
 
   /* Scroll කරාමත් Close */
-  window.addEventListener('scroll', () => popup.classList.remove('show'), { passive: true });
+  window.addEventListener('scroll', () => {
+    popup.classList.remove('show');
+    resetIdleTimer(); // Scroll කළ පසු නැවත timer එක start කරයි
+  }, { passive: true });
 
   updateActiveLangItem();
 }
