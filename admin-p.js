@@ -1165,3 +1165,524 @@ async function loadGeminiKeys() {
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('a-sw.js').catch(() => {});
 }
+/* ==========================================================
+   TERM TEST — TEST PREVIEW + ANALYSIS (O/L & A/L) + PDF
+   ========================================================== */
+import {
+    getFirestore, collection, query, where, getDocs,
+    doc as fsDoc, setDoc, serverTimestamp, addDoc
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+// Reuse your existing firebase app/db exports. If your admin-p.js
+// already has `db` exported/imported, remove the next line.
+const _db = window.__MSNS_DB__ || null;
+
+/* ---------- Grade helper ---------- */
+function calcGrade(m) {
+    const x = parseFloat(m);
+    if (isNaN(x)) return 'W';
+    if (x >= 75) return 'A';
+    if (x >= 65) return 'B';
+    if (x >= 55) return 'C';
+    if (x >= 35) return 'S';
+    return 'W';
+}
+
+function isPassGrade(g) { return g === 'A' || g === 'B' || g === 'C' || g === 'S'; }
+function isCreditGrade(g) { return g === 'A' || g === 'B' || g === 'C'; }
+
+/* ---------- Filter valid subject entries ---------- */
+function getSubjects(resultsObj) {
+    if (!resultsObj) return [];
+    return Object.entries(resultsObj).filter(([s]) => {
+        const k = s.toLowerCase().trim();
+        return !k.includes('grade') && !k.includes('class') && !k.includes('stream') && !k.includes('position');
+    });
+}
+
+/* ==========================================================
+   1) TEST RESULT PREVIEW
+   ========================================================== */
+const btnTest = document.getElementById('btnTestResult');
+btnTest?.addEventListener('click', async () => {
+    const year   = document.getElementById('testYear')?.value.trim();
+    const term   = document.getElementById('testTerm')?.value;
+    const grade  = document.getElementById('testGrade')?.value;
+    const cls    = document.getElementById('testClass')?.value;
+    const idx    = document.getElementById('testIndex')?.value.trim();
+
+    const out = document.getElementById('testResultOutput');
+    if (!out) return;
+
+    if (!year || !term || !grade) { showAdminToast?.('Please fill Year/Term/Grade', 'error'); return; }
+
+    out.style.display = 'block';
+    out.innerHTML = `<div class="test-empty-msg"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>`;
+
+    try {
+        const filters = [
+            where('year', '==', String(year)),
+            where('term', '==', term),
+            where('grade', '==', String(grade))
+        ];
+        if (cls) filters.push(where('class', '==', cls));
+        if (idx) filters.push(where('indexNumber', '==', idx));
+
+        const q = query(collection(window.db || db, 'term-test-student-results'), ...filters);
+        const snap = await getDocs(q);
+
+        if (snap.empty) {
+            out.innerHTML = `<div class="test-empty-msg"><i class="fa-solid fa-circle-info"></i> No records found for this filter.</div>`;
+            return;
+        }
+
+        // Random pick if no index given
+        const docs = snap.docs.map(d => d.data());
+        const student = idx ? docs[0] : docs[Math.floor(Math.random() * docs.length)];
+
+        const results = student.results || {};
+        const subjects = getSubjects(results);
+
+        // Build pass/fail per O/L & A/L rules
+        const gradeNum = parseInt(student.grade);
+        let passStatus = 'FAIL';
+        let statusText = '';
+
+        if (gradeNum === 10 || gradeNum === 11) {
+            // O/L rules: >=6 passes with A/B/C/S AND >=3 credits (A/B/C) including Sinhala
+            const passes = subjects.filter(([, m]) => isPassGrade(calcGrade(m))).length;
+            const credits = subjects.filter(([, m]) => isCreditGrade(calcGrade(m)));
+            const hasSinhalaCredit = credits.some(([s]) => s.toLowerCase().includes('sinhala'));
+            if (passes >= 6 && credits.length >= 3 && hasSinhalaCredit) {
+                passStatus = 'PASS';
+                statusText = `Passed with ${passes} subjects (${credits.length} credits incl. Sinhala)`;
+            } else {
+                statusText = `Passes: ${passes}/6, Credits: ${credits.length}/3${hasSinhalaCredit ? '' : ' (no Sinhala credit)'}`;
+            }
+        } else if (gradeNum === 12 || gradeNum === 13) {
+            // A/L rules: >=3 S passes
+            const sPasses = subjects.filter(([, m]) => isPassGrade(calcGrade(m))).length;
+            if (sPasses >= 3) {
+                passStatus = 'PASS';
+                statusText = `Passed with ${sPasses} S-grade subjects`;
+            } else {
+                statusText = `S passes: ${sPasses}/3`;
+            }
+        } else {
+            statusText = 'Preview for O/L & A/L only';
+        }
+
+        // Render
+        const subjHTML = subjects.map(([sub, marks]) => {
+            const g = calcGrade(marks);
+            return `<div class="test-result-subject">
+                <span class="sub-name">${sub}</span>
+                <span>
+                    <span class="sub-marks">${marks}</span>
+                    <span class="sub-grade grade-${g}">${g}</span>
+                </span>
+            </div>`;
+        }).join('');
+
+        out.innerHTML = `
+            <div class="test-result-header">
+                <div>
+                    <h4><i class="fa-solid fa-user-graduate"></i> ${student.name || 'Unknown'}</h4>
+                    <p style="color:var(--text-muted); font-size:0.82rem; margin-top:4px;">
+                        Index: ${student.indexNumber || '—'} • Grade ${student.grade || '—'} - Class ${student.class || '—'} • ${student.stream || ''}
+                    </p>
+                </div>
+                <span class="test-result-pill ${passStatus === 'PASS' ? 'pill-pass' : 'pill-fail'}">
+                    ${passStatus}
+                </span>
+            </div>
+            <div class="test-result-grid">
+                <div class="tr-item">Year<strong>${student.year || '—'}</strong></div>
+                <div class="tr-item">Term<strong>${student.term || '—'}</strong></div>
+                <div class="tr-item">Total<strong>${student.total || '—'}</strong></div>
+                <div class="tr-item">Average<strong>${student.average || '—'}</strong></div>
+                <div class="tr-item">Position<strong>${student.position || '—'}</strong></div>
+                <div class="tr-item">Status<strong style="color:${passStatus === 'PASS' ? '#34d399' : '#f87171'}">${statusText}</strong></div>
+            </div>
+            <div class="test-result-subjects">${subjHTML}</div>
+        `;
+
+        showAdminToast?.(`Result loaded for ${student.name || student.indexNumber}`, 'ok');
+    } catch (err) {
+        console.error(err);
+        out.innerHTML = `<div class="test-empty-msg" style="color:#f87171;"><i class="fa-solid fa-triangle-exclamation"></i> ${err.message}</div>`;
+    }
+});
+
+/* ==========================================================
+   2) ANALYSIS ENGINE
+   ========================================================== */
+let olCharts = { pf: null, grade: null };
+let alCharts = { pf: null, grade: null };
+let olAnalysisData = null;
+let alAnalysisData = null;
+
+/* Load available years into dropdowns */
+async function loadAnalysisYears() {
+    const snapshot = await getDocs(collection(window.db || db, 'term-test-student-results'));
+    const yearSet = new Set();
+    snapshot.forEach(d => { const y = d.data().year; if (y) yearSet.add(String(y)); });
+    const years = Array.from(yearSet).sort((a, b) => b - a);
+    if (!years.length) years.push(String(new Date().getFullYear()));
+
+    ['olAnalysisYear', 'alAnalysisYear'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        sel.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+    });
+}
+
+/* Core analysis calculation */
+function computeAnalysis(students, mode) {
+    // mode = 'ol' | 'al'
+    const summary = {
+        total: students.length,
+        passed: 0,
+        failed: 0,
+        gradeBreakdown: {},       // { '10': {total, passed, failed}, '11': {...} }
+        subjectStats: {},         // { subject: {A,B,C,S,W, passRate} }
+        students: []
+    };
+
+    students.forEach(st => {
+        const g = String(st.grade || '');
+        if (!summary.gradeBreakdown[g]) summary.gradeBreakdown[g] = { total: 0, passed: 0, failed: 0 };
+        summary.gradeBreakdown[g].total++;
+
+        const subjects = getSubjects(st.results || {});
+        let isPass = false;
+        let detail = '';
+
+        if (mode === 'ol') {
+            const passes = subjects.filter(([, m]) => isPassGrade(calcGrade(m))).length;
+            const credits = subjects.filter(([, m]) => isCreditGrade(calcGrade(m)));
+            const hasSinhalaCredit = credits.some(([s]) => s.toLowerCase().includes('sinhala'));
+            isPass = passes >= 6 && credits.length >= 3 && hasSinhalaCredit;
+            detail = `Passes ${passes}/6, Credits ${credits.length}/3${hasSinhalaCredit ? '' : ' (no Sinhala)'}`;
+        } else {
+            const sPasses = subjects.filter(([, m]) => isPassGrade(calcGrade(m))).length;
+            isPass = sPasses >= 3;
+            detail = `S passes ${sPasses}/3`;
+        }
+
+        if (isPass) { summary.passed++; summary.gradeBreakdown[g].passed++; }
+        else { summary.failed++; summary.gradeBreakdown[g].failed++; }
+
+        // subject stats
+        subjects.forEach(([sub, m]) => {
+            const grade = calcGrade(m);
+            if (!summary.subjectStats[sub]) summary.subjectStats[sub] = { A:0, B:0, C:0, S:0, W:0 };
+            summary.subjectStats[sub][grade]++;
+        });
+
+        summary.students.push({
+            index: st.indexNumber, name: st.name, grade: st.grade, class: st.class,
+            total: st.total, average: st.average, position: st.position,
+            pass: isPass, detail
+        });
+    });
+
+    summary.passRate = summary.total ? ((summary.passed / summary.total) * 100).toFixed(1) : '0.0';
+    return summary;
+}
+
+/* Fetch students */
+async function fetchStudents(mode, year, term, gradeFilter) {
+    const grades = mode === 'ol' ? ['10', '11'] : ['12', '13'];
+    const wanted = gradeFilter === 'all' ? grades : [String(gradeFilter)];
+    const q = query(
+        collection(window.db || db, 'term-test-student-results'),
+        where('year', '==', String(year)),
+        where('term', '==', term)
+    );
+    const snap = await getDocs(q);
+    const out = [];
+    snap.forEach(d => {
+        const data = d.data();
+        if (wanted.includes(String(data.grade))) out.push(data);
+    });
+    return out;
+}
+
+/* Render analysis UI */
+function renderAnalysis(mode, summary) {
+    const prefix = mode === 'ol' ? 'ol' : 'al';
+
+    document.getElementById(`${prefix}StatTotal`).textContent = summary.total;
+    document.getElementById(`${prefix}StatPass`).textContent  = summary.passed;
+    document.getElementById(`${prefix}StatFail`).textContent  = summary.failed;
+    document.getElementById(`${prefix}StatRate`).textContent  = `${summary.passRate}%`;
+
+    // Breakdown table
+    const tbody = document.getElementById(`${prefix}BreakdownBody`);
+    if (tbody) {
+        tbody.innerHTML = Object.keys(summary.gradeBreakdown).sort().map(g => {
+            const b = summary.gradeBreakdown[g];
+            const rate = b.total ? ((b.passed / b.total) * 100).toFixed(1) : '0.0';
+            return `<tr>
+                <td><strong>Grade ${g}</strong></td>
+                <td>${b.total}</td>
+                <td style="color:#34d399; font-weight:800;">${b.passed}</td>
+                <td style="color:#f87171; font-weight:800;">${b.failed}</td>
+                <td><strong>${rate}%</strong></td>
+            </tr>`;
+        }).join('');
+    }
+
+    // Pass/Fail chart
+    const pfId = prefix === 'ol' ? 'olPassFailChart' : 'alPassFailChart';
+    const gradeId = prefix === 'ol' ? 'olGradeChart' : 'alGradeChart';
+    const pfCanvas = document.getElementById(pfId);
+    const gradeCanvas = document.getElementById(gradeId);
+    if (!pfCanvas || !gradeCanvas) return;
+
+    const charts = mode === 'ol' ? olCharts : alCharts;
+    if (charts.pf) charts.pf.destroy();
+    if (charts.grade) charts.grade.destroy();
+
+    charts.pf = new Chart(pfCanvas, {
+        type: 'doughnut',
+        data: {
+            labels: ['Passed', 'Failed'],
+            datasets: [{
+                data: [summary.passed, summary.failed],
+                backgroundColor: ['#10b981', '#ef4444'],
+                borderColor: '#1e293b',
+                borderWidth: 4,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, cutout: '65%',
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 14, font: { weight: 700 }, usePointStyle: true, pointStyle: 'circle' } },
+                tooltip: {
+                    backgroundColor: '#0f172a', padding: 12, cornerRadius: 8,
+                    callbacks: {
+                        label: (ctx) => {
+                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                            const pct = total ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+                            return ` ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Grade-wise chart (bar)
+    const gradeLabels = Object.keys(summary.gradeBreakdown).sort().map(g => `Grade ${g}`);
+    const passData = Object.keys(summary.gradeBreakdown).sort().map(g => summary.gradeBreakdown[g].passed);
+    const failData = Object.keys(summary.gradeBreakdown).sort().map(g => summary.gradeBreakdown[g].failed);
+
+    charts.grade = new Chart(gradeCanvas, {
+        type: 'bar',
+        data: {
+            labels: gradeLabels,
+            datasets: [
+                { label: 'Passed', data: passData, backgroundColor: '#10b981', borderRadius: 8, maxBarThickness: 50 },
+                { label: 'Failed', data: failData, backgroundColor: '#ef4444', borderRadius: 8, maxBarThickness: 50 }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top', labels: { color: '#94a3b8', font: { weight: 700 }, usePointStyle: true, pointStyle: 'circle' } }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { weight: 700 } } },
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#94a3b8', font: { weight: 700 } } }
+            }
+        }
+    });
+}
+
+/* Generate buttons */
+document.getElementById('btnGenerateOl')?.addEventListener('click', async () => {
+    const year = document.getElementById('olAnalysisYear').value;
+    const term = document.getElementById('olAnalysisTerm').value;
+    const grade = document.getElementById('olAnalysisGrade').value;
+
+    showAdminToast?.('Generating O/L analysis...', 'ok');
+    try {
+        const students = await fetchStudents('ol', year, term, grade);
+        if (!students.length) { showAdminToast?.('No O/L records found', 'error'); return; }
+        olAnalysisData = { year, term, grade, summary: computeAnalysis(students, 'ol') };
+        renderAnalysis('ol', olAnalysisData.summary);
+        document.getElementById('olAnalysisResult').style.display = 'block';
+        document.getElementById('btnSaveOl').disabled = false;
+        document.getElementById('btnPdfOl').disabled = false;
+        showAdminToast?.('O/L analysis generated!', 'ok');
+    } catch (e) { console.error(e); showAdminToast?.(e.message, 'error'); }
+});
+
+document.getElementById('btnGenerateAl')?.addEventListener('click', async () => {
+    const year = document.getElementById('alAnalysisYear').value;
+    const term = document.getElementById('alAnalysisTerm').value;
+    const grade = document.getElementById('alAnalysisGrade').value;
+
+    showAdminToast?.('Generating A/L analysis...', 'ok');
+    try {
+        const students = await fetchStudents('al', year, term, grade);
+        if (!students.length) { showAdminToast?.('No A/L records found', 'error'); return; }
+        alAnalysisData = { year, term, grade, summary: computeAnalysis(students, 'al') };
+        renderAnalysis('al', alAnalysisData.summary);
+        document.getElementById('alAnalysisResult').style.display = 'block';
+        document.getElementById('btnSaveAl').disabled = false;
+        document.getElementById('btnPdfAl').disabled = false;
+        showAdminToast?.('A/L analysis generated!', 'ok');
+    } catch (e) { console.error(e); showAdminToast?.(e.message, 'error'); }
+});
+
+/* ==========================================================
+   3) SAVE TO FIRESTORE (term-test-analysis — 2 docs only)
+   ========================================================== */
+async function saveAnalysis(mode) {
+    const data = mode === 'ol' ? olAnalysisData : alAnalysisData;
+    if (!data) return;
+
+    const docId = mode === 'ol' ? 'ol_latest' : 'al_latest';
+    const payload = {
+        type: mode,
+        year: data.year,
+        term: data.term,
+        gradeFilter: data.grade,
+        totalStudents: data.summary.total,
+        passed: data.summary.passed,
+        failed: data.summary.failed,
+        passRate: parseFloat(data.summary.passRate),
+        gradeBreakdown: data.summary.gradeBreakdown,
+        subjectStats: data.summary.subjectStats,
+        generatedAt: serverTimestamp(),
+        generatedBy: window.currentUser?.uid || null
+    };
+
+    try {
+        await setDoc(fsDoc(window.db || db, 'term-test-analysis', docId), payload, { merge: true });
+        showAdminToast?.(`${mode.toUpperCase()} analysis saved!`, 'ok');
+    } catch (e) {
+        console.error(e);
+        showAdminToast?.('Save failed: ' + e.message, 'error');
+    }
+}
+
+document.getElementById('btnSaveOl')?.addEventListener('click', () => saveAnalysis('ol'));
+document.getElementById('btnSaveAl')?.addEventListener('click', () => saveAnalysis('al'));
+
+/* ==========================================================
+   4) PDF EXPORT
+   ========================================================== */
+async function exportPdf(mode) {
+    const data = mode === 'ol' ? olAnalysisData : alAnalysisData;
+    if (!data) return;
+
+    const resultBox = document.getElementById(mode === 'ol' ? 'olAnalysisResult' : 'alAnalysisResult');
+    if (!resultBox) return;
+
+    const originalParent = resultBox.parentNode;
+    const clone = resultBox.cloneNode(true);
+
+    // Wrap in styled container
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = `
+        width: 800px; background: #ffffff; color: #0f172a;
+        padding: 40px; font-family: 'Plus Jakarta Sans', sans-serif;
+    `;
+
+    const headerHTML = `
+        <div style="text-align:center; margin-bottom:24px; padding-bottom:16px; border-bottom:3px solid #1e3a5f;">
+            <h1 style="font-size:22px; color:#1e3a5f; font-weight:900; margin:0;">
+                A/Maithripala Senanayake Central College
+            </h1>
+            <h2 style="font-size:14px; color:#475569; font-weight:700; margin:6px 0 0;">
+                ${mode === 'ol' ? 'O/L (Grade 10 & 11)' : 'A/L (Grade 12 & 13)'} Term Test Analysis
+            </h2>
+            <p style="color:#64748b; font-size:12px; margin:6px 0 0;">
+                Year: ${data.year} • Term: ${data.term} • Filter: ${data.grade === 'all' ? 'All' : 'Grade ' + data.grade}
+            </p>
+        </div>
+    `;
+
+    wrapper.innerHTML = headerHTML + clone.outerHTML;
+
+    // Light-mode override for PDF
+    wrapper.querySelectorAll('.summary-stat-card, .exam-chart-card, .exam-table-card').forEach(el => {
+        el.style.cssText += 'background:#ffffff !important;border:1px solid #cbd5e1 !important;color:#0f172a !important;box-shadow:none !important;';
+    });
+    wrapper.querySelectorAll('.stat-value, .stat-label, .chart-card-title').forEach(el => {
+        el.style.color = '#0f172a';
+    });
+    wrapper.querySelectorAll('.stat-value').forEach(el => {
+        el.style.cssText += 'font-size:26px !important;font-weight:900 !important;';
+    });
+    wrapper.querySelectorAll('.tt-preview-table th').forEach(el => {
+        el.style.cssText += 'background:#f1f5f9 !important;color:#0f172a !important;';
+    });
+    wrapper.querySelectorAll('.tt-preview-table td').forEach(el => {
+        el.style.color = '#1e293b';
+    });
+
+    // Re-render charts onto cloned canvases
+    const clonedPf = wrapper.querySelector('canvas');
+    const clonedGrade = wrapper.querySelectorAll('canvas')[1];
+    const charts = mode === 'ol' ? olCharts : alCharts;
+
+    // Wait a tick for DOM to attach
+    document.body.appendChild(wrapper);
+    wrapper.style.position = 'absolute';
+    wrapper.style.left = '-99999px';
+
+    await new Promise(r => setTimeout(r, 400));
+
+    if (clonedPf && charts.pf) {
+        const c = clonedPf.getContext('2d');
+        c.drawImage(charts.pf.canvas, 0, 0, clonedPf.width, clonedPf.height);
+    }
+    if (clonedGrade && charts.grade) {
+        const c = clonedGrade.getContext('2d');
+        c.drawImage(charts.grade.canvas, 0, 0, clonedGrade.width, clonedGrade.height);
+    }
+
+    const filename = `MSNS_${mode.toUpperCase()}_TermTest_Analysis_${data.year}_${data.term.replace(' ', '')}.pdf`;
+
+    await html2pdf().set({
+        margin: 8,
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(wrapper).save();
+
+    document.body.removeChild(wrapper);
+    showAdminToast?.('PDF generated successfully!', 'ok');
+}
+
+document.getElementById('btnPdfOl')?.addEventListener('click', () => exportPdf('ol'));
+document.getElementById('btnPdfAl')?.addEventListener('click', () => exportPdf('al'));
+
+/* ==========================================================
+   5) TAB SWITCHING
+   ========================================================== */
+document.getElementById('tabOlAnalysis')?.addEventListener('click', () => {
+    document.getElementById('tabOlAnalysis').classList.add('active');
+    document.getElementById('tabAlAnalysis').classList.remove('active');
+    document.getElementById('olAnalysisPanel').style.display = 'block';
+    document.getElementById('alAnalysisPanel').style.display = 'none';
+});
+
+document.getElementById('tabAlAnalysis')?.addEventListener('click', () => {
+    document.getElementById('tabAlAnalysis').classList.add('active');
+    document.getElementById('tabOlAnalysis').classList.remove('active');
+    document.getElementById('alAnalysisPanel').style.display = 'block';
+    document.getElementById('olAnalysisPanel').style.display = 'none';
+});
+
+/* ==========================================================
+   6) INIT
+   ========================================================== */
+loadAnalysisYears().catch(console.error);
