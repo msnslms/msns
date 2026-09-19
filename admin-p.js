@@ -41,7 +41,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initTermTestModule();
     initDocumentsModule();
     initGeminiModule();
-    initTermAnalysisModule();   // NEW
+    initTermAnalysisModule();
+    initMainTabs();
 });
 
 function showToast(msg, type = 'ok') {
@@ -78,7 +79,6 @@ function initAuth() {
             let userData = null;
             let detectedRole = null;
 
-            // 1. Check direct doc ID match
             let adminDocRef = doc(db, 'admin-users', uname);
             let adminSnap = await getDoc(adminDocRef);
 
@@ -86,7 +86,6 @@ function initAuth() {
                 userData = adminSnap.data();
                 detectedRole = userData.role || adminSnap.id;
             } else {
-                // 2. Query by 'username' field
                 const q = query(collection(db, 'admin-users'), where('username', '==', uname));
                 const querySnap = await getDocs(q);
                 if (!querySnap.empty) {
@@ -1150,7 +1149,7 @@ let alCharts = { pf: null, grade: null };
 let olAnalysisData = null;
 let alAnalysisData = null;
 
-/* ---------- Grade helper ---------- */
+/* ---------- Grade helpers ---------- */
 function calcGrade(m) {
     const x = parseFloat(m);
     if (isNaN(x)) return 'W';
@@ -1172,6 +1171,97 @@ function getSubjects(resultsObj) {
     });
 }
 
+/* ---------- O/L Subject Detection (flexible) ---------- */
+function isMathsSubject(name) {
+    const n = String(name).toLowerCase().trim();
+    if (!n) return false;
+    if (n === 'maths' || n === 'math' || n === 'mathematics') return true;
+    if (n.includes('mathematics') || n.includes('maths')) return true;
+    if (n.includes('ගණිත')) return true;
+    return false;
+}
+
+function isSinhalaLiterature(name) {
+    const n = String(name).toLowerCase();
+    if (n.includes('sinhala') && (n.includes('literature') || n.includes('lit.'))) return true;
+    if (n.includes('සිංහල') && (n.includes('සාහිත්‍ය') || n.includes('සාහිත'))) return true;
+    return false;
+}
+
+function isTamilLiterature(name) {
+    const n = String(name).toLowerCase();
+    if (n.includes('tamil') && (n.includes('literature') || n.includes('lit.'))) return true;
+    if (n.includes('දෙමළ') && (n.includes('සාහිත්‍ය') || n.includes('සාහිත'))) return true;
+    return false;
+}
+
+function isMotherTongueSubject(name) {
+    const n = String(name).toLowerCase().trim();
+    if (!n) return false;
+    if (isSinhalaLiterature(n) || isTamilLiterature(n)) return false;
+    if (n.includes('sinhala') || n.includes('සිංහල')) return true;
+    if (n.includes('tamil') || n.includes('දෙමළ')) return true;
+    return false;
+}
+
+/* ---------- A/L Excluded Subjects (GIT, General English, English) ---------- */
+function isAlExcludedSubject(name) {
+    const n = String(name).toLowerCase().trim();
+    if (!n) return false;
+    if (n.includes('general information technology')) return true;
+    if (n === 'git' || n === 'g.i.t' || n === 'g i t') return true;
+    if (n.includes('general english')) return true;
+    if (n === 'english' || n === 'english language') return true;
+    return false;
+}
+
+/* ---------- O/L Pass/Fail ---------- */
+function checkOlPass(subjects) {
+    const graded = subjects.map(([name, mark]) => ({
+        name, mark, grade: calcGrade(mark)
+    }));
+
+    const passes  = graded.filter(g => isPassGrade(g.grade));
+    const credits = graded.filter(g => isCreditGrade(g.grade));
+
+    const maths  = graded.find(g => isMathsSubject(g.name));
+    const mother = graded.find(g => isMotherTongueSubject(g.name));
+
+    const mathsOk  = !!(maths  && isPassGrade(maths.grade));
+    const motherOk = !!(mother && isPassGrade(mother.grade));
+
+    const pass = passes.length >= 6 && credits.length >= 3 && mathsOk && motherOk;
+    const aCount = graded.filter(g => g.grade === 'A').length;
+
+    let reason = '';
+    if (pass) {
+        reason = `Passed (${passes.length}P, ${credits.length}C)`;
+    } else {
+        const fails = [];
+        if (passes.length < 6) fails.push(`P:${passes.length}/6`);
+        if (credits.length < 3) fails.push(`C:${credits.length}/3`);
+        if (!mathsOk) fails.push('Maths✗');
+        if (!motherOk) fails.push('Mother✗');
+        reason = `Failed (${fails.join(', ')})`;
+    }
+
+    return { pass, aCount, passes: passes.length, credits: credits.length, mathsOk, motherOk, reason };
+}
+
+/* ---------- A/L Pass/Fail ---------- */
+function checkAlPass(subjects) {
+    const mainSubjects = subjects.filter(([name]) => !isAlExcludedSubject(name));
+    const sPasses = mainSubjects.filter(([, mark]) => isPassGrade(calcGrade(mark)));
+    const aCount = mainSubjects.filter(([, mark]) => calcGrade(mark) === 'A').length;
+    return {
+        pass: sPasses.length >= 3,
+        count: sPasses.length,
+        aCount,
+        reason: `Main S-passes: ${sPasses.length}/3`
+    };
+}
+
+/* ---------- Main init ---------- */
 function initTermAnalysisModule() {
     /* ---------- Test Preview ---------- */
     const btnTest = document.getElementById('btnTestResult');
@@ -1212,44 +1302,19 @@ function initTermAnalysisModule() {
 
             const results = student.results || {};
             const subjects = getSubjects(results);
-
             const gradeNum = parseInt(student.grade);
-            let passStatus = 'FAIL';
-            let statusText = '';
+
+            let passStatus = 'N/A';
+            let statusText = 'Pass/Fail calculation available for O/L & A/L only';
 
             if (gradeNum === 10 || gradeNum === 11) {
-                const passes = subjects.filter(([, m]) => isPassGrade(calcGrade(m))).length;
-                const credits = subjects.filter(([, m]) => isCreditGrade(calcGrade(m)));
-                
-                // Check for Sinhala and Maths passing logic
-                const sinhalaSub = subjects.find(([s]) => s.toLowerCase().includes('sinhala') || s.includes('සිංහල'));
-                const sinhalaGrade = sinhalaSub ? calcGrade(sinhalaSub[1]) : 'W';
-                const hasSinhalaCredit = isCreditGrade(sinhalaGrade);
-
-                const mathsSub = subjects.find(([s]) => s.toLowerCase().includes('math') || s.includes('ගණිතය'));
-                const mathsGrade = mathsSub ? calcGrade(mathsSub[1]) : 'W';
-                const hasMathsPass = isPassGrade(mathsGrade);
-
-                const aCount = subjects.filter(([, m]) => calcGrade(m) === 'A').length;
-                let aText = aCount >= 6 ? ` (${aCount}A)` : '';
-
-                if (passes >= 6 && credits.length >= 3 && hasSinhalaCredit && hasMathsPass) {
-                    passStatus = 'PASS';
-                    statusText = `Passed${aText} (Sinhala: ${sinhalaGrade}, Maths: ${mathsGrade})`;
-                } else {
-                    statusText = `Failed (P:${passes}, C:${credits.length}, Sin:${sinhalaGrade}, Math:${mathsGrade})`;
-                }
+                const r = checkOlPass(subjects);
+                passStatus = r.pass ? 'PASS' : 'FAIL';
+                statusText = r.reason;
             } else if (gradeNum === 12 || gradeNum === 13) {
-                const sPasses = subjects.filter(([, m]) => isPassGrade(calcGrade(m))).length;
-                if (sPasses >= 3) {
-                    passStatus = 'PASS';
-                    statusText = `Passed with ${sPasses} S-passes`;
-                } else {
-                    statusText = `Failed (Passes: ${sPasses}/3)`;
-                }
-            } else {
-                statusText = 'Pass/Fail calculation available for O/L & A/L only';
-                passStatus = 'N/A';
+                const r = checkAlPass(subjects);
+                passStatus = r.pass ? 'PASS' : 'FAIL';
+                statusText = r.reason;
             }
 
             const subjHTML = subjects.map(([sub, marks]) => {
@@ -1295,37 +1360,39 @@ function initTermAnalysisModule() {
 
     /* ---------- Generate buttons ---------- */
     document.getElementById('btnGenerateOl')?.addEventListener('click', async () => {
-        const year = document.getElementById('olAnalysisYear').value;
-        const term = document.getElementById('olAnalysisTerm').value;
+        const year  = document.getElementById('olAnalysisYear').value;
+        const term  = document.getElementById('olAnalysisTerm').value;
         const grade = document.getElementById('olAnalysisGrade').value;
+        const cls   = document.getElementById('olAnalysisClass')?.value || 'all';
 
         showToast('Generating O/L analysis...', 'ok');
         try {
-            const students = await fetchStudents('ol', year, term, grade);
+            const students = await fetchStudents('ol', year, term, grade, cls);
             if (!students.length) { showToast('No O/L records found', 'error'); return; }
-            olAnalysisData = { year, term, grade, summary: computeAnalysis(students, 'ol') };
+            olAnalysisData = { year, term, grade, class: cls, summary: computeAnalysis(students, 'ol') };
             renderAnalysis('ol', olAnalysisData.summary);
             document.getElementById('olAnalysisResult').style.display = 'block';
             document.getElementById('btnSaveOl').disabled = false;
-            document.getElementById('btnPdfOl').disabled = false;
+            document.getElementById('btnPdfPreviewOl').disabled = false;
             showToast('O/L analysis generated!', 'ok');
         } catch (e) { console.error(e); showToast(e.message, 'error'); }
     });
 
     document.getElementById('btnGenerateAl')?.addEventListener('click', async () => {
-        const year = document.getElementById('alAnalysisYear').value;
-        const term = document.getElementById('alAnalysisTerm').value;
+        const year  = document.getElementById('alAnalysisYear').value;
+        const term  = document.getElementById('alAnalysisTerm').value;
         const grade = document.getElementById('alAnalysisGrade').value;
+        const cls   = document.getElementById('alAnalysisClass')?.value || 'all';
 
         showToast('Generating A/L analysis...', 'ok');
         try {
-            const students = await fetchStudents('al', year, term, grade);
+            const students = await fetchStudents('al', year, term, grade, cls);
             if (!students.length) { showToast('No A/L records found', 'error'); return; }
-            alAnalysisData = { year, term, grade, summary: computeAnalysis(students, 'al') };
+            alAnalysisData = { year, term, grade, class: cls, summary: computeAnalysis(students, 'al') };
             renderAnalysis('al', alAnalysisData.summary);
             document.getElementById('alAnalysisResult').style.display = 'block';
             document.getElementById('btnSaveAl').disabled = false;
-            document.getElementById('btnPdfAl').disabled = false;
+            document.getElementById('btnPdfPreviewAl').disabled = false;
             showToast('A/L analysis generated!', 'ok');
         } catch (e) { console.error(e); showToast(e.message, 'error'); }
     });
@@ -1334,9 +1401,25 @@ function initTermAnalysisModule() {
     document.getElementById('btnSaveOl')?.addEventListener('click', () => saveAnalysis('ol'));
     document.getElementById('btnSaveAl')?.addEventListener('click', () => saveAnalysis('al'));
 
-    /* ---------- PDF Print Preview buttons ---------- */
-    document.getElementById('btnPdfOl')?.addEventListener('click', () => exportPdf('ol'));
-    document.getElementById('btnPdfAl')?.addEventListener('click', () => exportPdf('al'));
+    /* ---------- PDF Preview buttons ---------- */
+    document.getElementById('btnPdfPreviewOl')?.addEventListener('click', () => exportPdf('ol'));
+    document.getElementById('btnPdfPreviewAl')?.addEventListener('click', () => exportPdf('al'));
+
+    /* ---------- Add Sheet shortcut buttons ---------- */
+    document.getElementById('btnAddSheetOl')?.addEventListener('click', () => {
+        document.getElementById('tabManageResults')?.click();
+        setTimeout(() => {
+            const g = document.getElementById('ttGrade');
+            if (g) { g.value = '11'; g.dispatchEvent(new Event('change')); }
+        }, 200);
+    });
+    document.getElementById('btnAddSheetAl')?.addEventListener('click', () => {
+        document.getElementById('tabManageResults')?.click();
+        setTimeout(() => {
+            const g = document.getElementById('ttGrade');
+            if (g) { g.value = '13'; g.dispatchEvent(new Event('change')); }
+        }, 200);
+    });
 
     /* ---------- Tab switching ---------- */
     document.getElementById('tabOlAnalysis')?.addEventListener('click', () => {
@@ -1357,7 +1440,7 @@ function initTermAnalysisModule() {
     loadAnalysisYears().catch(console.error);
 }
 
-/* Load available years */
+/* Load available years from Firestore */
 async function loadAnalysisYears() {
     const snapshot = await getDocs(collection(db, 'term-test-student-results'));
     const yearSet = new Set();
@@ -1372,6 +1455,27 @@ async function loadAnalysisYears() {
     });
 }
 
+/* Fetch students from Firestore */
+async function fetchStudents(mode, year, term, gradeFilter, classFilter = 'all') {
+    const grades = mode === 'ol' ? ['10', '11'] : ['12', '13'];
+    const wanted = gradeFilter === 'all' ? grades : [String(gradeFilter)];
+
+    const q = query(
+        collection(db, 'term-test-student-results'),
+        where('year', '==', String(year)),
+        where('term', '==', term)
+    );
+    const snap = await getDocs(q);
+    const out = [];
+    snap.forEach(d => {
+        const data = d.data();
+        if (!wanted.includes(String(data.grade))) return;
+        if (classFilter && classFilter !== 'all' && String(data.class) !== String(classFilter)) return;
+        out.push(data);
+    });
+    return out;
+}
+
 /* Compute analysis */
 function computeAnalysis(students, mode) {
     const summary = {
@@ -1381,7 +1485,7 @@ function computeAnalysis(students, mode) {
         gradeBreakdown: {},
         subjectStats: {},
         students: [],
-        achievers: { '9A': 0, '8A': 0, '7A': 0, '6A': 0 } // A Counts
+        achievers: { '9A': 0, '8A': 0, '7A': 0, '6A': 0 }
     };
 
     students.forEach(st => {
@@ -1392,36 +1496,27 @@ function computeAnalysis(students, mode) {
         const subjects = getSubjects(st.results || {});
         let isPass = false;
         let detail = '';
-        
-        const aCount = subjects.filter(([, m]) => calcGrade(m) === 'A').length;
+        let aCount = 0;
 
         if (mode === 'ol') {
-            const passes = subjects.filter(([, m]) => isPassGrade(calcGrade(m))).length;
-            const credits = subjects.filter(([, m]) => isCreditGrade(calcGrade(m)));
+            const r = checkOlPass(subjects);
+            isPass = r.pass;
+            detail = r.reason;
+            aCount = r.aCount;
 
-            const sinhalaSub = subjects.find(([s]) => s.toLowerCase().includes('sinhala') || s.includes('සිංහල'));
-            const hasSinhalaCredit = sinhalaSub ? isCreditGrade(calcGrade(sinhalaSub[1])) : false;
-
-            const mathsSub = subjects.find(([s]) => s.toLowerCase().includes('math') || s.includes('ගණිතය'));
-            const hasMathsPass = mathsSub ? isPassGrade(calcGrade(mathsSub[1])) : false;
-
-            // Updated Pass Logic: 6 Passes, 3 Credits, Sinhala >= C, Maths >= S
-            isPass = (passes >= 6 && credits.length >= 3 && hasSinhalaCredit && hasMathsPass);
-            detail = `P:${passes}, C:${credits.length}, Sin:${hasSinhalaCredit?'C+':'<C'}, Math:${hasMathsPass?'S+':'Fail'}`;
-
-            if (aCount === 9) summary.achievers['9A']++;
+            if (aCount === 9)      summary.achievers['9A']++;
             else if (aCount === 8) summary.achievers['8A']++;
             else if (aCount === 7) summary.achievers['7A']++;
             else if (aCount === 6) summary.achievers['6A']++;
-
         } else {
-            const sPasses = subjects.filter(([, m]) => isPassGrade(calcGrade(m))).length;
-            isPass = sPasses >= 3;
-            detail = `S passes: ${sPasses}/3`;
+            const r = checkAlPass(subjects);
+            isPass = r.pass;
+            detail = r.reason;
+            aCount = r.aCount;
         }
 
         if (isPass) { summary.passed++; summary.gradeBreakdown[g].passed++; }
-        else { summary.failed++; summary.gradeBreakdown[g].failed++; }
+        else        { summary.failed++; summary.gradeBreakdown[g].failed++; }
 
         subjects.forEach(([sub, m]) => {
             const grade = calcGrade(m);
@@ -1432,30 +1527,13 @@ function computeAnalysis(students, mode) {
         summary.students.push({
             index: st.indexNumber, name: st.name, grade: st.grade, class: st.class,
             total: st.total, average: st.average, position: st.position,
-            pass: isPass, detail, aCount
+            pass: isPass, detail, aCount,
+            results: st.results || {}
         });
     });
 
     summary.passRate = summary.total ? ((summary.passed / summary.total) * 100).toFixed(1) : '0.0';
     return summary;
-}
-
-/* Fetch students */
-async function fetchStudents(mode, year, term, gradeFilter) {
-    const grades = mode === 'ol' ? ['10', '11'] : ['12', '13'];
-    const wanted = gradeFilter === 'all' ? grades : [String(gradeFilter)];
-    const q = query(
-        collection(db, 'term-test-student-results'),
-        where('year', '==', String(year)),
-        where('term', '==', term)
-    );
-    const snap = await getDocs(q);
-    const out = [];
-    snap.forEach(d => {
-        const data = d.data();
-        if (wanted.includes(String(data.grade))) out.push(data);
-    });
-    return out;
 }
 
 /* Render analysis UI */
@@ -1482,7 +1560,6 @@ function renderAnalysis(mode, summary) {
         }).join('');
     }
 
-    // Add Achievers section dynamically if it's O/L
     if (mode === 'ol') {
         let achieversBox = document.getElementById('olAchieversBox');
         if (!achieversBox) {
@@ -1507,14 +1584,14 @@ function renderAnalysis(mode, summary) {
         }
     }
 
-    const pfId = prefix === 'ol' ? 'olPassFailChart' : 'alPassFailChart';
-    const gradeId = prefix === 'ol' ? 'olGradeChart' : 'alGradeChart';
-    const pfCanvas = document.getElementById(pfId);
+    const pfId    = prefix === 'ol' ? 'olPassFailChart' : 'alPassFailChart';
+    const gradeId = prefix === 'ol' ? 'olGradeChart'    : 'alGradeChart';
+    const pfCanvas    = document.getElementById(pfId);
     const gradeCanvas = document.getElementById(gradeId);
     if (!pfCanvas || !gradeCanvas) return;
 
     const charts = mode === 'ol' ? olCharts : alCharts;
-    if (charts.pf) charts.pf.destroy();
+    if (charts.pf)    charts.pf.destroy();
     if (charts.grade) charts.grade.destroy();
 
     charts.pf = new Chart(pfCanvas, {
@@ -1573,17 +1650,18 @@ function renderAnalysis(mode, summary) {
     });
 }
 
-/* Save to Firestore */
+/* Save to Firestore — ol-YYYY / al-YYYY */
 async function saveAnalysis(mode) {
     const data = mode === 'ol' ? olAnalysisData : alAnalysisData;
     if (!data) return;
 
-    const docId = mode === 'ol' ? 'ol_latest' : 'al_latest';
+    const docId = `${mode}-${data.year}`;
     const payload = {
         type: mode,
         year: data.year,
         term: data.term,
         gradeFilter: data.grade,
+        classFilter: data.class || 'all',
         totalStudents: data.summary.total,
         passed: data.summary.passed,
         failed: data.summary.failed,
@@ -1591,165 +1669,314 @@ async function saveAnalysis(mode) {
         gradeBreakdown: data.summary.gradeBreakdown,
         subjectStats: data.summary.subjectStats,
         achievers: data.summary.achievers || {},
+        students: data.summary.students,
         generatedAt: serverTimestamp(),
         generatedBy: currentAdminRole || null
     };
 
     try {
         await setDoc(doc(db, 'term-test-analysis', docId), payload, { merge: true });
-        showToast(`${mode.toUpperCase()} analysis saved!`, 'ok');
+        showToast(`${mode.toUpperCase()} analysis saved to "${docId}"!`, 'ok');
     } catch (e) {
         console.error(e);
         showToast('Save failed: ' + e.message, 'error');
     }
 }
 
-/* Native Print Preview (Replacing html2pdf) */
+/* ---------- PDF Report ---------- */
 async function exportPdf(mode) {
     const data = mode === 'ol' ? olAnalysisData : alAnalysisData;
-    if (!data) return;
+    if (!data) { showToast('Generate data first!', 'error'); return; }
 
-    const resultBox = document.getElementById(mode === 'ol' ? 'olAnalysisResult' : 'alAnalysisResult');
-    if (!resultBox) return;
+    const students = data.summary.students || [];
+    const modeLabel = mode === 'ol' ? 'O/L (Grade 10 &amp; 11)' : 'A/L (Grade 12 &amp; 13)';
 
-    // Clone the node to avoid mutating the live DOM
-    const clone = resultBox.cloneNode(true);
-    
-    // Replace charts/canvases with image elements in the cloned node so they render in print
-    const originalCanvases = resultBox.querySelectorAll('canvas');
-    const clonedCanvases = clone.querySelectorAll('canvas');
-    
-    originalCanvases.forEach((canvas, index) => {
-        const img = document.createElement('img');
-        img.src = canvas.toDataURL('image/png');
-        img.style.maxWidth = '100%';
-        img.style.height = 'auto';
-        if(clonedCanvases[index] && clonedCanvases[index].parentNode) {
-            clonedCanvases[index].parentNode.replaceChild(img, clonedCanvases[index]);
-        }
+    const subjectSet = new Set();
+    students.forEach(st => {
+        Object.keys(st.results || {}).forEach(sub => {
+            const k = sub.toLowerCase().trim();
+            if (k.includes('grade') || k.includes('class') || k.includes('stream') || k.includes('position')) return;
+            subjectSet.add(sub);
+        });
+    });
+    const subjectCols = Array.from(subjectSet).sort();
+
+    const sorted = [...students].sort((a, b) => {
+        if (b.aCount !== a.aCount) return b.aCount - a.aCount;
+        if (a.pass !== b.pass) return a.pass ? -1 : 1;
+        return String(a.name || '').localeCompare(String(b.name || ''));
     });
 
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
+    const achievers = { A9: [], A8: [], A7: [], A6: [] };
+    students.forEach(st => {
+        if (st.aCount === 9)      achievers.A9.push(st);
+        else if (st.aCount === 8) achievers.A8.push(st);
+        else if (st.aCount === 7) achievers.A7.push(st);
+        else if (st.aCount === 6) achievers.A6.push(st);
+    });
+
+    function achieverLine(grade, label) {
+        const arr = achievers[grade];
+        if (!arr.length) return '';
+        const names = arr.map(s => `${s.name || s.index || 'N/A'} (${s.index || '—'})`).join(', ');
+        return `<div class="ach-line"><strong>${label} (${arr.length}):</strong> ${names}</div>`;
+    }
+
+    const achieverHTML = mode === 'ol'
+        ? (achieverLine('A9','9A') + achieverLine('A8','8A') + achieverLine('A7','7A') + achieverLine('A6','6A')) || '<div class="ach-line" style="color:#666;">No 6A+ achievers.</div>'
+        : '';
+
+    const subjectHeaders = subjectCols.map(s => `<th>${s}</th>`).join('');
+
+    const rowsHTML = sorted.map((st, idx) => {
+        const grades = subjectCols.map(sub => {
+            const mark = (st.results || {})[sub];
+            if (mark === undefined || mark === '') return '<td class="empty">-</td>';
+            const g = calcGrade(mark);
+            return `<td class="g-${g}">${g}</td>`;
+        }).join('');
+
+        const rowCls = st.pass ? 'row-pass' : 'row-fail';
+        return `<tr class="${rowCls}">
+            <td>${idx + 1}</td>
+            <td>${st.index || '-'}</td>
+            <td class="name">${st.name || '-'}</td>
+            <td>${st.grade || '-'}</td>
+            <td>${st.class || '-'}</td>
+            ${grades}
+            <td class="a-count">${st.aCount}A</td>
+            <td class="status ${st.pass ? 'pass' : 'fail'}">${st.pass ? 'PASS' : 'FAIL'}</td>
+        </tr>`;
+    }).join('');
+
+    const html = `
         <!DOCTYPE html>
         <html>
         <head>
-            <title>${mode.toUpperCase()} Term Test Analysis Print</title>
+            <meta charset="UTF-8">
+            <title>${mode.toUpperCase()} Term Test Analysis - ${data.year} ${data.term}</title>
             <style>
-                body { 
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                    padding: 30px; 
-                    color: #000; 
-                    background: #fff; 
+                * { box-sizing: border-box; }
+                body {
+                    font-family: 'Segoe UI', 'Noto Sans Sinhala', Tahoma, sans-serif;
+                    padding: 20px 25px;
+                    color: #111;
+                    background: #fff;
+                    line-height: 1.4;
+                    font-size: 11px;
+                }
+                .report-header {
+                    text-align: center;
+                    border-bottom: 2px solid #b91c1c;
+                    padding-bottom: 10px;
+                    margin-bottom: 14px;
+                }
+                .report-header img {
+                    height: 55px;
+                    width: auto;
+                    margin-bottom: 4px;
+                }
+                .report-header h1 {
+                    font-size: 16px;
+                    color: #b91c1c;
+                    margin: 2px 0;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                .report-header h2 {
+                    font-size: 12px;
+                    color: #444;
+                    margin: 2px 0 6px;
+                    font-weight: 700;
+                }
+                .report-header .meta {
+                    font-size: 11px;
+                    color: #333;
+                    font-weight: 600;
+                }
+                .report-header .meta span {
+                    background: #fef3c7;
+                    color: #92400e;
+                    padding: 3px 10px;
+                    border-radius: 12px;
+                    border: 1px solid #f59e0b;
+                    margin: 0 4px;
+                    display: inline-block;
+                }
+                .ach-section {
+                    background: #fffbeb;
+                    border: 1px solid #f59e0b;
+                    border-radius: 6px;
+                    padding: 8px 12px;
+                    margin-bottom: 12px;
+                }
+                .ach-title {
+                    font-size: 12px;
+                    color: #b45309;
+                    font-weight: 800;
+                    margin-bottom: 5px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                .ach-line {
+                    font-size: 10.5px;
+                    color: #333;
+                    margin-bottom: 3px;
                     line-height: 1.5;
                 }
-                .print-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
-                h2, h3, h4 { margin: 5px 0; }
-                p { margin: 5px 0; }
-                
-                /* Layout styling */
-                .exam-table-card table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 25px; }
-                .exam-table-card th, .exam-table-card td { border: 1px solid #000; padding: 10px; text-align: center; }
-                .exam-table-card th { background-color: #f2f2f2 !important; }
-                
-                /* Cards */
-                .summary-stat-card { 
-                    display: inline-block; width: 22%; margin: 1%; padding: 15px; 
-                    border: 1px solid #000; text-align: center; box-sizing: border-box; 
-                    border-radius: 8px;
+                .ach-line strong { color: #b91c1c; }
+                .stats-row {
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 8px;
+                    margin-bottom: 12px;
                 }
-                .stat-value { font-size: 24px; font-weight: bold; margin-bottom: 5px; }
-                .stat-label { font-size: 14px; text-transform: uppercase; color: #333; }
-                
-                /* Charts layout */
-                .exam-charts-grid { display: flex; justify-content: space-between; margin-top: 30px; flex-wrap: wrap; }
-                .exam-chart-card { width: 48%; border: 1px solid #000; padding: 15px; border-radius: 8px; box-sizing: border-box; margin-bottom: 20px; text-align: center;}
-                .chart-container { margin-top: 15px; }
-                
-                /* Top Achievers Box (O/L) */
-                #olAchieversBox { margin-top: 25px; border: 1px solid #000; padding: 15px; border-radius: 8px; }
-                #olAchieversBox h4 { border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px; }
-                #olAchieversBox div { display: flex; gap: 15px; }
-                #olAchieversBox div > div { padding: 5px 10px; border: 1px solid #666; border-radius: 5px; }
-
-                /* Hide Interactive UI Elements */
-                button, .btn { display: none !important; }
-                
+                .stat-box {
+                    flex: 1;
+                    text-align: center;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 6px;
+                    padding: 6px 4px;
+                    background: #f8fafc;
+                }
+                .stat-box .num { font-size: 15px; font-weight: 800; color: #0f172a; }
+                .stat-box .lbl { font-size: 9.5px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+                .stat-box.pass { border-color: #10b981; }
+                .stat-box.pass .num { color: #059669; }
+                .stat-box.fail { border-color: #ef4444; }
+                .stat-box.fail .num { color: #dc2626; }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 6px;
+                    font-size: 9.5px;
+                }
+                th, td {
+                    border: 1px solid #94a3b8;
+                    padding: 3px 4px;
+                    text-align: center;
+                    vertical-align: middle;
+                }
+                th {
+                    background: #fef3c7;
+                    color: #78350f;
+                    font-weight: 800;
+                    text-transform: uppercase;
+                    font-size: 8.5px;
+                    letter-spacing: 0.3px;
+                }
+                td.name { text-align: left; font-weight: 700; font-size: 9.5px; }
+                td.a-count { font-weight: 800; color: #b91c1c; }
+                td.status { font-weight: 800; font-size: 9.5px; }
+                td.status.pass { color: #059669; background: #ecfdf5; }
+                td.status.fail { color: #dc2626; background: #fef2f2; }
+                td.g-A { color: #059669; font-weight: 800; }
+                td.g-B { color: #2563eb; font-weight: 800; }
+                td.g-C { color: #b45309; font-weight: 800; }
+                td.g-S { color: #c2410c; font-weight: 700; }
+                td.g-W { color: #b91c1c; font-weight: 800; }
+                td.empty { color: #cbd5e1; }
+                tr.row-fail { background: #fff5f5; }
                 @media print {
-                    .exam-charts-grid { display: block; }
-                    .exam-chart-card { width: 100%; page-break-inside: avoid; }
+                    body { padding: 12px 15px; }
+                    table { page-break-inside: auto; }
+                    tr { page-break-inside: avoid; page-break-after: auto; }
+                    thead { display: table-header-group; }
                 }
             </style>
         </head>
         <body>
-            <div class="print-header">
-                <h2>A/Maithripala Senanayake Central College</h2>
-                <h3>${mode === 'ol' ? 'O/L (Grade 10 & 11)' : 'A/L (Grade 12 & 13)'} Term Test Analysis</h3>
-                <p><strong>Year:</strong> ${data.year} &nbsp;|&nbsp; <strong>Term:</strong> ${data.term} &nbsp;|&nbsp; <strong>Grade Filter:</strong> ${data.grade === 'all' ? 'All' : 'Grade ' + data.grade}</p>
+            <div class="report-header">
+                <img src="school bage.png" alt="Badge" onerror="this.style.display='none';">
+                <h1>A/Maithripala Senanayake Central College</h1>
+                <h2>MSNS - Medawachchiya</h2>
+                <div class="meta">
+                    <span>${modeLabel}</span>
+                    <span>Year: ${data.year}</span>
+                    <span>Term: ${data.term}</span>
+                    <span>Class: ${data.class === 'all' ? 'All' : data.class}</span>
+                </div>
             </div>
-            ${clone.innerHTML}
+
+            ${mode === 'ol' ? `
+                <div class="ach-section">
+                    <div class="ach-title">★ Top Achievers</div>
+                    ${achieverHTML}
+                </div>
+            ` : ''}
+
+            <div class="stats-row">
+                <div class="stat-box"><div class="num">${data.summary.total}</div><div class="lbl">Total</div></div>
+                <div class="stat-box pass"><div class="num">${data.summary.passed}</div><div class="lbl">Passed</div></div>
+                <div class="stat-box fail"><div class="num">${data.summary.failed}</div><div class="lbl">Failed</div></div>
+                <div class="stat-box"><div class="num">${data.summary.passRate}%</div><div class="lbl">Pass Rate</div></div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:22px;">#</th>
+                        <th style="width:55px;">Index</th>
+                        <th style="min-width:120px;">Name</th>
+                        <th style="width:35px;">Gr</th>
+                        <th style="width:35px;">Cls</th>
+                        ${subjectHeaders}
+                        <th style="width:35px;">A's</th>
+                        <th style="width:48px;">Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rowsHTML}
+                </tbody>
+            </table>
         </body>
         </html>
-    `);
+    `;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.open();
+    printWindow.document.write(html);
     printWindow.document.close();
-    
-    // Slight delay to ensure images (converted canvases) load before printing
+
     setTimeout(() => {
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
-    }, 800);
-    
+        try {
+            printWindow.focus();
+            printWindow.print();
+        } catch (e) {
+            console.error(e);
+        }
+    }, 900);
+
     showToast('Print Preview විවෘත වේ...', 'ok');
+}
+
+// ==========================================
+// 9. MAIN TAB LOGIC (Manage Results vs Analysis)
+// ==========================================
+function initMainTabs() {
+    const tabManageResults = document.getElementById('tabManageResults');
+    const tabAnalysisMain  = document.getElementById('tabAnalysisMain');
+    const manageResultsWrapper = document.getElementById('manageResultsWrapper');
+    const analysisMainWrapper  = document.getElementById('analysisMainWrapper');
+
+    if (tabManageResults && tabAnalysisMain) {
+        tabManageResults.addEventListener('click', () => {
+            tabManageResults.classList.add('active');
+            tabAnalysisMain.classList.remove('active');
+            manageResultsWrapper.style.display = 'block';
+            analysisMainWrapper.style.display = 'none';
+        });
+
+        tabAnalysisMain.addEventListener('click', () => {
+            tabAnalysisMain.classList.add('active');
+            tabManageResults.classList.remove('active');
+            analysisMainWrapper.style.display = 'block';
+            manageResultsWrapper.style.display = 'none';
+        });
+    }
 }
 
 /* Service worker registration */
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('a-sw.js').catch(() => {});
-}
-// Term Test Section Main Tabs Logic
-const tabManageResults = document.getElementById('tabManageResults');
-const tabAnalysisMain = document.getElementById('tabAnalysisMain');
-const manageResultsWrapper = document.getElementById('manageResultsWrapper');
-const analysisMainWrapper = document.getElementById('analysisMainWrapper');
-
-if(tabManageResults && tabAnalysisMain) {
-    tabManageResults.addEventListener('click', () => {
-        tabManageResults.classList.add('active');
-        tabAnalysisMain.classList.remove('active');
-        manageResultsWrapper.style.display = 'block';
-        analysisMainWrapper.style.display = 'none';
-    });
-
-    tabAnalysisMain.addEventListener('click', () => {
-        tabAnalysisMain.classList.add('active');
-        tabManageResults.classList.remove('active');
-        analysisMainWrapper.style.display = 'block';
-        manageResultsWrapper.style.display = 'none';
-    });
-}
-
-// PDF Preview Modal Logic (Example for opening/closing)
-const pdfPreviewModalOverlay = document.getElementById('pdfPreviewModalOverlay');
-const closePdfModal = document.getElementById('closePdfModal');
-const btnCancelPdf = document.getElementById('btnCancelPdf');
-
-// ඔබගේ කලින් තිබුණු btnPdfOl සහ btnPdfAl දැන් Preview විදියට වෙනස් කර ඇත (btnPdfPreviewOl / btnPdfPreviewAl)
-// ඒවා ක්ලික් කළ විට Modal එක Open වීමට පහත කේතය භාවිතා කරන්න (ඔබේ අවශ්‍යතාවය අනුව වෙනස් කරගන්න)
-function openPdfPreview(contentToPreview) {
-    const pdfContentArea = document.getElementById('pdfContentArea');
-    // අවශ්‍ය නම් මෙතනට Chart වල පින්තූර සහ Data Table එක Clone කරලා දාන්න
-    pdfContentArea.innerHTML = "<h4>Analysis Data Preview</h4><p>Your charts and tables will appear here before downloading.</p>"; 
-    pdfPreviewModalOverlay.classList.add('active');
-}
-
-if(closePdfModal) closePdfModal.addEventListener('click', () => pdfPreviewModalOverlay.classList.remove('active'));
-if(btnCancelPdf) btnCancelPdf.addEventListener('click', () => pdfPreviewModalOverlay.classList.remove('active'));
-
-// O/L View PDF Button Action
-const btnPdfPreviewOl = document.getElementById('btnPdfPreviewOl');
-if(btnPdfPreviewOl) {
-    btnPdfPreviewOl.addEventListener('click', () => {
-        openPdfPreview(); // මෙතනට O/L Data යවන්න
-    });
 }
