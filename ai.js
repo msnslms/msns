@@ -40,7 +40,7 @@ const db = getFirestore(app);
 let currentUser = null;
 let currentChatId = null;
 let isAiDisabled = false;
-let isSending = false; // 🔥 FIX #1: Send lock (double request block)
+let isSending = false;
 
 // ------------------------------
 // 1. Authentication Guard
@@ -84,7 +84,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// Logout
 document.getElementById('logoutBtn')?.addEventListener('click', () => {
     signOut(auth).then(() => {
         window.location.href = "u.html";
@@ -235,7 +234,6 @@ async function saveMessageToDatabase(userText, botResponse) {
     }
 }
 
-// 🔥 FIX #2: limit(1) දාලා පළමු chat එක විතරක් ගන්නවා (Firestore reads අඩු කරයි)
 async function enforceChatLimitBeforeCreate(uid) {
     try {
         const chatsRef = collection(db, 'ai', uid, 'chats');
@@ -251,209 +249,200 @@ async function enforceChatLimitBeforeCreate(uid) {
     }
 }
 
-// ------------------------------
-// 5. Gemini AI & Knowledge Base
-// ------------------------------
+// ================================================================
+// 5. Gemini AI + JSON Knowledge Base + Google Search Grounding
+// ================================================================
+
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1Y9xYMoedyzyr1fzC68Cz9emyRFr3WWkpFi4ZG8eCiaw/export?format=csv";
 let GEMINI_API_KEYS = [];
 let isFetchingKeys = false;
 
-// 🔥 FIX #3: Blocked keys tracker (429 hit වුන keys skip කරන්න)
 const blockedKeys = new Map();
-const KEY_BLOCK_DURATION = 60000; // 1 minute block
+const KEY_BLOCK_DURATION = 60000;
 
-const TXT_FILE_URLS = [
-    "Grade_6_Mathematics.txt",
-    "6_Sreniya_Ithihasaya_Sampurna_Sahanata.txt",
-    "Grade_6_Health_and_Physical_Education_Short_Note.txt",
-    "Grade_6_Buddhism_Notes.txt",
-    "Grade_6_Science_Complete_Notes_Sinhala.txt",
-    "Purawasi_Adhyapanaya_Grade_6_Full_Note.txt",
-    "Geography_Grade_6_Full_Notes.txt",
-    "Grade_6_Sinhala_Full_Notes.txt",
-    "Grade_6_ICT_Short_Note.txt",
-    "Grade_7_History_Complete_Notes.txt",
-    "Grade_7_Health_Notes.txt",
-    "Grade_7_Buddhism_Full_Notes.txt",
-    "Grade_7_Geography_Full_Notes.txt",
-    "Civic_Education_Grade_7_Full_Notes.txt",
+// 🔥 JSON Files — json/ folder එකේ
+const JSON_FILE_URLS = [
+    "json/grade 6 buddhism.json",
+    "json/grade 6 geography.json",
+    "json/grade 6 civic.json",
+    "json/grade 6 science.json",
+    // අලුත් JSON files මෙතනට එකතු කරන්න:
+    // "json/grade 6 maths.json",
+    // "json/grade 7 buddhism.json",
+    // "json/grade 7 geography.json",
+    // "json/grade 7 civic.json",
+    // "json/grade 7 history.json",
+    // "json/grade 7 health.json",
+    // "json/grade 6 ict.json",
+    // "json/grade 7 ict.json",
+    // "json/grade 6 history.json",
+    // "json/grade 6 health.json",
+    // "json/grade 6 sinhala.json",
 ];
 
-// 🔥 FIX #4: EXTRA_TXT_KNOWLEDGE වෙනුවට FILE-BY-FILE MAP එකක් (smart search සඳහා)
-let TXT_KNOWLEDGE_MAP = {}; // { filename: content }
+// 🧠 පොදු JSON knowledge base එක (හැම file එකේ notes එකට)
+let JSON_KNOWLEDGE_DB = [];
 
-async function loadTxtFilesKnowledge() {
+async function loadJsonFilesKnowledge() {
     try {
-        const fetchPromises = TXT_FILE_URLS.map(async (url) => {
+        const fetchPromises = JSON_FILE_URLS.map(async (url) => {
             try {
-                const res = await fetch(url);
-                if (!res.ok) return { url, content: "" };
-                return { url, content: await res.text() };
-            } catch (e) {
-                return { url, content: "" };
-            }
-        });
-        const allFiles = await Promise.all(fetchPromises);
-        
-        allFiles.forEach(f => {
-            if (f.content && f.content.trim().length > 0) {
-                TXT_KNOWLEDGE_MAP[f.url] = f.content;
-            }
-        });
-        
-        const totalChars = Object.values(TXT_KNOWLEDGE_MAP).reduce((a, b) => a + b.length, 0);
-        console.log(`✅ TXT files loaded: ${Object.keys(TXT_KNOWLEDGE_MAP).length} files, ${totalChars} chars total`);
-    } catch (err) {
-        console.error("TXT Files Load Error:", err);
-    }
-}
-
-// 🔥 FIX #5: Smart search - අදාළ TXT files වලින් අදාළ කොටස් විතරක් ගන්නවා
-function getRelevantKnowledge(userQuestion) {
-    const question = userQuestion.toLowerCase();
-    
-    // Subject → Keywords + File patterns
-    const subjectMap = {
-        'ගණිත': {
-            keywords: ['ගණිත', 'සමමිති', 'කුලක', 'භාග', 'දශම', 'ප්‍රතිශත', 'සමීකරණ', 'කෝණ', 'ත්‍රිකෝණ', 'පරිමිති', 'වර්ගඵල', 'පරිමාව', 'ස්කන්ධ', 'දිග', 'සංඛ්‍යා', 'අනුපාත', 'වීජීය', 'සමාන්තර'],
-            files: ['math', 'ganitha', 'Mathematics']
-        },
-        'ඉතිහාස': {
-            keywords: ['ඉතිහාස', 'රජ', 'රජවරු', 'අනුරාධපුර', 'පොළොන්නරු', 'විජය', 'දුටුගැමුණු', 'මිහිඳු', 'බුද්ධත්ව', 'පැරණි', 'ශිෂ්ටාචාර', 'මෙසපොතේ', 'ඊජිප්තු', 'රෝම', 'ග්‍රීක', 'විජයබාහු', 'පරාක්‍රමබාහු', 'දඹදෙණි', 'යාපහුව', 'කුරුණෑගල', 'ගම්පොළ', 'කෝට්ටේ'],
-            files: ['history', 'ithihas', 'Ithihasaya', 'History']
-        },
-        'භූගෝල': {
-            keywords: ['භූගෝල', 'ගංගා', 'කඳු', 'දේශගුණ', 'පළාත', 'දිස්ත්‍රික්ක', 'සාගර', 'මහාද්වීප', 'පෘථිවි', 'අක්ෂාංශ', 'දේශාංශ', 'පාසල', 'නිවස', 'පරිසර'],
-            files: ['geography', 'Geography', 'bhugola']
-        },
-        'බුද්ධ': {
-            keywords: ['බුද්ධ', 'බුදුන්', 'ධර්ම', 'සංඝ', 'පංචසීල', 'මෛත්‍රී', 'බෝසත්', 'සිදුහත්', 'ජාතක', 'අරහාදී', 'නිවන්', 'කර්ම', 'දාන', 'සීල', 'භාවනා', 'චතුරාර්ය'],
-            files: ['buddhism', 'Buddhism', 'Buddha', 'budu']
-        },
-        'විද්‍යා': {
-            keywords: ['විද්‍යා', 'ශාක', 'සතුන්', 'පරිසර', 'ජල', 'වාත', 'ශක්ති', 'පදාර්ථ', 'පරමාණු', 'රසායන', 'ජීව'],
-            files: ['science', 'Science', 'vidyawa']
-        },
-        'ICT': {
-            keywords: ['පරිගණක', 'ICT', 'තොරතුරු', 'CPU', 'මෘදුකාංග', 'දෘඪාංග', 'HTML', 'අන්තර්ජාල', 'ගොනු', 'ඇල්ගොරිතම', 'Scratch'],
-            files: ['ICT', 'ict', 'Information']
-        },
-        'සෞඛ්‍ය': {
-            keywords: ['සෞඛ්‍ය', 'රෝග', 'පෝෂණ', 'ආහාර', 'ව්‍යායාම', 'ක්‍රීඩා', 'වොලිබෝල්', 'නෙට්බෝල්', 'පා පන්දු'],
-            files: ['health', 'Health', 'Health_and']
-        },
-        'පුරවැසි': {
-            keywords: ['පුරවැසි', 'පවුල', 'සමාජ', 'අයිතිවාසිකම්', 'යුතුකම්', 'සංස්කෘති', 'ජන සමාජ'],
-            files: ['Civic', 'civic', 'Purawasi', 'Purawasi_Adhyapanaya']
-        },
-        'සිංහල': {
-            keywords: ['සිංහල', 'ව්‍යාකරණ', 'පද්‍ය', 'ගද්‍ය', 'කවි', 'කථා'],
-            files: ['Sinhala', 'sinhala']
-        },
-    };
-    
-    // Subject හඳුනා ගන්න
-    let detectedSubjects = new Set();
-    for (const [subject, data] of Object.entries(subjectMap)) {
-        if (data.keywords.some(kw => question.includes(kw))) {
-            detectedSubjects.add(subject);
-        }
-    }
-    
-    // Subject හඳුනාගත්තේ නැත්නම්, empty return (Gemini broad knowledge use කරයි)
-    if (detectedSubjects.size === 0) {
-        console.log("🎯 No specific subject detected - using Gemini broad knowledge");
-        return "";
-    }
-    
-    // අදාළ files තෝරන්න
-    let relevantFiles = [];
-    for (const [subject, data] of Object.entries(subjectMap)) {
-        if (!detectedSubjects.has(subject)) continue;
-        
-        for (const [url, content] of Object.entries(TXT_KNOWLEDGE_MAP)) {
-            if (data.files.some(pattern => url.toLowerCase().includes(pattern.toLowerCase()))) {
-                relevantFiles.push({ url, content, subject });
-            }
-        }
-    }
-    
-    if (relevantFiles.length === 0) {
-        console.log("🎯 No matching files found");
-        return "";
-    }
-    
-    // 🔥 Max 15000 chars (~4000 tokens) යවන්න - TPM limit එකට ගැළපෙන්න
-    const maxChars = 15000;
-    let relevantContent = "";
-    let totalChars = 0;
-    
-    const questionKeywords = question.split(/\s+/).filter(w => w.length > 2);
-    
-    for (const file of relevantFiles) {
-        if (totalChars >= maxChars) break;
-        
-        // Paragraphs වලට කඩන්න
-        const paragraphs = file.content.split(/\n\n+/);
-        
-        // Keyword match වෙන paragraphs පළමුව ගන්න
-        const scoredParagraphs = paragraphs.map(para => {
-            const paraLower = para.toLowerCase();
-            const matches = questionKeywords.filter(kw => paraLower.includes(kw)).length;
-            return { para, score: matches, length: para.length };
-        }).filter(p => p.length > 50 && p.length < 3000);
-        
-        // Score අනුව sort කරන්න
-        scoredParagraphs.sort((a, b) => b.score - a.score);
-        
-        // Top paragraphs ගන්න
-        for (const item of scoredParagraphs) {
-            if (totalChars >= maxChars) break;
-            if (totalChars + item.length > maxChars) {
-                const remaining = maxChars - totalChars;
-                if (remaining > 200) {
-                    relevantContent += item.para.substring(0, remaining) + "\n\n";
-                    totalChars += remaining;
+                const res = await fetch(encodeURI(url));
+                if (!res.ok) {
+                    console.warn(`⚠️ JSON not found: ${url}`);
+                    return null;
                 }
-                break;
+                return await res.json();
+            } catch (e) {
+                console.error(`Error loading ${url}:`, e);
+                return null;
             }
-            relevantContent += item.para + "\n\n";
-            totalChars += item.length;
-        }
+        });
+
+        const allData = await Promise.all(fetchPromises);
+
+        allData.forEach((data, idx) => {
+            if (Array.isArray(data)) {
+                JSON_KNOWLEDGE_DB.push(...data);
+                console.log(`✅ Loaded ${data.length} notes from ${JSON_FILE_URLS[idx]}`);
+            }
+        });
+
+        console.log(`📚 TOTAL: ${JSON_KNOWLEDGE_DB.length} notes loaded`);
+    } catch (err) {
+        console.error("JSON Files Load Error:", err);
     }
-    
-    console.log(`🎯 Smart Search: ${totalChars} chars from ${relevantFiles.length} files for subjects: ${Array.from(detectedSubjects).join(', ')}`);
-    return relevantContent;
 }
 
-// 🔥 FIX #6: Response cache (same question වලට API call නොකර)
+await loadJsonFilesKnowledge();
+
+// ============================================================
+// 🔍 Smart JSON Search
+// ============================================================
+function getRelevantKnowledge(userQuestion) {
+    if (!JSON_KNOWLEDGE_DB.length) return null;
+
+    const question = String(userQuestion).toLowerCase().trim();
+    const questionWords = question.split(/\s+/).filter(w => w.length > 1);
+
+    // Each note එකට score එකක් හදනවා
+    const scored = JSON_KNOWLEDGE_DB.map(note => {
+        let score = 0;
+
+        // 1. Keywords match — ඉතාම වැදගත්
+        if (Array.isArray(note.keywords)) {
+            note.keywords.forEach(kw => {
+                const kwLower = String(kw).toLowerCase().trim();
+                if (kwLower.length < 2) return;
+
+                if (question.includes(kwLower)) {
+                    score += 25;
+                } else if (questionWords.some(qw =>
+                    qw.includes(kwLower) || kwLower.includes(qw)
+                )) {
+                    score += 5;
+                }
+            });
+        }
+
+        // 2. Unit name match
+        if (note.unit_name && question.includes(String(note.unit_name).toLowerCase())) {
+            score += 15;
+        }
+
+        // 3. Section match
+        if (note.section && question.includes(String(note.section).toLowerCase())) {
+            score += 10;
+        }
+
+        // 4. Content word match
+        if (note.content) {
+            const contentLower = String(note.content).toLowerCase();
+            questionWords.forEach(qw => {
+                if (qw.length > 2 && contentLower.includes(qw)) {
+                    score += 1;
+                }
+            });
+        }
+
+        return { note, score };
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+
+    // Minimum threshold — 5+ score
+    const filtered = scored.filter(s => s.score >= 5);
+
+    if (filtered.length === 0) return null;
+
+    // Top matches — total 15000 chars limit
+    const maxChars = 15000;
+    const maxPerNote = 3500;
+    let context = "";
+    let totalChars = 0;
+    const matchedNotes = [];
+
+    for (const { note, score } of filtered) {
+        if (totalChars >= maxChars) break;
+
+        const header = `📚 [${note.subject || ''}] ${note.unit_name || ''}${note.section ? ' - ' + note.section : ''}\n`;
+        let content = String(note.content || '');
+
+        if (content.length > maxPerNote) {
+            content = content.substring(0, maxPerNote) + "...";
+        }
+
+        const entry = header + content + "\n\n";
+
+        if (totalChars + entry.length > maxChars) {
+            const remaining = maxChars - totalChars;
+            if (remaining > 500) {
+                context += entry.substring(0, remaining) + "\n\n";
+                totalChars += remaining;
+                matchedNotes.push(note);
+            }
+            break;
+        }
+
+        context += entry;
+        totalChars += entry.length;
+        matchedNotes.push(note);
+    }
+
+    if (matchedNotes.length === 0) return null;
+
+    console.log(`🎯 JSON Match: ${matchedNotes.length} notes (${totalChars} chars)`);
+    return { context, notes: matchedNotes };
+}
+
+// ============================================================
+// 💾 Response Cache
+// ============================================================
 const responseCache = new Map();
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+const CACHE_DURATION = 24 * 60 * 60 * 1000;
 
 function getCachedResponse(query) {
-    const key = query.toLowerCase().trim();
+    const key = String(query).toLowerCase().trim();
     const cached = responseCache.get(key);
     if (cached && Date.now() - cached.time < CACHE_DURATION) {
-        console.log("✅ Cache HIT - no API call needed");
+        console.log("✅ Cache HIT");
         return cached.response;
     }
     return null;
 }
 
 function cacheResponse(query, response) {
-    const key = query.toLowerCase().trim();
+    const key = String(query).toLowerCase().trim();
     responseCache.set(key, { response, time: Date.now() });
-    
-    // Max 100 entries
     if (responseCache.size > 100) {
         const oldestKey = responseCache.keys().next().value;
         responseCache.delete(oldestKey);
     }
 }
 
-// Load TXT files immediately
-await loadTxtFilesKnowledge();
-
+// ============================================================
+// 🔑 API Keys Sheet
+// ============================================================
 async function fetchApiKeysFromSheet() {
     if (GEMINI_API_KEYS.length > 0) return GEMINI_API_KEYS;
     if (isFetchingKeys) {
@@ -468,8 +457,7 @@ async function fetchApiKeysFromSheet() {
         const response = await fetch(GOOGLE_SHEET_CSV_URL);
         if (!response.ok) throw new Error("API Keys Load කරගැනීමට නොහැකි විය.");
         const csvData = await response.text();
-        
-        // 🔥 FIX #7: \r?\n දාන්න (Windows/Mac/Linux සියල්ලටම)
+
         const lines = csvData.split(/\r?\n/).filter(line => line.trim());
         const extractedKeys = lines
             .map(line => line.split(',')[0].trim().replace(/^["']|["']$/g, ''))
@@ -489,8 +477,70 @@ async function fetchApiKeysFromSheet() {
 
 fetchApiKeysFromSheet();
 
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
+// ============================================================
+// 🚀 STREAMING API — letter by letter
+// ============================================================
+const GEMINI_STREAM_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:streamGenerateContent?alt=sse";
 
+async function streamGeminiRequest(apiKey, requestBody, onChunk) {
+    const response = await fetch(`${GEMINI_STREAM_URL}&key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+        const errText = await response.text();
+        let errData;
+        try { errData = JSON.parse(errText); } catch { errData = { error: { message: errText } }; }
+        const err = new Error(errData.error?.message || 'Request failed');
+        err.status = response.status;
+        err.data = errData;
+        throw err;
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = "";
+    let buffer = "";
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || !trimmed.startsWith('data:')) continue;
+            const jsonStr = trimmed.substring(5).trim();
+            if (!jsonStr || jsonStr === '[DONE]') continue;
+
+            try {
+                const data = JSON.parse(jsonStr);
+                const parts = data.candidates?.[0]?.content?.parts;
+                if (parts) {
+                    for (const part of parts) {
+                        if (part.text) {
+                            fullText += part.text;
+                            onChunk(fullText);
+                        }
+                    }
+                }
+            } catch (e) {
+                // Ignore incomplete chunks
+            }
+        }
+    }
+
+    return fullText;
+}
+
+// ============================================================
+// SYSTEM INSTRUCTION
+// ============================================================
 const SYSTEM_INSTRUCTION = `
 You are MSNS AI, the official digital smart assistant of A/Maithripala Senanayake Central College (Medawachchiya).
 
@@ -509,21 +559,25 @@ Your Instructions & Context:
 7. Core Capabilities:
    - Answer ANY school-related question using the above details.
    - Answer ANY general academic, general knowledge, science, IT, or everyday question using your broad knowledge as Gemini Flash.
-   - When පාඩම් සටහන් (lesson notes) context is provided below, USE IT as the PRIMARY source for answers about school subjects (ගණිතය, ඉතිහාසය, භූගෝලය, බුද්ධ ධර්මය, විද්‍යාව, ICT, සෞඛ්‍ය, පුරවැසි අධ්‍යාපනය).
+   - When පාඩම් සටහන් (lesson notes) context is provided below, USE IT as the PRIMARY source for answers about school subjects.
 8. Tone & Language:
    - Respond in friendly, respectful Sinhala (or English if the user asks in English).
    - Use bold (<b>) for key points or headings.
+   - When answering lesson questions from provided notes, give a structured, clear, complete answer.
 9. Website developer: A/L 2028 Tech student K.D.G Sandaru Malisha Deniyegedara (WhatsApp: 0712049343).
 10. Exam Results Links:
     - O/L Results: msns-lms.github.io/msns/ol.html
     - A/L Results: msns-lms.github.io/msns/al.html
 11. Images:
-    - School Crest / Badge (පාසල් ලාංඡනය): "school badge.png" (පාසල් ලාංඡනය ගැන ඇසුවොත් <img src="school badge.png" class="chat-media-img" alt="School Badge"> ලෙස පිළිතුරේ ඇතුළත් කරන්න).
+    - School Crest / Badge (පාසල් ලාංඡනය): "school badge.png"
 12. Videos (YouTube Links):
-    - School Anthem (පාසල් ගීතය / Anthem): https://youtu.be/1akiY0iJjnA
-    - School Preview / Introduction Video (පාසල් වීඩියෝව / සංචාරය): https://youtu.be/2DftH14DYn8
+    - School Anthem: https://youtu.be/1akiY0iJjnA
+    - School Preview: https://youtu.be/2DftH14DYn8
 `;
 
+// ============================================================
+// UI helpers
+// ============================================================
 function hideHeroGreeting() {
     const hero = document.getElementById('heroGreeting');
     if (hero) hero.style.display = 'none';
@@ -558,20 +612,84 @@ function formatResponse(text) {
     formatted = formatted.replace(imgRegex, '<br><img src="$1" class="chat-media-img" alt="Image"/><br>');
 
     if (typeof marked !== 'undefined') {
-        formatted = marked.parse(formatted);
+        try {
+            formatted = marked.parse(formatted);
+        } catch (e) {
+            console.error("Marked parse error:", e);
+        }
     }
 
     return formatted;
+}
+
+function renderKatex(el) {
+    if (window.renderMathInElement) {
+        try {
+            renderMathInElement(el, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\(', right: '\\)', display: false},
+                    {left: '\\[', right: '\\]', display: true}
+                ],
+                throwOnError: false
+            });
+        } catch (err) {
+            // KaTeX error ignore
+        }
+    }
+}
+
+function attachBotActions(msgDiv, rawText) {
+    const copyBtn = msgDiv.querySelector('.copy-btn');
+    copyBtn?.addEventListener('click', () => {
+        const contentDiv = msgDiv.querySelector('.msg-content');
+        const textToCopy = contentDiv ? contentDiv.innerText : rawText;
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            copyBtn.classList.add('copied');
+            copyBtn.innerHTML = `<i class="fa-solid fa-check"></i> <span>Copied!</span>`;
+            setTimeout(() => {
+                copyBtn.classList.remove('copied');
+                copyBtn.innerHTML = `<i class="fa-regular fa-copy"></i> <span>Copy</span>`;
+            }, 2000);
+        }).catch(() => {
+            const textArea = document.createElement('textarea');
+            textArea.value = textToCopy;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            copyBtn.classList.add('copied');
+            copyBtn.innerHTML = `<i class="fa-solid fa-check"></i> <span>Copied!</span>`;
+            setTimeout(() => {
+                copyBtn.classList.remove('copied');
+                copyBtn.innerHTML = `<i class="fa-regular fa-copy"></i> <span>Copy</span>`;
+            }, 2000);
+        });
+    });
+
+    const pdfBtn = msgDiv.querySelector('.pdf-btn');
+    pdfBtn?.addEventListener('click', () => {
+        const contentDiv = msgDiv.querySelector('.msg-content');
+        const htmlContent = contentDiv ? contentDiv.innerHTML : '';
+        const pdfData = {
+            content: htmlContent,
+            timestamp: new Date().toLocaleString('si-LK'),
+            title: 'MSNS AI Response'
+        };
+        localStorage.setItem('msns_pdf_data', JSON.stringify(pdfData));
+        window.open('pdf.html', '_blank');
+    });
 }
 
 function appendMessage(rawText, className, format = true) {
     hideHeroGreeting();
     const chatMessages = document.getElementById('chatMessages');
     if (!chatMessages) return null;
-    
+
     const msgDiv = document.createElement('div');
     msgDiv.className = className;
-    
+
     const contentHTML = format ? formatResponse(rawText) : rawText;
 
     if (className.includes('bot') && !className.includes('loading-pill') && !className.includes('error-msg')) {
@@ -586,46 +704,7 @@ function appendMessage(rawText, className, format = true) {
                 </button>
             </div>
         `;
-
-        const copyBtn = msgDiv.querySelector('.copy-btn');
-        copyBtn?.addEventListener('click', () => {
-            const contentDiv = msgDiv.querySelector('.msg-content');
-            const textToCopy = contentDiv ? contentDiv.innerText : rawText;
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                copyBtn.classList.add('copied');
-                copyBtn.innerHTML = `<i class="fa-solid fa-check"></i> <span>Copied!</span>`;
-                setTimeout(() => {
-                    copyBtn.classList.remove('copied');
-                    copyBtn.innerHTML = `<i class="fa-regular fa-copy"></i> <span>Copy</span>`;
-                }, 2000);
-            }).catch(() => {
-                const textArea = document.createElement('textarea');
-                textArea.value = textToCopy;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                copyBtn.classList.add('copied');
-                copyBtn.innerHTML = `<i class="fa-solid fa-check"></i> <span>Copied!</span>`;
-                setTimeout(() => {
-                    copyBtn.classList.remove('copied');
-                    copyBtn.innerHTML = `<i class="fa-regular fa-copy"></i> <span>Copy</span>`;
-                }, 2000);
-            });
-        });
-
-        const pdfBtn = msgDiv.querySelector('.pdf-btn');
-        pdfBtn?.addEventListener('click', () => {
-            const contentDiv = msgDiv.querySelector('.msg-content');
-            const htmlContent = contentDiv ? contentDiv.innerHTML : '';
-            const pdfData = {
-                content: htmlContent,
-                timestamp: new Date().toLocaleString('si-LK'),
-                title: 'MSNS AI Response'
-            };
-            localStorage.setItem('msns_pdf_data', JSON.stringify(pdfData));
-            window.open('pdf.html', '_blank');
-        });
+        attachBotActions(msgDiv, rawText);
     } else {
         msgDiv.innerHTML = contentHTML;
     }
@@ -633,25 +712,65 @@ function appendMessage(rawText, className, format = true) {
     chatMessages.appendChild(msgDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
-    if (window.renderMathInElement) {
-        try {
-            renderMathInElement(msgDiv, {
-                delimiters: [
-                    {left: '$$', right: '$$', display: true},
-                    {left: '$', right: '$', display: false},
-                    {left: '\\(', right: '\\)', display: false},
-                    {left: '\\[', right: '\\]', display: true}  // 🔥 FIX #8: \\[ → \\]
-                ],
-                throwOnError: false
-            });
-        } catch (err) {
-            console.error("KaTeX Error:", err);
-        }
-    }
+    renderKatex(msgDiv);
 
     return msgDiv;
 }
 
+// ============================================================
+// 🎬 STREAMING MESSAGE HELPERS
+// ============================================================
+function createStreamingMessage() {
+    hideHeroGreeting();
+    const chatMessages = document.getElementById('chatMessages');
+    if (!chatMessages) return null;
+
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'chat-msg bot';
+    msgDiv.innerHTML = `<div class="msg-content"><span class="typing-cursor">▍</span></div>`;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return msgDiv;
+}
+
+function updateStreamingMessage(msgDiv, text) {
+    if (!msgDiv) return;
+    const contentDiv = msgDiv.querySelector('.msg-content');
+    if (!contentDiv) return;
+
+    // 🔥 Real-time streaming with cursor
+    contentDiv.innerHTML = formatResponse(text) + '<span class="typing-cursor">▍</span>';
+
+    renderKatex(msgDiv);
+
+    const chatMessages = document.getElementById('chatMessages');
+    if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function finalizeStreamingMessage(msgDiv, finalText) {
+    if (!msgDiv) return;
+
+    msgDiv.innerHTML = `
+        <div class="msg-content">${formatResponse(finalText)}</div>
+        <div class="msg-footer">
+            <button class="copy-btn" title="Copy Message">
+                <i class="fa-regular fa-copy"></i> <span>Copy</span>
+            </button>
+            <button class="pdf-btn" title="Generate PDF">
+                <i class="fa-solid fa-file-pdf"></i> <span>PDF</span>
+            </button>
+        </div>
+    `;
+    attachBotActions(msgDiv, finalText);
+    renderKatex(msgDiv);
+
+    const chatMessages = document.getElementById('chatMessages');
+    if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// ============================================================
+// Quick queries
+// ============================================================
 window.sendQuickQuery = function(queryText) {
     if (isAiDisabled) return;
     const input = document.getElementById('userInput');
@@ -661,11 +780,13 @@ window.sendQuickQuery = function(queryText) {
     }
 };
 
-// 🔥 FIX #9: isSending lock + try/finally
+// ============================================================
+// 🔥 MAIN sendMessage with Streaming + JSON + Google Search
+// ============================================================
 async function sendMessage() {
     if (isAiDisabled) return;
     if (isSending) {
-        console.log("⏳ Already sending... please wait");
+        console.log("⏳ Already sending...");
         return;
     }
 
@@ -679,11 +800,13 @@ async function sendMessage() {
     const sendBtn = document.getElementById('sendBtn');
     if (sendBtn) sendBtn.disabled = true;
 
+    let botMsgDiv = null;
+
     try {
         appendMessage(userText, 'chat-msg user', false);
         inputField.value = '';
 
-        // 🔥 FIX #10: Cache check (same question → no API call)
+        // 1️⃣ Cache check
         const cachedResponse = getCachedResponse(userText);
         if (cachedResponse) {
             appendMessage(cachedResponse, 'chat-msg bot', true);
@@ -691,34 +814,60 @@ async function sendMessage() {
             return;
         }
 
-        const loadingHtml = `<div class="spinner-arc"></div><span class="loading-text">MSNS AI is thinking...</span>`;
-        const botMsgDiv = appendMessage(loadingHtml, 'chat-msg bot loading-pill', false);
+        // 2️⃣ JSON search
+        const knowledgeMatch = getRelevantKnowledge(userText);
 
+        let fullSystemInstruction = SYSTEM_INSTRUCTION;
+        let useGrounding = false;
+
+        if (knowledgeMatch) {
+            fullSystemInstruction += "\n\n=== අදාළ පාඩම් සටහන් ===\n" + knowledgeMatch.context;
+            console.log(`📚 Using JSON notes (${knowledgeMatch.notes.length} notes)`);
+        } else {
+            useGrounding = true;
+            console.log("🌐 No JSON match → enabling Google Search grounding");
+        }
+
+        // 3️⃣ Create streaming message UI
+        botMsgDiv = createStreamingMessage();
+        if (!botMsgDiv) throw new Error("Cannot create message UI");
+
+        // 4️⃣ Load API keys
         const keys = await fetchApiKeysFromSheet();
 
         if (!keys || keys.length === 0) {
-            if (botMsgDiv) {
-                botMsgDiv.className = 'chat-msg error-msg';
-                botMsgDiv.innerHTML = "⚠️ <b>දෝෂයක්:</b> API Keys ලබා ගැනීමට නොහැකි විය.";
-            }
+            botMsgDiv.className = 'chat-msg error-msg';
+            botMsgDiv.innerHTML = "⚠️ <b>දෝෂයක්:</b> API Keys ලබා ගැනීමට නොහැකි විය.";
             return;
         }
 
+        // 5️⃣ Build request body
+        const requestBody = {
+            system_instruction: {
+                parts: [{ text: fullSystemInstruction }]
+            },
+            contents: [
+                { parts: [{ text: userText }] }
+            ],
+            generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 2048
+            }
+        };
+
+        if (useGrounding) {
+            requestBody.tools = [{ google_search: {} }];
+        }
+
         let lastErrorMessage = "නොදන්නා දෝෂයක් සිදුවී ඇත.";
+        let fullResponseText = "";
+        let streamingSucceeded = false;
 
-        // 🔥 FIX #11: Smart search - අදාළ කොටස් විතරක් ගන්න
-        const relevantKnowledge = getRelevantKnowledge(userText);
-        const fullSystemInstruction = SYSTEM_INSTRUCTION + 
-            (relevantKnowledge 
-                ? "\n\n=== අදාළ පාඩම් සටහන් ===\n" + relevantKnowledge 
-                : "");
-
-        console.log(`📤 Sending ${fullSystemInstruction.length} chars to Gemini`);
-
+        // 6️⃣ Try each API key
         for (let i = 0; i < keys.length; i++) {
             const currentApiKey = keys[i];
 
-            // 🔥 FIX #12: Blocked keys skip කරන්න
+            // Skip blocked keys
             if (blockedKeys.has(currentApiKey)) {
                 const unblockTime = blockedKeys.get(currentApiKey);
                 if (Date.now() < unblockTime) {
@@ -730,61 +879,74 @@ async function sendMessage() {
             }
 
             try {
-                const response = await fetch(GEMINI_API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-goog-api-key': currentApiKey
-                    },
-                    body: JSON.stringify({
-                        system_instruction: {
-                            parts: [{ text: fullSystemInstruction }]
-                        },
-                        contents: [
-                            {
-                                parts: [{ text: userText }]
-                            }
-                        ]
-                    })
-                });
+                // 🔥 Try with current request body
+                fullResponseText = await streamGeminiRequest(
+                    currentApiKey,
+                    requestBody,
+                    (partialText) => {
+                        // Update UI on every chunk — letter by letter ✨
+                        updateStreamingMessage(botMsgDiv, partialText);
+                    }
+                );
 
-                const data = await response.json();
-
-                if (response.status === 429 || (data.error && (data.error.code === 429 || data.error.message?.includes('quota') || data.error.message?.includes('Quota')))) {
-                    // 🔥 FIX #13: Rate limited key එක 60s block කරන්න
-                    blockedKeys.set(currentApiKey, Date.now() + KEY_BLOCK_DURATION);
-                    console.log(`🚫 Key ${i + 1} blocked for 60s`);
-                    lastErrorMessage = "සියලුම API Keys වල සීමාවන් ඉක්මවා ඇත (Quota Exceeded).";
-                    continue; 
-                }
-
-                if (response.ok && data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-                    let rawText = data.candidates[0].content.parts[0].text;
-                    
-                    botMsgDiv?.remove();
-                    appendMessage(rawText, 'chat-msg bot', true);
-
-                    // 🔥 FIX #14: Response cache කරන්න
-                    cacheResponse(userText, rawText);
-
-                    await saveMessageToDatabase(userText, rawText);
-                    return;
-                } else {
-                    lastErrorMessage = data.error ? data.error.message : "API Request Error";
-                }
+                streamingSucceeded = true;
+                break; // Success!
 
             } catch (error) {
                 console.error(`Key ${i + 1} Error:`, error);
-                lastErrorMessage = "Network Error: අන්තර්ජාල සම්බන්ධතාවය පරීක්ෂා කරන්න.";
+
+                // 429 → block this key & try next
+                if (error.status === 429) {
+                    blockedKeys.set(currentApiKey, Date.now() + KEY_BLOCK_DURATION);
+                    console.log(`🚫 Key ${i + 1} blocked for 60s`);
+                    lastErrorMessage = "සියලුම API Keys වල සීමාවන් ඉක්මවා ඇත (Quota Exceeded).";
+                    continue;
+                }
+
+                // 🔥 If grounding failed (400/403) → retry without grounding
+                if (useGrounding && (error.status === 400 || error.status === 403)) {
+                    console.warn("⚠️ Grounding failed → retrying without Google Search");
+                    useGrounding = false;
+                    delete requestBody.tools;
+
+                    try {
+                        fullResponseText = await streamGeminiRequest(
+                            currentApiKey,
+                            requestBody,
+                            (partialText) => {
+                                updateStreamingMessage(botMsgDiv, partialText);
+                            }
+                        );
+                        streamingSucceeded = true;
+                        break;
+                    } catch (retryError) {
+                        console.error(`Retry without grounding failed:`, retryError);
+                        lastErrorMessage = retryError.message || "API Error";
+                        continue;
+                    }
+                }
+
+                lastErrorMessage = error.message || "API Error";
             }
         }
 
-        if (botMsgDiv) {
+        // 7️⃣ Handle results
+        if (streamingSucceeded && fullResponseText) {
+            finalizeStreamingMessage(botMsgDiv, fullResponseText);
+            cacheResponse(userText, fullResponseText);
+            await saveMessageToDatabase(userText, fullResponseText);
+        } else {
             botMsgDiv.className = 'chat-msg error-msg';
             botMsgDiv.innerHTML = `⚠️ <b>දෝෂයක්:</b> ${lastErrorMessage}`;
         }
+
+    } catch (err) {
+        console.error("sendMessage Error:", err);
+        if (botMsgDiv) {
+            botMsgDiv.className = 'chat-msg error-msg';
+            botMsgDiv.innerHTML = `⚠️ <b>දෝෂයක්:</b> ${err.message || "Unknown error"}`;
+        }
     } finally {
-        // 🔥 FIX #15: Lock එක release කරන්න
         isSending = false;
         if (sendBtn) sendBtn.disabled = false;
     }
@@ -792,7 +954,6 @@ async function sendMessage() {
 
 document.getElementById('sendBtn')?.addEventListener('click', sendMessage);
 
-// 🔥 FIX #16: keypress → keydown (double request වළක්වන්න)
 document.getElementById('userInput')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -800,7 +961,9 @@ document.getElementById('userInput')?.addEventListener('keydown', (e) => {
     }
 });
 
+// ============================================================
 // Sidebar / Image Modal / Viewport Height
+// ============================================================
 const menuToggle = document.getElementById('menuToggle');
 const closeMenu = document.getElementById('closeMenu');
 const sidebar = document.getElementById('sidebar');
@@ -859,9 +1022,9 @@ document.getElementById('imageModal')?.addEventListener('click', (e) => {
     setVH();
 })();
 
-// ------------------------------
-// 6. Firestore Realtime AI On/Off Listener
-// ------------------------------
+// ============================================================
+// Firestore Realtime AI On/Off Listener
+// ============================================================
 const aiStatusRef = doc(db, 'ai-on-off', 'ai');
 
 onSnapshot(aiStatusRef, (docSnap) => {
@@ -872,7 +1035,7 @@ onSnapshot(aiStatusRef, (docSnap) => {
 
     if (docSnap.exists()) {
         const data = docSnap.data();
-        
+
         const rawVal = data['on or off'] ?? data['status'] ?? data['state'] ?? 'on';
         const strVal = String(rawVal).trim().toLowerCase();
 
