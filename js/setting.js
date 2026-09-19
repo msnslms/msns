@@ -27,7 +27,11 @@ const doNotTranslateList = [
    '.msns-nav-link',
    '.msns-navbar-menu',
    '.msns-navbar-inner',
-   '.msns-desktop-navbar'
+   '.msns-desktop-navbar',
+   '.cr-text',
+   '#previewOverlay',
+   '#paperModalOverlay',
+   '.contact-detail',
 ];
 
 /* 2. STYLES & FONTS INJECT කිරීම */
