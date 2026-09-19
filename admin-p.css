@@ -675,3 +675,249 @@ header {
         grid-template-columns: 1fr;
     }
 }
+/* ==========================================
+   TERM TEST ANALYSIS & TEST PREVIEW
+   ========================================== */
+
+.analysis-panel {
+    margin-top: 20px;
+}
+
+.analysis-btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+}
+
+.analysis-result-box {
+    margin-top: 24px;
+    animation: fadeIn 0.3s ease;
+}
+
+/* 4-column summary grid */
+.analysis-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 22px;
+}
+
+.summary-stat-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+    transition: 0.2s;
+}
+
+.summary-stat-card:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+.stat-icon-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.summary-stat-card .stat-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.summary-stat-card .stat-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.1;
+}
+
+.stat-total .stat-icon-wrap { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+.stat-pass  .stat-icon-wrap { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+.stat-fail  .stat-icon-wrap { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+.stat-rate  .stat-icon-wrap { background: rgba(201, 154, 46, 0.15); color: #fbbf24; }
+
+/* Chart cards */
+.charts-grid-exam {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 22px;
+}
+
+.exam-chart-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 18px;
+}
+
+.chart-card-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chart-card-title i { color: #60a5fa; font-size: 0.9rem; }
+
+.chart-wrapper-exam {
+    position: relative;
+    height: 260px;
+    width: 100%;
+}
+
+/* Table card */
+.exam-table-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 18px;
+}
+
+/* Test Preview output */
+.test-result-output {
+    margin-top: 20px;
+    background: rgba(59, 130, 246, 0.06);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 14px;
+    padding: 18px;
+    animation: fadeIn 0.25s ease;
+}
+
+.test-result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.test-result-header h4 {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+.test-result-pill {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.pill-pass { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+.pill-fail { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+
+.test-result-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+    font-size: 0.85rem;
+}
+
+.test-result-grid .tr-item {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px 12px;
+    border-radius: 10px;
+    color: var(--text-muted);
+}
+
+.test-result-grid .tr-item strong { color: #fff; display: block; font-size: 0.95rem; margin-top: 2px; }
+
+.test-result-subjects {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.test-result-subject {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.25);
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    border-left: 3px solid var(--primary-color);
+}
+
+.test-result-subject .sub-name { color: var(--text-main); font-weight: 600; font-size: 0.82rem; }
+.test-result-subject .sub-marks { color: #60a5fa; font-weight: 800; font-size: 0.9rem; }
+.test-result-subject .sub-grade {
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 0.7rem;
+    margin-left: 8px;
+}
+
+.grade-A { background: rgba(5,150,105,0.2); color: #34d399; }
+.grade-B { background: rgba(37,99,235,0.2); color: #60a5fa; }
+.grade-C { background: rgba(180,83,9,0.2); color: #fbbf24; }
+.grade-S { background: rgba(194,65,12,0.2); color: #fb923c; }
+.grade-W { background: rgba(185,28,28,0.2); color: #f87171; }
+
+.test-empty-msg {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* ============ PDF EXPORT MODE ============ */
+.pdf-export-mode {
+    position: absolute !important;
+    left: -99999px !important;
+    top: 0 !important;
+    width: 800px !important;
+    background: #ffffff !important;
+    color: #111 !important;
+    padding: 30px !important;
+    z-index: -1;
+}
+
+.pdf-export-mode .summary-stat-card,
+.pdf-export-mode .exam-chart-card,
+.pdf-export-mode .exam-table-card {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #111 !important;
+    box-shadow: none !important;
+}
+
+.pdf-export-mode .summary-stat-card .stat-value,
+.pdf-export-mode .summary-stat-card .stat-label,
+.pdf-export-mode .chart-card-title { color: #0f172a !important; }
+
+.pdf-export-mode .tt-preview-table th { background: #f1f5f9 !important; color: #0f172a !important; }
+.pdf-export-mode .tt-preview-table td { color: #1e293b !important; border-color: #e2e8f0 !important; }
+
+@media (max-width: 768px) {
+    .charts-grid-exam { grid-template-columns: 1fr; }
+}
