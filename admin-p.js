@@ -1707,3 +1707,49 @@ async function exportPdf(mode) {
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('a-sw.js').catch(() => {});
 }
+// Term Test Section Main Tabs Logic
+const tabManageResults = document.getElementById('tabManageResults');
+const tabAnalysisMain = document.getElementById('tabAnalysisMain');
+const manageResultsWrapper = document.getElementById('manageResultsWrapper');
+const analysisMainWrapper = document.getElementById('analysisMainWrapper');
+
+if(tabManageResults && tabAnalysisMain) {
+    tabManageResults.addEventListener('click', () => {
+        tabManageResults.classList.add('active');
+        tabAnalysisMain.classList.remove('active');
+        manageResultsWrapper.style.display = 'block';
+        analysisMainWrapper.style.display = 'none';
+    });
+
+    tabAnalysisMain.addEventListener('click', () => {
+        tabAnalysisMain.classList.add('active');
+        tabManageResults.classList.remove('active');
+        analysisMainWrapper.style.display = 'block';
+        manageResultsWrapper.style.display = 'none';
+    });
+}
+
+// PDF Preview Modal Logic (Example for opening/closing)
+const pdfPreviewModalOverlay = document.getElementById('pdfPreviewModalOverlay');
+const closePdfModal = document.getElementById('closePdfModal');
+const btnCancelPdf = document.getElementById('btnCancelPdf');
+
+// ඔබගේ කලින් තිබුණු btnPdfOl සහ btnPdfAl දැන් Preview විදියට වෙනස් කර ඇත (btnPdfPreviewOl / btnPdfPreviewAl)
+// ඒවා ක්ලික් කළ විට Modal එක Open වීමට පහත කේතය භාවිතා කරන්න (ඔබේ අවශ්‍යතාවය අනුව වෙනස් කරගන්න)
+function openPdfPreview(contentToPreview) {
+    const pdfContentArea = document.getElementById('pdfContentArea');
+    // අවශ්‍ය නම් මෙතනට Chart වල පින්තූර සහ Data Table එක Clone කරලා දාන්න
+    pdfContentArea.innerHTML = "<h4>Analysis Data Preview</h4><p>Your charts and tables will appear here before downloading.</p>"; 
+    pdfPreviewModalOverlay.classList.add('active');
+}
+
+if(closePdfModal) closePdfModal.addEventListener('click', () => pdfPreviewModalOverlay.classList.remove('active'));
+if(btnCancelPdf) btnCancelPdf.addEventListener('click', () => pdfPreviewModalOverlay.classList.remove('active'));
+
+// O/L View PDF Button Action
+const btnPdfPreviewOl = document.getElementById('btnPdfPreviewOl');
+if(btnPdfPreviewOl) {
+    btnPdfPreviewOl.addEventListener('click', () => {
+        openPdfPreview(); // මෙතනට O/L Data යවන්න
+    });
+}
