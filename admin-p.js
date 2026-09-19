@@ -58,7 +58,6 @@ function initAuth() {
     } else {
         $('loginModal')?.classList.add('active');
     }
-
     $('loginForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const unameInput = $('loginUsername');
@@ -66,12 +65,10 @@ function initAuth() {
         if (!unameInput || !pwdInput) return;
         const uname = unameInput.value.trim().toLowerCase();
         const pwd = pwdInput.value.trim();
-
         try {
             let userData = null;
             let detectedRole = null;
             let adminSnap = await getDoc(doc(db, 'admin-users', uname));
-
             if (adminSnap.exists()) {
                 userData = adminSnap.data();
                 detectedRole = userData.role || adminSnap.id;
@@ -84,7 +81,6 @@ function initAuth() {
                     detectedRole = userData.role || matchedDoc.id;
                 }
             }
-
             if (userData && (userData.password === pwd || userData.pwd === pwd)) {
                 currentAdminRole = (detectedRole || 'admin').toLowerCase();
                 sessionStorage.setItem('adminRole', currentAdminRole);
@@ -99,7 +95,6 @@ function initAuth() {
             showToast('Login දෝෂයක්: ' + err.message, 'error');
         }
     });
-
     $('btnLogout')?.addEventListener('click', () => {
         sessionStorage.removeItem('adminRole');
         location.reload();
@@ -115,7 +110,6 @@ function applyRolePermissions() {
         termTest: $('navTermTest'), documents: $('navDocuments'), gemini: $('navGemini')
     };
     Object.values(navLinks).forEach(el => { if (el) el.style.display = 'none'; });
-
     if (currentAdminRole === 'media-unit') {
         if (navLinks.news) navLinks.news.style.display = 'flex';
         switchSection('newsSection');
@@ -533,7 +527,7 @@ function renderAlStreamsForm() {
 }
 
 // ==========================================
-// 5. TERM TEST MANAGE (same as before)
+// 5. TERM TEST MANAGE
 // ==========================================
 let parsedSheetStudents = [];
 let currentMeta = {};
@@ -626,6 +620,49 @@ function initTermTestModule() {
     loadTermTestList();
 }
 
+// ==========================================
+// ✅ FIXED: Proper CSV parser (multi-line cell safe)
+// ==========================================
+function parseFullCSV(text) {
+    const rows = [];
+    let row = [];
+    let field = '';
+    let inQuotes = false;
+    let i = 0;
+    while (i < text.length) {
+        const c = text[i];
+        if (inQuotes) {
+            if (c === '"') {
+                if (text[i + 1] === '"') { field += '"'; i += 2; }
+                else { inQuotes = false; i++; }
+            } else { field += c; i++; }
+        } else {
+            if (c === '"') { inQuotes = true; i++; }
+            else if (c === ',') { row.push(field); field = ''; i++; }
+            else if (c === '\r') {
+                if (text[i + 1] === '\n') i++;
+                row.push(field);
+                if (row.some(f => String(f).trim() !== '')) rows.push(row);
+                row = []; field = ''; i++;
+            }
+            else if (c === '\n') {
+                row.push(field);
+                if (row.some(f => String(f).trim() !== '')) rows.push(row);
+                row = []; field = ''; i++;
+            }
+            else { field += c; i++; }
+        }
+    }
+    if (field !== '' || row.length > 0) {
+        row.push(field);
+        if (row.some(f => String(f).trim() !== '')) rows.push(row);
+    }
+    // Clean cells: replace newlines with spaces, collapse multiple spaces
+    return rows.map(r => r.map(cell => 
+        String(cell).replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim()
+    ));
+}
+
 async function fetchAndParseGoogleSheet(sheetUrl) {
     const matches = sheetUrl.match(/\/d\/([a-zA-Z0-9\-_]+)/i);
     if (!matches || !matches[1]) throw new Error('අවලංගු Google Sheet Link එකකි!');
@@ -634,81 +671,126 @@ async function fetchAndParseGoogleSheet(sheetUrl) {
     const response = await fetch(csvUrl);
     if (!response.ok) throw new Error('Sheet එක Share කර "Anyone with the link can view" ද බලන්න.');
     const csvText = await response.text();
-    return parseCSVToStudentResults(csvText);
+    const rows = parseFullCSV(csvText);
+    return parseRowsToStudentResults(rows);
 }
 
-function parseCSVToStudentResults(csvText) {
-    const lines = csvText.split(/\r\n|\n/).map(l => parseCSVLine(l)).filter(row => row.some(cell => cell.trim() !== ''));
-    if (lines.length < 2) throw new Error('Sheet එකේ දත්ත නොමැත!');
+// ==========================================
+// ✅ FIXED: Parse rows → students (with better headers)
+// ==========================================
+function parseRowsToStudentResults(rows) {
+    if (rows.length < 2) throw new Error('Sheet එකේ දත්ත නොමැත!');
+
+    // Find header row (must have "index" and "name")
     let headerRowIdx = -1;
-    for (let i = 0; i < Math.min(lines.length, 15); i++) {
-        const row = lines[i].map(c => c.toLowerCase().trim());
+    for (let i = 0; i < Math.min(rows.length, 15); i++) {
+        const row = rows[i].map(c => String(c).toLowerCase());
         const hasIndex = row.some(c => c.includes('index') || c.includes('විභාග අංකය') || c.includes('අංකය'));
-        const hasName = row.some(c => c.includes('name') || c.includes('නම') || c.includes('student name'));
+        const hasName = row.some(c => c.includes('name') || c.includes('නම'));
         if (hasIndex && hasName) { headerRowIdx = i; break; }
     }
-    if (headerRowIdx === -1) throw new Error('Index No හෝ Name Columns සොයාගත නොහැක.');
-    const row1 = lines[headerRowIdx];
-    const row2 = (headerRowIdx + 1 < lines.length) ? lines[headerRowIdx + 1] : [];
-    let indexColIdx = row1.findIndex(c => c.toLowerCase().includes('index') || c.toLowerCase().includes('විභාග අංකය') || c.toLowerCase().includes('අංකය'));
-    if (indexColIdx === -1) indexColIdx = row2.findIndex(c => c.toLowerCase().includes('index') || c.toLowerCase().includes('විභාග අංකය') || c.toLowerCase().includes('අංකය'));
+    if (headerRowIdx === -1) throw new Error('Header row සොයාගත නොහැක. "Index" සහ "Name" columns තියෙන්න ඕන.');
+
+    const row1 = rows[headerRowIdx] || [];
+    const row2 = (headerRowIdx + 1 < rows.length) ? rows[headerRowIdx + 1] : [];
+
+    // Detect if row2 is another header row (2-row header case)
+    let indexColIdx = row1.findIndex(c => {
+        const l = String(c).toLowerCase();
+        return l.includes('index') || l.includes('විභාග අංකය') || l.includes('අංකය');
+    });
+    if (indexColIdx === -1) {
+        indexColIdx = row2.findIndex(c => {
+            const l = String(c).toLowerCase();
+            return l.includes('index') || l.includes('විභාග අංකය') || l.includes('අංකය');
+        });
+    }
+
     let isRow2Header = false;
-    if (indexColIdx !== -1 && row2[indexColIdx] && row2[indexColIdx].trim() === '') isRow2Header = true;
-    let colMap = { index: -1, name: -1, total: -1, average: -1, position: -1, subjects: [] };
+    if (indexColIdx !== -1 && row2[indexColIdx] !== undefined && String(row2[indexColIdx]).trim() === '') {
+        // Check if row2 has more subject columns than row1
+        const row2NonEmpty = row2.filter(c => String(c).trim() !== '').length;
+        const row1NonEmpty = row1.filter(c => String(c).trim() !== '').length;
+        if (row2NonEmpty >= row1NonEmpty * 0.5) {
+            isRow2Header = true;
+        }
+    }
+
+    // Build column map by combining row1 + row2
+    const colMap = { index: -1, name: -1, total: -1, average: -1, position: -1, subjects: [] };
     const maxCols = Math.max(row1.length, isRow2Header ? row2.length : 0);
+
     for (let i = 0; i < maxCols; i++) {
-        let val1 = row1[i] ? row1[i].trim() : '';
-        let val2 = (isRow2Header && row2[i]) ? row2[i].trim() : '';
-        let colName = val1;
-        if (val2 !== '') colName = val2;
-        let lowerCol = colName.toLowerCase();
+        const val1 = row1[i] ? String(row1[i]).trim() : '';
+        const val2 = (isRow2Header && row2[i]) ? String(row2[i]).trim() : '';
+        
+        // Combine: prefer val2 (sub-header) if present, otherwise val1
+        // But if val1 has the real name and val2 is empty, use val1
+        let colName = val2 !== '' ? val2 : val1;
+        
+        // If both are non-empty and different, join them (e.g. "SINHALA" + "LITERATURE")
+        if (val1 !== '' && val2 !== '' && val1 !== val2) {
+            colName = `${val1} ${val2}`;
+        }
+        
         if (!colName) continue;
-        if (lowerCol.includes('index') || lowerCol.includes('විභාග අංකය') || lowerCol.includes('අංකය')) colMap.index = i;
-        else if (lowerCol.includes('name') || lowerCol.includes('නම') || lowerCol.includes('student name')) colMap.name = i;
-        else if (lowerCol.includes('total') || lowerCol.includes('එකතුව')) colMap.total = i;
-        else if (lowerCol.includes('average') || lowerCol.includes('avg') || lowerCol.includes('සාමාන්‍යය')) colMap.average = i;
-        else if (lowerCol.includes('position') || lowerCol.includes('rank') || lowerCol.includes('place') || lowerCol.includes('ස්ථානය')) colMap.position = i;
-        else {
-            const ignoredKeywords = ['bucket', 'main subject', 'optional'];
-            const isIgnored = ignoredKeywords.some(key => lowerCol.includes(key));
-            if (!isIgnored && i !== colMap.index && i !== colMap.name) {
+        const lower = colName.toLowerCase();
+
+        if (lower.includes('index') || lower.includes('විභාග අංකය') || lower.includes('අංකය')) {
+            colMap.index = i;
+        } else if (lower.includes('name') || lower.includes('නම')) {
+            colMap.name = i;
+        } else if (lower.includes('total') || lower.includes('එකතුව')) {
+            colMap.total = i;
+        } else if (lower.includes('average') || lower.includes('avg') || lower.includes('සාමාන්‍ය')) {
+            colMap.average = i;
+        } else if (lower.includes('position') || lower.includes('rank') || lower.includes('place') || lower.includes('ස්ථානය')) {
+            colMap.position = i;
+        } else {
+            const ignored = ['bucket', 'main subject', 'optional', 'result', 'grade', 'class', 'stream'];
+            const skip = ignored.some(k => lower === k || lower.startsWith(k + ' '));
+            if (!skip && i !== colMap.index && i !== colMap.name && colName.length > 0) {
                 colMap.subjects.push({ index: i, name: colName });
             }
         }
     }
+
+    if (colMap.index === -1 || colMap.name === -1) {
+        throw new Error('Index/Name columns හඳුනාගත නොහැක.');
+    }
+
+    // Parse students
     const students = [];
-    let dataStartRow = isRow2Header ? headerRowIdx + 2 : headerRowIdx + 1;
-    for (let i = dataStartRow; i < lines.length; i++) {
-        const row = lines[i];
+    const dataStartRow = isRow2Header ? headerRowIdx + 2 : headerRowIdx + 1;
+
+    for (let i = dataStartRow; i < rows.length; i++) {
+        const row = rows[i];
         if (!row || row.length === 0) continue;
-        const indexNum = colMap.index !== -1 && row[colMap.index] ? row[colMap.index].trim() : '';
-        const name = colMap.name !== -1 && row[colMap.name] ? row[colMap.name].trim() : '';
-        if (!indexNum || indexNum === '' || indexNum.toLowerCase().includes('index')) continue;
+
+        const indexNum = row[colMap.index] ? String(row[colMap.index]).trim() : '';
+        const name = row[colMap.name] ? String(row[colMap.name]).trim() : '';
+
+        if (!indexNum || indexNum === '' || indexNum.toLowerCase().includes('index') || 
+            indexNum.toLowerCase().includes('total') || !/^\d+/.test(indexNum)) {
+            continue;
+        }
+
         const results = {};
         colMap.subjects.forEach(sub => {
-            const mark = row[sub.index] ? row[sub.index].trim() : '';
-            if (mark !== '' && mark !== '-') results[sub.name] = mark;
+            const mark = row[sub.index] ? String(row[sub.index]).trim() : '';
+            if (mark !== '' && mark !== '-' && mark !== '--') {
+                results[sub.name] = mark;
+            }
         });
-        const total = colMap.total !== -1 && row[colMap.total] ? row[colMap.total].trim() : '';
-        const average = colMap.average !== -1 && row[colMap.average] ? row[colMap.average].trim() : '';
-        const position = colMap.position !== -1 && row[colMap.position] ? row[colMap.position].trim() : '';
+
+        const total = colMap.total !== -1 && row[colMap.total] ? String(row[colMap.total]).trim() : '';
+        const average = colMap.average !== -1 && row[colMap.average] ? String(row[colMap.average]).trim() : '';
+        const position = colMap.position !== -1 && row[colMap.position] ? String(row[colMap.position]).trim() : '';
+
         students.push({ indexNumber: indexNum, name, total, average, position, results });
     }
-    return students;
-}
 
-function parseCSVLine(text) {
-    let p = '', c = '', r = [];
-    let q = false;
-    for (let i = 0; i < text.length; i++) {
-        c = text[i];
-        if (c === '"') {
-            if (q && text[i + 1] === '"') { p += '"'; i++; } else { q = !q; }
-        } else if (c === ',' && !q) { r.push(p); p = ''; }
-        else { p += c; }
-    }
-    r.push(p);
-    return r;
+    return students;
 }
 
 function renderSheetPreview(students) {
@@ -866,7 +948,18 @@ let alAnalysisData = null;
 
 /* ---------- Grade helper ---------- */
 function calcGrade(m) {
-    const x = parseFloat(m);
+    if (m === undefined || m === null) return 'W';
+    const s = String(m).trim().toUpperCase();
+    if (!s) return 'W';
+    
+    // If already a letter grade, use directly
+    if (['A', 'B', 'C', 'S', 'W', 'F', 'AB'].includes(s)) {
+        if (s === 'F' || s === 'AB') return 'W';
+        return s;
+    }
+    
+    // Otherwise try to parse as number
+    const x = parseFloat(s);
     if (isNaN(x)) return 'W';
     if (x >= 75) return 'A';
     if (x >= 65) return 'B';
@@ -876,74 +969,123 @@ function calcGrade(m) {
 }
 function isPassGrade(g) { return g === 'A' || g === 'B' || g === 'C' || g === 'S'; }
 function isCreditGrade(g) { return g === 'A' || g === 'B' || g === 'C'; }
+
 function getSubjects(resultsObj) {
     if (!resultsObj) return [];
     return Object.entries(resultsObj).filter(([s]) => {
-        const k = s.toLowerCase().trim();
-        return !k.includes('grade') && !k.includes('class') && !k.includes('stream') && !k.includes('position');
+        const k = String(s).toLowerCase().trim();
+        return !k.includes('grade') && !k.includes('class') && 
+               !k.includes('stream') && !k.includes('position') &&
+               !k.includes('total') && !k.includes('average') &&
+               !k.includes('result');
     });
 }
 
-/* ---------- Subject detection ---------- */
+/* ---------- ✅ FIXED: Subject Detection ---------- */
+function normalizeSubject(name) {
+    return String(name || '')
+        .toLowerCase()
+        .replace(/[\r\n]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
 function isMathsSubject(name) {
-    const n = String(name).toLowerCase().trim();
-    if (!n) return false;
-    if (n === 'maths' || n === 'math' || n === 'mathematics') return true;
-    if (n.includes('mathematics') || n.includes('maths')) return true;
-    if (n.includes('ගණිත')) return true;
-    return false;
-}
-function isSinhalaLiterature(name) {
-    const n = String(name).toLowerCase();
-    if (n.includes('sinhala') && (n.includes('literature') || n.includes('lit.'))) return true;
-    if (n.includes('සිංහල') && (n.includes('සාහිත්‍ය') || n.includes('සාහිත'))) return true;
-    return false;
-}
-function isTamilLiterature(name) {
-    const n = String(name).toLowerCase();
-    if (n.includes('tamil') && (n.includes('literature') || n.includes('lit.'))) return true;
-    if (n.includes('දෙමළ') && (n.includes('සාහිත්‍ය') || n.includes('සාහිත'))) return true;
-    return false;
-}
-function isMotherTongueSubject(name) {
-    const n = String(name).toLowerCase().trim();
-    if (!n) return false;
-    if (isSinhalaLiterature(n) || isTamilLiterature(n)) return false;
-    if (n.includes('sinhala') || n.includes('සිංහල')) return true;
-    if (n.includes('tamil') || n.includes('දෙමළ')) return true;
-    return false;
-}
-function isAlExcludedSubject(name) {
-    const n = String(name).toLowerCase().trim();
-    if (!n) return false;
-    if (n.includes('general information technology')) return true;
-    if (n === 'git' || n === 'g.i.t' || n === 'g i t') return true;
-    if (n.includes('general english')) return true;
-    if (n === 'english' || n === 'english language') return true;
+    const raw = normalizeSubject(name);
+    if (!raw) return false;
+    const compact = raw.replace(/[\s\.\-_\(\)&]+/g, '');
+    if (!compact) return false;
+    
+    if (compact === 'maths' || compact === 'math' || compact === 'mathematics' || compact === 'mathamatics') return true;
+    if (compact.includes('mathematics')) return true;
+    if (compact.includes('maths')) return true;
+    if (compact.startsWith('math')) return true;
+    if (compact.includes('ගණිත')) return true;
     return false;
 }
 
-/* ---------- O/L Pass/Fail ---------- */
-function checkOlPass(subjects) {
-    const graded = subjects.map(([name, mark]) => ({ name, mark, grade: calcGrade(mark) }));
-    const passes = graded.filter(g => isPassGrade(g.grade));
+function isSinhalaLit(name) {
+    const compact = normalizeSubject(name).replace(/[\s\.\-_\(\)&]+/g, '');
+    if (!compact) return false;
+    if (!compact.includes('sinhala') && !compact.includes('සිංහල')) return false;
+    return compact.includes('literature') || 
+           compact.includes('lit') ||
+           compact.includes('සාහිත්‍ය') || 
+           compact.includes('සාහිත');
+}
+
+function isTamilLit(name) {
+    const compact = normalizeSubject(name).replace(/[\s\.\-_\(\)&]+/g, '');
+    if (!compact) return false;
+    if (!compact.includes('tamil') && !compact.includes('දෙමළ')) return false;
+    return compact.includes('literature') || 
+           compact.includes('lit') ||
+           compact.includes('සාහිත්‍ය') || 
+           compact.includes('සාහිත');
+}
+
+function isMotherTongueSubject(name) {
+    const compact = normalizeSubject(name).replace(/[\s\.\-_\(\)&]+/g, '');
+    if (!compact) return false;
+    
+    const hasSinhala = compact.includes('sinhala') || compact.includes('සිංහල');
+    const hasTamil = compact.includes('tamil') || compact.includes('දෙමළ');
+    if (!hasSinhala && !hasTamil) return false;
+    
+    // Exclude literature
+    if (isSinhalaLit(name) || isTamilLit(name)) return false;
+    
+    return true;
+}
+
+function isAlExcludedSubject(name) {
+    const compact = normalizeSubject(name).replace(/[\s\.\-_\(\)&]+/g, '');
+    if (!compact) return false;
+    if (compact.includes('generalinformationtechnology')) return true;
+    if (compact === 'git' || compact === 'git' || compact === 'g i t'.replace(/\s/g, '')) return true;
+    if (compact.includes('generalenglish')) return true;
+    if (compact === 'english' || compact === 'englishlanguage') return true;
+    if (compact.includes('englishliterature')) return true;
+    return false;
+}
+
+/* ---------- ✅ FIXED: O/L Pass/Fail (lenient on missing subjects) ---------- */
+function checkOlPass(subjects, allSubjectNames) {
+    const graded = subjects.map(([name, mark]) => ({
+        name, mark, grade: calcGrade(mark)
+    }));
+
+    const passes  = graded.filter(g => isPassGrade(g.grade));
     const credits = graded.filter(g => isCreditGrade(g.grade));
-    const maths = graded.find(g => isMathsSubject(g.name));
+
+    // Check if sheet HAS a maths column (across all subjects in sheet)
+    const sheetHasMaths = (allSubjectNames || []).some(n => isMathsSubject(n));
+    const sheetHasMother = (allSubjectNames || []).some(n => isMotherTongueSubject(n));
+
+    // Find student's maths/mother tongue
+    const maths  = graded.find(g => isMathsSubject(g.name));
     const mother = graded.find(g => isMotherTongueSubject(g.name));
-    const mathsOk = !!(maths && isPassGrade(maths.grade));
-    const motherOk = !!(mother && isPassGrade(mother.grade));
+
+    // If the sheet doesn't have that subject column at all → be lenient (pass)
+    // If it has but student has no value → fail
+    const mathsOk  = !sheetHasMaths  ? true : !!(maths  && isPassGrade(maths.grade));
+    const motherOk = !sheetHasMother ? true : !!(mother && isPassGrade(mother.grade));
+
     const pass = passes.length >= 6 && credits.length >= 3 && mathsOk && motherOk;
     const aCount = graded.filter(g => g.grade === 'A').length;
+
     let reason = '';
-    if (pass) reason = `Passed (${passes.length}P, ${credits.length}C)`;
-    else {
+    if (pass) {
+        reason = `Passed (${passes.length}P, ${credits.length}C)`;
+    } else {
         const fails = [];
         if (passes.length < 6) fails.push(`P:${passes.length}/6`);
         if (credits.length < 3) fails.push(`C:${credits.length}/3`);
-        if (!mathsOk) fails.push('Maths✗');
-        if (!motherOk) fails.push('Mother✗');
+        if (sheetHasMaths && !mathsOk) fails.push('Maths✗');
+        if (sheetHasMother && !motherOk) fails.push('Mother✗');
         reason = `Failed (${fails.join(', ')})`;
     }
+
     return { pass, aCount, passes: passes.length, credits: credits.length, mathsOk, motherOk, reason };
 }
 
@@ -952,12 +1094,16 @@ function checkAlPass(subjects) {
     const mainSubjects = subjects.filter(([name]) => !isAlExcludedSubject(name));
     const sPasses = mainSubjects.filter(([, mark]) => isPassGrade(calcGrade(mark)));
     const aCount = mainSubjects.filter(([, mark]) => calcGrade(mark) === 'A').length;
-    return { pass: sPasses.length >= 3, count: sPasses.length, aCount, reason: `Main S-passes: ${sPasses.length}/3` };
+    return {
+        pass: sPasses.length >= 3,
+        count: sPasses.length,
+        aCount,
+        reason: `Main S-passes: ${sPasses.length}/3`
+    };
 }
 
 /* ---------- Init analysis ---------- */
 function initTermAnalysisModule() {
-    /* Test Preview */
     document.getElementById('btnTestResult')?.addEventListener('click', async () => {
         const year = document.getElementById('testYear')?.value.trim();
         const term = document.getElementById('testTerm')?.value;
@@ -982,10 +1128,11 @@ function initTermAnalysisModule() {
             const student = idx ? docs[0] : docs[Math.floor(Math.random() * docs.length)];
             const results = student.results || {};
             const subjects = getSubjects(results);
+            const allNames = subjects.map(([n]) => n);
             const gradeNum = parseInt(student.grade);
             let passStatus = 'N/A', statusText = 'Pass/Fail calculation available for O/L & A/L only';
             if (gradeNum === 10 || gradeNum === 11) {
-                const r = checkOlPass(subjects);
+                const r = checkOlPass(subjects, allNames);
                 passStatus = r.pass ? 'PASS' : 'FAIL';
                 statusText = r.reason;
             } else if (gradeNum === 12 || gradeNum === 13) {
@@ -1019,27 +1166,18 @@ function initTermAnalysisModule() {
         } catch (err) { out.innerHTML = `<div class="test-empty-msg" style="color:#f87171;">${err.message}</div>`; }
     });
 
-    /* Init O/L and A/L class sheet rows */
     initClassSheetRows('ol');
     initClassSheetRows('al');
 
-    /* Add class buttons */
     document.getElementById('btnAddOlClass')?.addEventListener('click', () => addClassSheetRow('ol', ''));
     document.getElementById('btnAddAlClass')?.addEventListener('click', () => addClassSheetRow('al', ''));
-
-    /* Generate buttons */
     document.getElementById('btnGenerateOl')?.addEventListener('click', generateOlAnalysis);
     document.getElementById('btnGenerateAl')?.addEventListener('click', generateAlAnalysis);
-
-    /* Save */
     document.getElementById('btnSaveOl')?.addEventListener('click', () => saveAnalysis('ol'));
     document.getElementById('btnSaveAl')?.addEventListener('click', () => saveAnalysis('al'));
-
-    /* PDF */
     document.getElementById('btnPdfPreviewOl')?.addEventListener('click', () => exportPdf('ol'));
     document.getElementById('btnPdfPreviewAl')?.addEventListener('click', () => exportPdf('al'));
 
-    /* Tab switching */
     document.getElementById('tabOlAnalysis')?.addEventListener('click', () => {
         document.getElementById('tabOlAnalysis').classList.add('active');
         document.getElementById('tabAlAnalysis').classList.remove('active');
@@ -1063,11 +1201,9 @@ function initClassSheetRows(mode) {
 function addClassSheetRow(mode, className = '') {
     const container = document.getElementById(`${mode}ClassSheetsContainer`);
     if (!container) return;
-
     const gradeOpts = mode === 'ol'
         ? `<option value="10">Grade 10</option><option value="11" selected>Grade 11</option>`
         : `<option value="12">Grade 12</option><option value="13" selected>Grade 13</option>`;
-
     const row = document.createElement('div');
     row.className = `class-sheet-row ${mode}-class-row`;
     row.innerHTML = `
@@ -1077,7 +1213,6 @@ function addClassSheetRow(mode, className = '') {
         <button type="button" class="btn btn-danger btn-remove-class"><i class="fa-solid fa-trash"></i></button>
     `;
     container.appendChild(row);
-
     row.querySelector('.btn-remove-class').addEventListener('click', () => row.remove());
 }
 
@@ -1098,9 +1233,7 @@ async function generateOlAnalysis() {
     const year = document.getElementById('olAnalysisYear').value.trim();
     const term = document.getElementById('olAnalysisTerm').value;
     const gradeFilter = document.getElementById('olAnalysisGrade').value;
-
     if (!year) { showToast('Year එක type කරන්න!', 'error'); return; }
-
     const classes = collectClassSheets('ol');
     if (!classes.length) { showToast('අවම වශයෙන් එක Class Sheet එකක් add කරන්න!', 'error'); return; }
 
@@ -1111,10 +1244,15 @@ async function generateOlAnalysis() {
 
     const allStudents = [];
     let okCount = 0;
+    let allSubjectNamesSet = new Set();
     for (const item of classes) {
         try {
             const students = await fetchAndParseGoogleSheet(item.url);
-            students.forEach(s => { s.class = item.cls; s.grade = item.grade; });
+            students.forEach(s => {
+                s.class = item.cls;
+                s.grade = item.grade;
+                Object.keys(s.results || {}).forEach(k => allSubjectNamesSet.add(k));
+            });
             allStudents.push(...students);
             okCount++;
         } catch (err) {
@@ -1122,7 +1260,6 @@ async function generateOlAnalysis() {
             showToast(`Class ${item.cls} read failed: ${err.message}`, 'error');
         }
     }
-
     btn.disabled = false;
     btn.innerHTML = originalHTML;
 
@@ -1131,13 +1268,13 @@ async function generateOlAnalysis() {
     const filtered = gradeFilter === 'all'
         ? allStudents
         : allStudents.filter(s => String(s.grade) === gradeFilter);
-
     if (!filtered.length) { showToast('Matching records නෑ!', 'error'); return; }
 
     olAnalysisData = {
         year, term, grade: gradeFilter,
         class: classes.map(c => c.cls).join(','),
-        summary: computeAnalysis(filtered, 'ol')
+        allSubjectNames: Array.from(allSubjectNamesSet),
+        summary: computeAnalysis(filtered, 'ol', Array.from(allSubjectNamesSet))
     };
     renderAnalysis('ol', olAnalysisData.summary);
     document.getElementById('olAnalysisResult').style.display = 'block';
@@ -1152,9 +1289,7 @@ async function generateAlAnalysis() {
     const term = document.getElementById('alAnalysisTerm').value;
     const stream = document.getElementById('alAnalysisStream').value;
     const gradeFilter = document.getElementById('alAnalysisGrade').value;
-
     if (!year) { showToast('Year එක type කරන්න!', 'error'); return; }
-
     const classes = collectClassSheets('al');
     if (!classes.length) { showToast('අවම වශයෙන් එක Class Sheet එකක් add කරන්න!', 'error'); return; }
 
@@ -1176,7 +1311,6 @@ async function generateAlAnalysis() {
             showToast(`Class ${item.cls} read failed: ${err.message}`, 'error');
         }
     }
-
     btn.disabled = false;
     btn.innerHTML = originalHTML;
 
@@ -1185,13 +1319,12 @@ async function generateAlAnalysis() {
     const filtered = gradeFilter === 'all'
         ? allStudents
         : allStudents.filter(s => String(s.grade) === gradeFilter);
-
     if (!filtered.length) { showToast('Matching records නෑ!', 'error'); return; }
 
     alAnalysisData = {
         year, term, grade: gradeFilter, stream,
         class: classes.map(c => c.cls).join(','),
-        summary: computeAnalysis(filtered, 'al')
+        summary: computeAnalysis(filtered, 'al', [])
     };
     renderAnalysis('al', alAnalysisData.summary);
     document.getElementById('alAnalysisResult').style.display = 'block';
@@ -1201,11 +1334,13 @@ async function generateAlAnalysis() {
 }
 
 /* ---------- Compute Analysis ---------- */
-function computeAnalysis(students, mode) {
+function computeAnalysis(students, mode, allSubjectNames = []) {
     const summary = {
         total: students.length, passed: 0, failed: 0,
         gradeBreakdown: {}, subjectStats: {}, students: [],
-        achievers: { '9A': 0, '8A': 0, '7A': 0, '6A': 0 }
+        achievers: { '9A': 0, '8A': 0, '7A': 0, '6A': 0 },
+        detectedMathsSubject: allSubjectNames.find(n => isMathsSubject(n)) || null,
+        detectedMotherSubject: allSubjectNames.find(n => isMotherTongueSubject(n)) || null
     };
 
     students.forEach(st => {
@@ -1217,7 +1352,7 @@ function computeAnalysis(students, mode) {
         let isPass = false, detail = '', aCount = 0;
 
         if (mode === 'ol') {
-            const r = checkOlPass(subjects);
+            const r = checkOlPass(subjects, allSubjectNames);
             isPass = r.pass; detail = r.reason; aCount = r.aCount;
             if (aCount === 9) summary.achievers['9A']++;
             else if (aCount === 8) summary.achievers['8A']++;
@@ -1285,6 +1420,10 @@ function renderAnalysis(mode, summary) {
                     <div style="background:#1e293b; padding:10px 15px; border-radius:8px; border:1px solid #334155;"><strong>7A:</strong> <span style="color:#34d399">${summary.achievers['7A']}</span></div>
                     <div style="background:#1e293b; padding:10px 15px; border-radius:8px; border:1px solid #334155;"><strong>6A:</strong> <span style="color:#34d399">${summary.achievers['6A']}</span></div>
                 </div>
+                <div style="margin-top:15px; padding:10px 14px; background:#1e293b; border:1px solid #334155; border-radius:8px; font-size:0.82rem; color:#94a3b8;">
+                    <div><strong style="color:#60a5fa;">Detected Maths:</strong> ${summary.detectedMathsSubject || '<span style="color:#f87171;">Not found (lenient mode)</span>'}</div>
+                    <div style="margin-top:4px;"><strong style="color:#60a5fa;">Detected Mother Tongue:</strong> ${summary.detectedMotherSubject || '<span style="color:#f87171;">Not found (lenient mode)</span>'}</div>
+                </div>
             `;
         }
     }
@@ -1351,7 +1490,7 @@ function renderAnalysis(mode, summary) {
     });
 }
 
-/* ---------- Save Analysis to Firestore ---------- */
+/* ---------- Save Analysis ---------- */
 async function saveAnalysis(mode) {
     const data = mode === 'ol' ? olAnalysisData : alAnalysisData;
     if (!data) return;
@@ -1367,6 +1506,8 @@ async function saveAnalysis(mode) {
         subjectStats: data.summary.subjectStats,
         achievers: data.summary.achievers || {},
         students: data.summary.students,
+        detectedMaths: data.summary.detectedMathsSubject || null,
+        detectedMotherTongue: data.summary.detectedMotherSubject || null,
         generatedAt: serverTimestamp(),
         generatedBy: currentAdminRole || null
     };
@@ -1390,8 +1531,9 @@ async function exportPdf(mode) {
     const subjectSet = new Set();
     students.forEach(st => {
         Object.keys(st.results || {}).forEach(sub => {
-            const k = sub.toLowerCase().trim();
+            const k = String(sub).toLowerCase().trim();
             if (k.includes('grade') || k.includes('class') || k.includes('stream') || k.includes('position')) return;
+            if (k.includes('total') || k.includes('average') || k.includes('result')) return;
             subjectSet.add(sub);
         });
     });
@@ -1454,32 +1596,21 @@ async function exportPdf(mode) {
                 @page { size: A4 portrait; margin: 8mm 6mm; }
                 * { box-sizing: border-box; margin: 0; padding: 0; }
                 html, body {
-                    width: 210mm;
-                    background: #fff;
-                    color: #111;
+                    width: 210mm; background: #fff; color: #111;
                     font-family: 'Segoe UI', 'Noto Sans Sinhala', Tahoma, sans-serif;
-                    font-size: 8pt;
-                    line-height: 1.3;
+                    font-size: 8pt; line-height: 1.3;
                 }
                 body { padding: 0 2mm; }
-
                 .report-header { text-align: center; border-bottom: 2px solid #b91c1c; padding-bottom: 6px; margin-bottom: 8px; }
                 .report-header img { height: 40px; width: auto; margin-bottom: 2px; }
                 .report-header h1 { font-size: 12pt; color: #b91c1c; margin: 1px 0; text-transform: uppercase; letter-spacing: 0.3px; }
                 .report-header h2 { font-size: 9pt; color: #444; margin: 1px 0 4px; font-weight: 700; }
                 .report-header .meta { font-size: 8pt; color: #333; font-weight: 600; }
-                .report-header .meta span {
-                    background: #fef3c7; color: #92400e;
-                    padding: 2px 7px; border-radius: 10px;
-                    border: 1px solid #f59e0b;
-                    margin: 0 3px; display: inline-block;
-                }
-
+                .report-header .meta span { background: #fef3c7; color: #92400e; padding: 2px 7px; border-radius: 10px; border: 1px solid #f59e0b; margin: 0 3px; display: inline-block; }
                 .ach-section { background: #fffbeb; border: 1px solid #f59e0b; border-radius: 5px; padding: 5px 8px; margin-bottom: 8px; }
                 .ach-title { font-size: 9pt; color: #b45309; font-weight: 800; margin-bottom: 3px; text-transform: uppercase; }
                 .ach-line { font-size: 8pt; color: #333; margin-bottom: 2px; line-height: 1.4; }
                 .ach-line strong { color: #b91c1c; }
-
                 .stats-row { display: flex; justify-content: space-between; gap: 5px; margin-bottom: 8px; }
                 .stat-box { flex: 1; text-align: center; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 2px; background: #f8fafc; }
                 .stat-box .num { font-size: 11pt; font-weight: 800; color: #0f172a; }
@@ -1488,21 +1619,9 @@ async function exportPdf(mode) {
                 .stat-box.pass .num { color: #059669; }
                 .stat-box.fail { border-color: #ef4444; }
                 .stat-box.fail .num { color: #dc2626; }
-
                 table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 7pt; }
-                th, td {
-                    border: 1px solid #94a3b8;
-                    padding: 2px 2px;
-                    text-align: center;
-                    vertical-align: middle;
-                    word-wrap: break-word;
-                    overflow-wrap: break-word;
-                }
-                th {
-                    background: #fef3c7; color: #78350f;
-                    font-weight: 800; text-transform: uppercase;
-                    font-size: 6pt; letter-spacing: 0.2px;
-                }
+                th, td { border: 1px solid #94a3b8; padding: 2px 2px; text-align: center; vertical-align: middle; word-wrap: break-word; overflow-wrap: break-word; }
+                th { background: #fef3c7; color: #78350f; font-weight: 800; text-transform: uppercase; font-size: 6pt; letter-spacing: 0.2px; }
                 td.name { text-align: left; font-weight: 700; font-size: 7pt; }
                 td.a-count { font-weight: 800; color: #b91c1c; }
                 td.status { font-weight: 800; font-size: 7pt; }
@@ -1515,7 +1634,6 @@ async function exportPdf(mode) {
                 td.g-W { color: #b91c1c; font-weight: 800; }
                 td.empty { color: #cbd5e1; }
                 tr.row-fail { background: #fff5f5; }
-
                 @media print {
                     table { page-break-inside: auto; }
                     tr { page-break-inside: avoid; page-break-after: auto; }
@@ -1527,7 +1645,7 @@ async function exportPdf(mode) {
         <body>
             <div class="report-header">
                 <img src="school bage.png" alt="Badge" onerror="this.style.display='none';">
-                <h1>A/Maithripala Senanayake Central College</h1>
+                <h1>A/Maithripalanayake Central College</h1>
                 <h2>MSNS - Medawachchiya</h2>
                 <div class="meta">
                     <span>${modeLabel}</span>
@@ -1537,21 +1655,18 @@ async function exportPdf(mode) {
                     ${data.stream ? `<span>${data.stream}</span>` : ''}
                 </div>
             </div>
-
             ${mode === 'ol' ? `
                 <div class="ach-section">
                     <div class="ach-title">★ Top Achievers</div>
                     ${achieverHTML}
                 </div>
             ` : ''}
-
             <div class="stats-row">
                 <div class="stat-box"><div class="num">${data.summary.total}</div><div class="lbl">Total</div></div>
                 <div class="stat-box pass"><div class="num">${data.summary.passed}</div><div class="lbl">Passed</div></div>
                 <div class="stat-box fail"><div class="num">${data.summary.failed}</div><div class="lbl">Failed</div></div>
                 <div class="stat-box"><div class="num">${data.summary.passRate}%</div><div class="lbl">Pass Rate</div></div>
             </div>
-
             <table>
                 <thead>
                     <tr>
@@ -1565,9 +1680,7 @@ async function exportPdf(mode) {
                         <th style="width:7%;">Result</th>
                     </tr>
                 </thead>
-                <tbody>
-                    ${rowsHTML}
-                </tbody>
+                <tbody>${rowsHTML}</tbody>
             </table>
         </body>
         </html>
@@ -1577,14 +1690,9 @@ async function exportPdf(mode) {
     printWindow.document.open();
     printWindow.document.write(html);
     printWindow.document.close();
-
     setTimeout(() => {
-        try {
-            printWindow.focus();
-            printWindow.print();
-        } catch (e) { console.error(e); }
+        try { printWindow.focus(); printWindow.print(); } catch (e) { console.error(e); }
     }, 900);
-
     showToast('Print Preview විවෘත වේ...', 'ok');
 }
 
@@ -1596,7 +1704,6 @@ function initMainTabs() {
     const tabAnalysisMain = document.getElementById('tabAnalysisMain');
     const manageResultsWrapper = document.getElementById('manageResultsWrapper');
     const analysisMainWrapper = document.getElementById('analysisMainWrapper');
-
     if (tabManageResults && tabAnalysisMain) {
         tabManageResults.addEventListener('click', () => {
             tabManageResults.classList.add('active');
