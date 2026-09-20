@@ -1,15 +1,16 @@
+/* ==========================================================
+   MSNS Term Test Papers - Main Logic & Event Handling
+   ========================================================== */
 (function() {
     'use strict';
 
-    // ==========================================================
     // Google Sheet Configuration
-    // ==========================================================
     const SHEET_ID = '1u6fKlgiG9p1e9WsyRIwaM-w-OnNveBGIg0_kjC50Z6M';
     const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 
     // State Variables
     let allData = [];
-    let filteredData = [];
+    let zipData = [];
     let currentYear = '';
     let currentTerm = '';
     let currentGrade = 'All'; 
@@ -25,9 +26,6 @@
     const previewClose = document.getElementById('previewClose');
     const zipContainer = document.getElementById('zipContainer');
     const downloadZipBtn = document.getElementById('downloadZipBtn');
-    const zipProgress = document.getElementById('zipProgress');
-    const zipCount = document.getElementById('zipCount');
-    const zipTotal = document.getElementById('zipTotal');
 
     // ==========================================================
     // Disclaimer Modal Logic
@@ -39,17 +37,21 @@
 
         if (!disclaimerOverlay) return;
 
-        // Show modal on load
         disclaimerOverlay.classList.add('active');
+        disclaimerOverlay.style.display = 'flex';
 
-        agreeBtn.addEventListener('click', () => {
-            disclaimerOverlay.classList.remove('active');
-        });
+        if (agreeBtn) {
+            agreeBtn.addEventListener('click', () => {
+                disclaimerOverlay.classList.remove('active');
+                setTimeout(() => { disclaimerOverlay.style.display = 'none'; }, 300);
+            });
+        }
 
-        disagreeBtn.addEventListener('click', () => {
-            // Redirect to home page if they disagree
-            window.location.href = 'index.html'; 
-        });
+        if (disagreeBtn) {
+            disagreeBtn.addEventListener('click', () => {
+                window.location.href = 'index.html'; 
+            });
+        }
     }
 
     // ==========================================================
@@ -129,17 +131,26 @@
             }
 
             allData = [];
+            zipData = [];
+
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
                 if (row.length < 5) continue;
 
-                const type = row[0] || '';
+                const type = (row[0] || '').toLowerCase();
                 const url = row[1] || '';
                 const classStr = row[2] || '';
                 const year = row[3] || '';
                 const term = row[4] || '';
 
-                if (type.toLowerCase() !== 'sheet' || !url) continue;
+                if (!url) continue;
+
+                if (type === 'zip') {
+                    zipData.push({ url, classStr, year, term });
+                    continue;
+                }
+
+                if (type !== 'sheet') continue;
 
                 let grade = '';
                 let section = '';
@@ -157,7 +168,9 @@
             initFilters();
         } catch (error) {
             console.error("Error fetching data:", error);
-            paperListEl.innerHTML = `<div class="no-docs-card">Failed to load data. Please check the Google Sheet.</div>`;
+            if (paperListEl) {
+                paperListEl.innerHTML = `<div class="no-docs-card">Failed to load data. Please check the Google Sheet.</div>`;
+            }
         }
     }
 
@@ -167,18 +180,20 @@
     function initFilters() {
         const years = [...new Set(allData.map(item => item.year))].filter(y => y).sort((a, b) => b - a);
         
-        yearSelect.innerHTML = '<option value="">Select Year</option>';
-        years.forEach(year => {
-            const option = document.createElement('option');
-            option.value = year;
-            option.textContent = year;
-            yearSelect.appendChild(option);
-        });
+        if (yearSelect) {
+            yearSelect.innerHTML = '<option value="">Select Year</option>';
+            years.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelect.appendChild(option);
+            });
 
-        if (years.length > 0) {
-            yearSelect.value = years[0];
-            currentYear = years[0];
-            populateTerms(years[0]);
+            if (years.length > 0) {
+                yearSelect.value = years[0];
+                currentYear = years[0];
+                populateTerms(years[0]);
+            }
         }
 
         renderGrades();
@@ -187,25 +202,28 @@
     function populateTerms(year) {
         const terms = [...new Set(allData.filter(item => item.year === year).map(item => item.term))].filter(t => t).sort();
         
-        termSelect.innerHTML = '<option value="">Select Term</option>';
-        terms.forEach(term => {
-            const option = document.createElement('option');
-            option.value = term;
-            option.textContent = term;
-            termSelect.appendChild(option);
-        });
+        if (termSelect) {
+            termSelect.innerHTML = '<option value="">Select Term</option>';
+            terms.forEach(term => {
+                const option = document.createElement('option');
+                option.value = term;
+                option.textContent = term;
+                termSelect.appendChild(option);
+            });
 
-        if (terms.length > 0) {
-            termSelect.value = terms[0];
-            currentTerm = terms[0];
-        } else {
-            currentTerm = '';
+            if (terms.length > 0) {
+                termSelect.value = terms[0];
+                currentTerm = terms[0];
+            } else {
+                currentTerm = '';
+            }
         }
         
         renderPapers();
     }
 
     function renderGrades() {
+        if (!gradePillsEl) return;
         const grades = ['6', '7', '8', '9', '10', '11', '12', '13', 'All'];
         let html = '';
         
@@ -233,17 +251,34 @@
     }
 
     // ==========================================================
-    // Rendering Papers
+    // Rendering Papers & ZIP Download
     // ==========================================================
     function renderPapers() {
+        if (!paperListEl) return;
+
         if (!currentYear || !currentTerm) {
             paperListEl.innerHTML = `<div class="no-docs-card">Please select a Year and Term.</div>`;
-            dynamicTitle.innerHTML = `<span>Select filters to view papers</span>`;
-            zipContainer.style.display = 'none';
+            if (dynamicTitle) dynamicTitle.innerHTML = `<span>Select filters to view papers</span>`;
+            if (zipContainer) zipContainer.style.display = 'none';
             return;
         }
 
-        filteredData = allData.filter(item => {
+        const matchingZipRecord = zipData.find(z => z.year === currentYear && z.term === currentTerm);
+        
+        if (matchingZipRecord && zipContainer && downloadZipBtn) {
+            zipContainer.style.display = 'block';
+            downloadZipBtn.onclick = function() {
+                const fileId = extractDriveId(matchingZipRecord.url);
+                const downloadUrl = fileId 
+                    ? `https://drive.usercontent.google.com/download?id=${fileId}&export=download` 
+                    : matchingZipRecord.url;
+                window.open(downloadUrl, '_blank');
+            };
+        } else if (zipContainer) {
+            zipContainer.style.display = 'none';
+        }
+
+        let filteredData = allData.filter(item => {
             const matchYear = item.year === currentYear;
             const matchTerm = item.term === currentTerm;
             const matchGrade = currentGrade === 'All' || item.grade === currentGrade;
@@ -251,7 +286,9 @@
         });
 
         const gradeText = currentGrade === 'All' ? 'All Grades' : `Grade ${currentGrade}`;
-        dynamicTitle.innerHTML = `<span>${currentYear} - ${currentTerm} Term Test - ${gradeText}</span>`;
+        if (dynamicTitle) {
+            dynamicTitle.innerHTML = `<span>${currentYear} - ${currentTerm} Term Test - ${gradeText}</span>`;
+        }
 
         if (filteredData.length === 0) {
             paperListEl.innerHTML = `
@@ -260,7 +297,6 @@
                     <div>No papers found for this selection.</div>
                 </div>
             `;
-            zipContainer.style.display = 'none';
             return;
         }
 
@@ -304,7 +340,6 @@
         });
 
         paperListEl.innerHTML = html;
-        zipContainer.style.display = 'block';
     }
 
     // ==========================================================
@@ -315,86 +350,120 @@
             alert('Preview URL is not available.');
             return;
         }
-        previewIframe.src = url;
-        previewOverlay.classList.add('active');
+        if (previewIframe && previewOverlay) {
+            previewIframe.src = url;
+            previewOverlay.classList.add('active');
+        }
     };
 
     function closePreview() {
-        previewOverlay.classList.remove('active');
-        previewIframe.src = 'about:blank';
+        if (previewOverlay && previewIframe) {
+            previewOverlay.classList.remove('active');
+            previewIframe.src = 'about:blank';
+        }
     }
 
-    previewClose.addEventListener('click', closePreview);
-    previewOverlay.addEventListener('click', (e) => {
-        if (e.target === previewOverlay) closePreview();
-    });
+    if (previewClose) previewClose.addEventListener('click', closePreview);
+    if (previewOverlay) {
+        previewOverlay.addEventListener('click', (e) => {
+            if (e.target === previewOverlay) closePreview();
+        });
+    }
 
-    // ==========================================================
-    // ZIP Generation Logic (UPDATED FOR CORS ISSUE)
-    // ==========================================================
-    downloadZipBtn.addEventListener('click', async () => {
-        if (filteredData.length === 0) return;
+    // Select Event Listeners
+    if (yearSelect) {
+        yearSelect.addEventListener('change', function() {
+            currentYear = this.value;
+            if (currentYear) {
+                populateTerms(currentYear);
+            } else {
+                if (termSelect) termSelect.innerHTML = '<option value="">Select Year First</option>';
+                currentTerm = '';
+                renderPapers();
+            }
+        });
+    }
 
-        zipProgress.style.display = 'block';
-        zipTotal.textContent = filteredData.length;
-        zipCount.textContent = 'Preparing...';
-        downloadZipBtn.disabled = true;
-        downloadZipBtn.innerHTML = 'Preparing ZIP...';
-
-        try {
-            const zip = new JSZip();
-            let linkText = `MSNS Term Test Papers - Download Links\nGenerated on: ${new Date().toLocaleString()}\n\n`;
-            linkText += `Filters: Year ${currentYear} | Term ${currentTerm} | Grade ${currentGrade}\n\n`;
-            linkText += `--------------------------------------------------\n\n`;
-
-            filteredData.forEach((item, index) => {
-                const fileId = extractDriveId(item.url);
-                const downloadUrl = fileId 
-                    ? `https://drive.usercontent.google.com/download?id=${fileId}&export=download` 
-                    : item.url;
-                
-                linkText += `${index + 1}. ${item.classStr} - ${item.year} ${item.term} Term\n`;
-                linkText += `Download Link: ${downloadUrl}\n\n`;
-            });
-
-            zip.file("Download_Links.txt", linkText);
-            
-            const content = await zip.generateAsync({ type: "blob" });
-            saveAs(content, `MSNS_Term_Test_${currentYear}_${currentTerm}_Grade_${currentGrade}_Links.zip`);
-            
-        } catch (error) {
-            console.error("ZIP Generation Error:", error);
-            alert("An error occurred while generating the ZIP file.");
-        } finally {
-            zipProgress.style.display = 'none';
-            downloadZipBtn.disabled = false;
-            downloadZipBtn.innerHTML = '<i class="bi bi-file-earmark-zip"></i> Download All as ZIP';
-        }
-    });
-
-    // ==========================================================
-    // Event Listeners for Selects
-    // ==========================================================
-    yearSelect.addEventListener('change', function() {
-        currentYear = this.value;
-        if (currentYear) {
-            populateTerms(currentYear);
-        } else {
-            termSelect.innerHTML = '<option value="">Select Year First</option>';
-            currentTerm = '';
+    if (termSelect) {
+        termSelect.addEventListener('change', function() {
+            currentTerm = this.value;
             renderPapers();
+        });
+    }
+
+    // ==========================================================
+    // Mobile Sidebar & Scroll to Top Navigation
+    // ==========================================================
+    function initNavigation() {
+        const menuToggle = document.getElementById('menuToggle');
+        const closeMenu = document.getElementById('closeMenu');
+        const sidebar = document.getElementById('sidebar');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const backToTopBtn = document.getElementById('backToTop');
+
+        if (menuToggle && sidebar && menuOverlay) {
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.add('active');
+                menuOverlay.classList.add('active');
+            });
         }
-    });
 
-    termSelect.addEventListener('change', function() {
-        currentTerm = this.value;
-        renderPapers();
-    });
+        const hideMenu = () => {
+            if (sidebar) sidebar.classList.remove('active');
+            if (menuOverlay) menuOverlay.classList.remove('active');
+        };
+
+        if (closeMenu) closeMenu.addEventListener('click', hideMenu);
+        if (menuOverlay) menuOverlay.addEventListener('click', hideMenu);
+
+        if (backToTopBtn) {
+            window.addEventListener('scroll', function() {
+                if (document.body.scrollTop > 250 || document.documentElement.scrollTop > 250) {
+                    backToTopBtn.style.display = "flex";
+                } else {
+                    backToTopBtn.style.display = "none";
+                }
+            });
+            backToTopBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }
 
     // ==========================================================
+    // Universal Header Overlap Fix
+    // ==========================================================
+    function fixHeaderOverlap() {
+        const header = document.querySelector('header#top') || document.querySelector('header');
+        if (!header) return;
+        const headerHeight = header.offsetHeight || 65;
+        const safeOffset = headerHeight + 15;
+        document.documentElement.style.scrollPaddingTop = safeOffset + 'px';
+        let styleTag = document.getElementById('auto-header-fix-style');
+        if (!styleTag) {
+            styleTag = document.createElement('style');
+            styleTag.id = 'auto-header-fix-style';
+            document.head.appendChild(styleTag);
+        }
+        styleTag.innerHTML = `
+            html { scroll-padding-top: ${safeOffset}px !important; }
+            .content-wrapper { margin-top: 5px; }
+            .subject-card, .grade-selector, .lang-selection-section, .news-banner, section, [id] {
+                scroll-margin-top: ${safeOffset}px !important;
+            }
+        `;
+    }
+
     // Initialize
-    // ==========================================================
-    fetchData();
-    initDisclaimer();
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchData();
+        initDisclaimer();
+        initNavigation();
+        fixHeaderOverlap();
+    });
+
+    window.addEventListener('resize', fixHeaderOverlap);
+    window.addEventListener('load', fixHeaderOverlap);
 
 })();
+
