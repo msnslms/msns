@@ -11,29 +11,18 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- ඔබගේ පවතින CSS ගොනු -->
+    <!-- CSS ගොනු -->
     <link rel="stylesheet" href="css/style-w.css">
     <link rel="stylesheet" href="css/t-book-w.css">
     <link rel="stylesheet" href="css/footer.css?v=2">
     <link rel="stylesheet" href="css/animetion.css?v=2">
-    
-    <!-- Term Test සඳහා විශේෂිත CSS (පවතින past-w.css එකට එකතු කර ඇත) -->
     <link rel="stylesheet" href="css/past-w.css">
-
-    <!-- ZIP සෑදීම සඳහා අවශ්‍ය පුස්තකාල -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 </head>
 <body>
 
-<!-- ==========================================================
-     🖥️ DESKTOP NAVBAR (PC එකේ විතරයි පේන්නේ)
-     Mobile = hidden  |  PC = visible
-     ========================================================== -->
+<!-- DESKTOP NAVBAR -->
 <nav class="msns-desktop-navbar">
     <div class="msns-navbar-inner">
-        
-        <!-- ========== Left: Logo + Brand ========== -->
         <a href="index.html" class="msns-navbar-brand">
             <img src="school bage.png" alt="MSNS Logo" class="msns-navbar-logo">
             <div class="msns-navbar-brand-text">
@@ -42,10 +31,7 @@
             </div>
         </a>
 
-        <!-- ========== Center: Nav Links (Sidebar එකේ ඒවම) ========== -->
         <ul class="msns-navbar-menu">
-
-            <!-- Home -->
             <li>
                 <a href="index.html" class="msns-nav-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -55,8 +41,6 @@
                     <span>Home</span>
                 </a>
             </li>
-
-            <!-- About Us -->
             <li>
                 <a href="index.html#about" class="msns-nav-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -67,8 +51,6 @@
                     <span>About</span>
                 </a>
             </li>
-
-            <!-- Governing Body -->
             <li>
                 <a href="index.html#governing" class="msns-nav-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -80,8 +62,6 @@
                     <span>Governing</span>
                 </a>
             </li>
-
-            <!-- Past Papers -->
             <li>
                 <a href="Past.html" class="msns-nav-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -91,8 +71,6 @@
                     <span>Past Papers</span>
                 </a>
             </li>
-
-            <!-- History -->
             <li>
                 <a href="history.html" class="msns-nav-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -102,8 +80,6 @@
                     <span>History</span>
                 </a>
             </li>
-
-            <!-- News -->
             <li>
                 <a href="news.html" class="msns-nav-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -115,8 +91,6 @@
                     <span>News</span>
                 </a>
             </li>
-
-            <!-- MSNS.AI Assistant -->
             <li>
                 <a href="msns-ai.html" class="msns-nav-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -126,8 +100,6 @@
                     <span>MSNS.AI</span>
                 </a>
             </li>
-
-            <!-- Download Mobile App -->
             <li>
                 <a href="apk.html" class="msns-nav-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -138,8 +110,6 @@
                     <span>App</span>
                 </a>
             </li>
-
-            <!-- Contact -->
             <li>
                 <a href="index.html#contact" class="msns-nav-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -148,13 +118,9 @@
                     <span>Contact</span>
                 </a>
             </li>
-
         </ul>
 
-        <!-- ========== Right: Profile / Login Actions ========== -->
         <div class="msns-navbar-actions">
-
-            <!-- My Profile -->
             <a href="u.html" class="msns-nav-btn msns-nav-btn-profile">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -162,8 +128,6 @@
                 </svg>
                 <span>Profile</span>
             </a>
-
-            <!-- About Developer -->
             <a href="ab.html" class="msns-nav-btn msns-nav-btn-dev">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -172,9 +136,7 @@
                 </svg>
                 <span>Dev</span>
             </a>
-
         </div>
-
     </div>
 </nav>
 
@@ -273,8 +235,8 @@
     <!-- Grade Selector Pill Bar -->
     <div class="grade-selector" id="gradePillsSection">
         <span class="grade-selector-label">Select Grade</span>
-        <div class="grade-grid" id="gradePills">
-            <!-- Grade Pills dynamically rendered -->
+        <div class="grade-pills" id="gradePills">
+            <!-- Dynamic Grade Pills -->
         </div>
     </div>
 
@@ -288,33 +250,23 @@
         <div class="no-docs-card">Loading papers...</div>
     </div>
 
-    <!-- ZIP Download Button (Hidden by default) -->
+    <!-- ZIP Download Button -->
     <div class="zip-download-container" id="zipContainer" style="display: none;">
         <button id="downloadZipBtn" class="application-btn" style="max-width: 300px; margin: 20px auto;">
             <i class="bi bi-file-earmark-zip"></i> Download All as ZIP
         </button>
-        <div id="zipProgress" class="text-center mt-2" style="display: none; color: #b91c1c; font-weight: bold;">
-            Zipping... <span id="zipCount">0</span> / <span id="zipTotal">0</span>
-        </div>
     </div>
 
 </div>
 
 <!-- PDF Preview Modal Overlay -->
-<div class="paper-modal-overlay" id="previewOverlay">
-    <div class="paper-modal-content">
-        <div class="paper-modal-header">
-            <div class="paper-modal-title">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-                Document Preview
-            </div>
-            <button class="paper-modal-close" id="previewClose">&times;</button>
-        </div>
-        <div class="paper-modal-body">
-            <iframe id="previewIframe" src="about:blank" allow="autoplay" style="width: 100%; height: 100%; border: none;"></iframe>
-        </div>
+<div class="pdf-preview-overlay" id="previewOverlay">
+    <div class="pdf-preview-box">
+        <button class="close-pdf-circle" id="previewClose">&times;</button>
+        <iframe id="previewIframe" src="about:blank" allow="autoplay" style="width: 100%; height: 100%; border: none; border-radius: 12px;"></iframe>
     </div>
 </div>
+
 <!-- Disclaimer Modal Overlay -->
 <div class="disclaimer-overlay" id="disclaimerOverlay">
     <div class="disclaimer-card">
@@ -328,6 +280,7 @@
         </div>
     </div>
 </div>
+
 <!-- Scroll To Top Button -->
 <button id="backToTop" title="Go to top">↑</button>
 
@@ -338,101 +291,9 @@
     <p class="credit-text">Editor: K.D.G.S.M. DENIYEGEDARA</p>
 </footer>
 
-<!-- JavaScript Logic -->
-<script>
-    // Mobile Navigation Drawer Logic
-    const menuToggle = document.getElementById('menuToggle');
-    const closeMenu = document.getElementById('closeMenu');
-    const sidebar = document.getElementById('sidebar');
-    const menuOverlay = document.getElementById('menuOverlay');
-
-    if(menuToggle) {
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.add('active');
-            menuOverlay.classList.add('active');
-        });
-    }
-
-    const hideMenu = () => {
-        sidebar.classList.remove('active');
-        menuOverlay.classList.remove('active');
-    };
-
-    if(closeMenu) closeMenu.addEventListener('click', hideMenu);
-    if(menuOverlay) menuOverlay.addEventListener('click', hideMenu);
-
-    // Scroll to Top Logic
-    const backToTopBtn = document.getElementById('backToTop');
-    window.addEventListener('scroll', function() {
-        if (document.body.scrollTop > 250 || document.documentElement.scrollTop > 250) {
-            backToTopBtn.style.display = "flex";
-        } else {
-            backToTopBtn.style.display = "none";
-        }
-    });
-    backToTopBtn.addEventListener('click', () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-</script>
-
-<!-- Universal Header Overlap Fix Script -->
-<script>
-(function() {
-    'use strict';
-
-    function fixHeaderOverlap() {
-        // Header එක සොයා ගැනීම (header#top හෝ සාමාන්‍ය header)
-        const header = document.querySelector('header#top') || document.querySelector('header');
-        if (!header) return;
-
-        // Header එකේ උස (Height) ගණනය කිරීම
-        const headerHeight = header.offsetHeight || 65;
-        const safeOffset = headerHeight + 15; // Extra 15px clearance
-
-        // Global Scroll Padding සකස් කිරීම
-        document.documentElement.style.scrollPaddingTop = safeOffset + 'px';
-
-        // Dynamic Style Tag එකක් මගින් සියලුම Elements වලට Scroll Margin එකතු කිරීම
-        let styleTag = document.getElementById('auto-header-fix-style');
-        if (!styleTag) {
-            styleTag = document.createElement('style');
-            styleTag.id = 'auto-header-fix-style';
-            document.head.appendChild(styleTag);
-        }
-
-        styleTag.innerHTML = `
-            html {
-                scroll-padding-top: ${safeOffset}px !important;
-            }
-            .content-wrapper {
-                margin-top: 5px;
-            }
-            .subject-card, 
-            .grade-selector, 
-            .lang-selection-section, 
-            .news-banner, 
-            section, 
-            [id] {
-                scroll-margin-top: ${safeOffset}px !important;
-            }
-        `;
-    }
-
-    // Page එක Load වෙද්දී සහ Resize වෙද්දී Auto-run වීම
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', fixHeaderOverlap);
-    } else {
-        fixHeaderOverlap();
-    }
-
-    window.addEventListener('resize', fixHeaderOverlap);
-    window.addEventListener('load', fixHeaderOverlap);
-})();
-</script>
-
-<!-- Term Analysis JS (මෙය අනිවාර්යයෙන්ම අන්තිමට තියෙන්න ඕනේ) -->
+<!-- External JavaScript References -->
+<script src="js/term-papers.js?v=1"></script>
 <script src="js/term-analysis.js"></script>
-
 <script src="paw.js?v=2"></script>
 <script src="do.js?v=2"></script>
 <script src="js/hide-f.js?v=2"></script>
