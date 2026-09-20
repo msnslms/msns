@@ -36,7 +36,8 @@ const doNotTranslateList = [
    '.grade-grid',
    '.paper-modal-body',
    '.paperModalTitle',
-   '#resultsSection'
+   '#resultsSection',
+   '#searchClass',
 ];
 
 /* 2. STYLES & FONTS INJECT කිරීම */
