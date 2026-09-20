@@ -12,7 +12,7 @@
     let filteredData = [];
     let currentYear = '';
     let currentTerm = '';
-    let currentGrade = 'All'; // Default to All
+    let currentGrade = 'All'; 
 
     // DOM Elements
     const yearSelect = document.getElementById('yearSelect');
@@ -30,10 +30,31 @@
     const zipTotal = document.getElementById('zipTotal');
 
     // ==========================================================
+    // Disclaimer Modal Logic
+    // ==========================================================
+    function initDisclaimer() {
+        const disclaimerOverlay = document.getElementById('disclaimerOverlay');
+        const agreeBtn = document.getElementById('agreeBtn');
+        const disagreeBtn = document.getElementById('disagreeBtn');
+
+        if (!disclaimerOverlay) return;
+
+        // Show modal on load
+        disclaimerOverlay.classList.add('active');
+
+        agreeBtn.addEventListener('click', () => {
+            disclaimerOverlay.classList.remove('active');
+        });
+
+        disagreeBtn.addEventListener('click', () => {
+            // Redirect to home page if they disagree
+            window.location.href = 'index.html'; 
+        });
+    }
+
+    // ==========================================================
     // Helper Functions
     // ==========================================================
-    
-    // CSV Parser
     function parseCSV(text) {
         let lines = [];
         let row = [];
@@ -73,21 +94,18 @@
         return lines;
     }
 
-    // Extract Google Drive File ID
     function extractDriveId(url) {
         if (!url) return null;
         const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
         return match ? match[1] : null;
     }
 
-    // Escape HTML
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
 
-    // Auto Scroll
     function goToNextStep(elementId) {
         const targetElement = document.getElementById(elementId);
         if (targetElement) {
@@ -110,12 +128,10 @@
                 throw new Error("No data found in sheet.");
             }
 
-            // Assuming Row 0 is header: type, url, class, year, term
-            // Data starts from Row 1
             allData = [];
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
-                if (row.length < 5) continue; // Skip incomplete rows
+                if (row.length < 5) continue;
 
                 const type = row[0] || '';
                 const url = row[1] || '';
@@ -125,7 +141,6 @@
 
                 if (type.toLowerCase() !== 'sheet' || !url) continue;
 
-                // Parse Class (e.g., "6A" -> grade: "6", section: "A")
                 let grade = '';
                 let section = '';
                 const classMatch = classStr.match(/^(\d+)([A-Za-z]+)$/);
@@ -133,18 +148,10 @@
                     grade = classMatch[1];
                     section = classMatch[2].toUpperCase();
                 } else {
-                    grade = classStr; // Fallback if no section
+                    grade = classStr;
                 }
 
-                allData.push({
-                    type,
-                    url,
-                    classStr,
-                    year,
-                    term,
-                    grade,
-                    section
-                });
+                allData.push({ type, url, classStr, year, term, grade, section });
             }
 
             initFilters();
@@ -158,7 +165,6 @@
     // UI Initialization
     // ==========================================================
     function initFilters() {
-        // Extract unique years
         const years = [...new Set(allData.map(item => item.year))].filter(y => y).sort((a, b) => b - a);
         
         yearSelect.innerHTML = '<option value="">Select Year</option>';
@@ -169,15 +175,13 @@
             yearSelect.appendChild(option);
         });
 
-        // Default selection
         if (years.length > 0) {
             yearSelect.value = years[0];
             currentYear = years[0];
             populateTerms(years[0]);
         }
 
-        // Render Grade Buttons
-        renderGradeButtons();
+        renderGrades();
     }
 
     function populateTerms(year) {
@@ -201,26 +205,31 @@
         renderPapers();
     }
 
-    function renderGradeButtons() {
+    function renderGrades() {
         const grades = ['6', '7', '8', '9', '10', '11', '12', '13', 'All'];
         let html = '';
         
         grades.forEach(g => {
             const displayGrade = g === 'All' ? 'All' : `Grade ${g}`;
             const active = g === currentGrade ? 'active' : '';
-            html += `<div class="grade-btn ${active}" data-grade="${g}">${displayGrade}</div>`;
+            html += `<div class="grade-pill ${active}" data-grade="${g}">${displayGrade}</div>`;
         });
 
         gradePillsEl.innerHTML = html;
 
-        document.querySelectorAll('.grade-btn').forEach(el => {
+        document.querySelectorAll('.grade-pill').forEach(el => {
             el.addEventListener('click', function() {
                 currentGrade = this.dataset.grade;
-                renderGradeButtons(); // Re-render to update active state
+                renderGrades();
                 renderPapers();
                 goToNextStep('paperList');
             });
         });
+
+        const activePill = gradePillsEl.querySelector('.grade-pill.active');
+        if (activePill) {
+            activePill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
     }
 
     // ==========================================================
@@ -234,7 +243,6 @@
             return;
         }
 
-        // Filter Data
         filteredData = allData.filter(item => {
             const matchYear = item.year === currentYear;
             const matchTerm = item.term === currentTerm;
@@ -242,7 +250,6 @@
             return matchYear && matchTerm && matchGrade;
         });
 
-        // Update Title
         const gradeText = currentGrade === 'All' ? 'All Grades' : `Grade ${currentGrade}`;
         dynamicTitle.innerHTML = `<span>${currentYear} - ${currentTerm} Term Test - ${gradeText}</span>`;
 
@@ -257,7 +264,6 @@
             return;
         }
 
-        // Render Cards
         let html = '';
         filteredData.forEach(item => {
             const fileId = extractDriveId(item.url);
@@ -324,68 +330,47 @@
     });
 
     // ==========================================================
-    // ZIP Generation Logic
+    // ZIP Generation Logic (UPDATED FOR CORS ISSUE)
     // ==========================================================
     downloadZipBtn.addEventListener('click', async () => {
         if (filteredData.length === 0) return;
 
-        const zip = new JSZip();
-        let completed = 0;
-        const total = filteredData.length;
-
         zipProgress.style.display = 'block';
-        zipTotal.textContent = total;
-        zipCount.textContent = completed;
+        zipTotal.textContent = filteredData.length;
+        zipCount.textContent = 'Preparing...';
         downloadZipBtn.disabled = true;
         downloadZipBtn.innerHTML = 'Preparing ZIP...';
 
         try {
-            for (const item of filteredData) {
+            const zip = new JSZip();
+            let linkText = `MSNS Term Test Papers - Download Links\nGenerated on: ${new Date().toLocaleString()}\n\n`;
+            linkText += `Filters: Year ${currentYear} | Term ${currentTerm} | Grade ${currentGrade}\n\n`;
+            linkText += `--------------------------------------------------\n\n`;
+
+            filteredData.forEach((item, index) => {
                 const fileId = extractDriveId(item.url);
-                if (!fileId) continue;
-
-                // Direct download link for fetching blob
-                const downloadUrl = `https://drive.usercontent.google.com/download?id=${fileId}&export=download`;
+                const downloadUrl = fileId 
+                    ? `https://drive.usercontent.google.com/download?id=${fileId}&export=download` 
+                    : item.url;
                 
-                try {
-                    const response = await fetch(downloadUrl, { mode: 'cors' });
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    
-                    const blob = await response.blob();
-                    // Sanitize filename
-                    const safeName = `${item.classStr}_${item.year}_${item.term}_Term.pdf`.replace(/[^a-z0-9_\-\.]/gi, '_');
-                    zip.file(safeName, blob);
-                    
-                    completed++;
-                    zipCount.textContent = completed;
-                } catch (err) {
-                    console.warn(`Failed to fetch ${item.classStr}:`, err);
-                    // Continue with other files even if one fails
-                }
-            }
+                linkText += `${index + 1}. ${item.classStr} - ${item.year} ${item.term} Term\n`;
+                linkText += `Download Link: ${downloadUrl}\n\n`;
+            });
 
-            if (completed === 0) {
-                alert("Could not download any files. This might be due to CORS restrictions or invalid links.");
-                resetZipButton();
-                return;
-            }
-
+            zip.file("Download_Links.txt", linkText);
+            
             const content = await zip.generateAsync({ type: "blob" });
-            saveAs(content, `MSNS_Term_Test_${currentYear}_${currentTerm}_Grade_${currentGrade}.zip`);
+            saveAs(content, `MSNS_Term_Test_${currentYear}_${currentTerm}_Grade_${currentGrade}_Links.zip`);
             
         } catch (error) {
             console.error("ZIP Generation Error:", error);
             alert("An error occurred while generating the ZIP file.");
         } finally {
-            resetZipButton();
+            zipProgress.style.display = 'none';
+            downloadZipBtn.disabled = false;
+            downloadZipBtn.innerHTML = '<i class="bi bi-file-earmark-zip"></i> Download All as ZIP';
         }
     });
-
-    function resetZipButton() {
-        zipProgress.style.display = 'none';
-        downloadZipBtn.disabled = false;
-        downloadZipBtn.innerHTML = '<i class="bi bi-file-earmark-zip"></i> Download All as ZIP';
-    }
 
     // ==========================================================
     // Event Listeners for Selects
@@ -410,5 +395,6 @@
     // Initialize
     // ==========================================================
     fetchData();
+    initDisclaimer();
 
 })();
