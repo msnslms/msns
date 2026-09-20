@@ -620,9 +620,6 @@ function initTermTestModule() {
     loadTermTestList();
 }
 
-// ==========================================
-// ✅ FIXED: Proper CSV parser (multi-line cell safe)
-// ==========================================
 function parseFullCSV(text) {
     const rows = [];
     let row = [];
@@ -657,7 +654,6 @@ function parseFullCSV(text) {
         row.push(field);
         if (row.some(f => String(f).trim() !== '')) rows.push(row);
     }
-    // Clean cells: replace newlines with spaces, collapse multiple spaces
     return rows.map(r => r.map(cell => 
         String(cell).replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim()
     ));
@@ -675,13 +671,8 @@ async function fetchAndParseGoogleSheet(sheetUrl) {
     return parseRowsToStudentResults(rows);
 }
 
-// ==========================================
-// ✅ FIXED: Parse rows → students (with better headers)
-// ==========================================
 function parseRowsToStudentResults(rows) {
     if (rows.length < 2) throw new Error('Sheet එකේ දත්ත නොමැත!');
-
-    // Find header row (must have "index" and "name")
     let headerRowIdx = -1;
     for (let i = 0; i < Math.min(rows.length, 15); i++) {
         const row = rows[i].map(c => String(c).toLowerCase());
@@ -693,8 +684,6 @@ function parseRowsToStudentResults(rows) {
 
     const row1 = rows[headerRowIdx] || [];
     const row2 = (headerRowIdx + 1 < rows.length) ? rows[headerRowIdx + 1] : [];
-
-    // Detect if row2 is another header row (2-row header case)
     let indexColIdx = row1.findIndex(c => {
         const l = String(c).toLowerCase();
         return l.includes('index') || l.includes('විභාග අංකය') || l.includes('අංකය');
@@ -705,34 +694,23 @@ function parseRowsToStudentResults(rows) {
             return l.includes('index') || l.includes('විභාග අංකය') || l.includes('අංකය');
         });
     }
-
     let isRow2Header = false;
     if (indexColIdx !== -1 && row2[indexColIdx] !== undefined && String(row2[indexColIdx]).trim() === '') {
-        // Check if row2 has more subject columns than row1
         const row2NonEmpty = row2.filter(c => String(c).trim() !== '').length;
         const row1NonEmpty = row1.filter(c => String(c).trim() !== '').length;
-        if (row2NonEmpty >= row1NonEmpty * 0.5) {
-            isRow2Header = true;
-        }
+        if (row2NonEmpty >= row1NonEmpty * 0.5) isRow2Header = true;
     }
 
-    // Build column map by combining row1 + row2
     const colMap = { index: -1, name: -1, total: -1, average: -1, position: -1, subjects: [] };
     const maxCols = Math.max(row1.length, isRow2Header ? row2.length : 0);
 
     for (let i = 0; i < maxCols; i++) {
         const val1 = row1[i] ? String(row1[i]).trim() : '';
         const val2 = (isRow2Header && row2[i]) ? String(row2[i]).trim() : '';
-        
-        // Combine: prefer val2 (sub-header) if present, otherwise val1
-        // But if val1 has the real name and val2 is empty, use val1
         let colName = val2 !== '' ? val2 : val1;
-        
-        // If both are non-empty and different, join them (e.g. "SINHALA" + "LITERATURE")
         if (val1 !== '' && val2 !== '' && val1 !== val2) {
             colName = `${val1} ${val2}`;
         }
-        
         if (!colName) continue;
         const lower = colName.toLowerCase();
 
@@ -755,25 +733,18 @@ function parseRowsToStudentResults(rows) {
         }
     }
 
-    if (colMap.index === -1 || colMap.name === -1) {
-        throw new Error('Index/Name columns හඳුනාගත නොහැක.');
-    }
+    if (colMap.index === -1 || colMap.name === -1) throw new Error('Index/Name columns හඳුනාගත නොහැක.');
 
-    // Parse students
     const students = [];
     const dataStartRow = isRow2Header ? headerRowIdx + 2 : headerRowIdx + 1;
 
     for (let i = dataStartRow; i < rows.length; i++) {
         const row = rows[i];
         if (!row || row.length === 0) continue;
-
         const indexNum = row[colMap.index] ? String(row[colMap.index]).trim() : '';
         const name = row[colMap.name] ? String(row[colMap.name]).trim() : '';
-
         if (!indexNum || indexNum === '' || indexNum.toLowerCase().includes('index') || 
-            indexNum.toLowerCase().includes('total') || !/^\d+/.test(indexNum)) {
-            continue;
-        }
+            indexNum.toLowerCase().includes('total') || !/^\d+/.test(indexNum)) continue;
 
         const results = {};
         colMap.subjects.forEach(sub => {
@@ -782,14 +753,11 @@ function parseRowsToStudentResults(rows) {
                 results[sub.name] = mark;
             }
         });
-
         const total = colMap.total !== -1 && row[colMap.total] ? String(row[colMap.total]).trim() : '';
         const average = colMap.average !== -1 && row[colMap.average] ? String(row[colMap.average]).trim() : '';
         const position = colMap.position !== -1 && row[colMap.position] ? String(row[colMap.position]).trim() : '';
-
         students.push({ indexNumber: indexNum, name, total, average, position, results });
     }
-
     return students;
 }
 
@@ -806,8 +774,8 @@ function renderSheetPreview(students) {
         tr.id = `tr-student-${idx}`;
         let resultsHTML = '<div class="results-tag-box">';
         for (const [sub, mark] of Object.entries(s.results)) {
-            const isAB = String(mark).toLowerCase() === 'ab';
-            resultsHTML += `<div class="sub-tag" ${isAB ? 'style="color:red; border-color:red;"' : ''}>${sub}: <span>${mark}</span></div>`;
+            const isAB = String(mark).toUpperCase() === 'AB';
+            resultsHTML += `<div class="sub-tag" ${isAB ? 'style="color:#a78bfa; border-color:#a78bfa;"' : ''}>${sub}: <span>${mark}</span></div>`;
         }
         resultsHTML += '</div>';
         let statsHTML = '<div style="margin-top: 5px; font-size: 0.85rem; color: #10b981;">';
@@ -946,19 +914,17 @@ let alCharts = { pf: null, grade: null };
 let olAnalysisData = null;
 let alAnalysisData = null;
 
-/* ---------- Grade helper ---------- */
+/* ---------- Grade helper (FIXED: keep AB) ---------- */
 function calcGrade(m) {
     if (m === undefined || m === null) return 'W';
     const s = String(m).trim().toUpperCase();
     if (!s) return 'W';
-    
-    // If already a letter grade, use directly
-    if (['A', 'B', 'C', 'S', 'W', 'F', 'AB'].includes(s)) {
-        if (s === 'F' || s === 'AB') return 'W';
-        return s;
-    }
-    
-    // Otherwise try to parse as number
+    // Keep AB (absent) as its own grade
+    if (s === 'AB' || s === 'ABS' || s === 'ABSENT') return 'AB';
+    // Already letter grade
+    if (s === 'A' || s === 'B' || s === 'C' || s === 'S') return s;
+    if (s === 'W' || s === 'F' || s === 'FAIL') return 'W';
+    // Numeric
     const x = parseFloat(s);
     if (isNaN(x)) return 'W';
     if (x >= 75) return 'A';
@@ -974,14 +940,15 @@ function getSubjects(resultsObj) {
     if (!resultsObj) return [];
     return Object.entries(resultsObj).filter(([s]) => {
         const k = String(s).toLowerCase().trim();
-        return !k.includes('grade') && !k.includes('class') && 
-               !k.includes('stream') && !k.includes('position') &&
-               !k.includes('total') && !k.includes('average') &&
-               !k.includes('result');
+        // Exclude meta fields — but DO NOT exclude subject names
+        if (k === 'grade' || k === 'class' || k === 'stream' || k === 'position') return false;
+        if (k === 'total' || k === 'average' || k === 'avg' || k === 'result') return false;
+        if (k.startsWith('grade ') || k.startsWith('class ')) return false;
+        return true;
     });
 }
 
-/* ---------- ✅ FIXED: Subject Detection ---------- */
+/* ---------- Subject detection ---------- */
 function normalizeSubject(name) {
     return String(name || '')
         .toLowerCase()
@@ -991,11 +958,8 @@ function normalizeSubject(name) {
 }
 
 function isMathsSubject(name) {
-    const raw = normalizeSubject(name);
-    if (!raw) return false;
-    const compact = raw.replace(/[\s\.\-_\(\)&]+/g, '');
+    const compact = normalizeSubject(name).replace(/[\s\.\-_\(\)&]+/g, '');
     if (!compact) return false;
-    
     if (compact === 'maths' || compact === 'math' || compact === 'mathematics' || compact === 'mathamatics') return true;
     if (compact.includes('mathematics')) return true;
     if (compact.includes('maths')) return true;
@@ -1027,14 +991,10 @@ function isTamilLit(name) {
 function isMotherTongueSubject(name) {
     const compact = normalizeSubject(name).replace(/[\s\.\-_\(\)&]+/g, '');
     if (!compact) return false;
-    
     const hasSinhala = compact.includes('sinhala') || compact.includes('සිංහල');
     const hasTamil = compact.includes('tamil') || compact.includes('දෙමළ');
     if (!hasSinhala && !hasTamil) return false;
-    
-    // Exclude literature
     if (isSinhalaLit(name) || isTamilLit(name)) return false;
-    
     return true;
 }
 
@@ -1042,15 +1002,15 @@ function isAlExcludedSubject(name) {
     const compact = normalizeSubject(name).replace(/[\s\.\-_\(\)&]+/g, '');
     if (!compact) return false;
     if (compact.includes('generalinformationtechnology')) return true;
-    if (compact === 'git' || compact === 'git' || compact === 'g i t'.replace(/\s/g, '')) return true;
+    if (compact === 'git') return true;
     if (compact.includes('generalenglish')) return true;
     if (compact === 'english' || compact === 'englishlanguage') return true;
     if (compact.includes('englishliterature')) return true;
     return false;
 }
 
-/* ---------- ✅ FIXED: O/L Pass/Fail (lenient on missing subjects) ---------- */
-function checkOlPass(subjects, allSubjectNames) {
+/* ---------- O/L Pass/Fail — PER-STUDENT LENIENT ---------- */
+function checkOlPass(subjects) {
     const graded = subjects.map(([name, mark]) => ({
         name, mark, grade: calcGrade(mark)
     }));
@@ -1058,18 +1018,14 @@ function checkOlPass(subjects, allSubjectNames) {
     const passes  = graded.filter(g => isPassGrade(g.grade));
     const credits = graded.filter(g => isCreditGrade(g.grade));
 
-    // Check if sheet HAS a maths column (across all subjects in sheet)
-    const sheetHasMaths = (allSubjectNames || []).some(n => isMathsSubject(n));
-    const sheetHasMother = (allSubjectNames || []).some(n => isMotherTongueSubject(n));
-
-    // Find student's maths/mother tongue
     const maths  = graded.find(g => isMathsSubject(g.name));
     const mother = graded.find(g => isMotherTongueSubject(g.name));
 
-    // If the sheet doesn't have that subject column at all → be lenient (pass)
-    // If it has but student has no value → fail
-    const mathsOk  = !sheetHasMaths  ? true : !!(maths  && isPassGrade(maths.grade));
-    const motherOk = !sheetHasMother ? true : !!(mother && isPassGrade(mother.grade));
+    // Per-student lenient:
+    //  - If the student's row has NO maths/mother-tongue → skip that requirement
+    //  - If the student's row HAS it → must be S or above
+    const mathsOk  = !maths  ? true : isPassGrade(maths.grade);
+    const motherOk = !mother ? true : isPassGrade(mother.grade);
 
     const pass = passes.length >= 6 && credits.length >= 3 && mathsOk && motherOk;
     const aCount = graded.filter(g => g.grade === 'A').length;
@@ -1081,8 +1037,8 @@ function checkOlPass(subjects, allSubjectNames) {
         const fails = [];
         if (passes.length < 6) fails.push(`P:${passes.length}/6`);
         if (credits.length < 3) fails.push(`C:${credits.length}/3`);
-        if (sheetHasMaths && !mathsOk) fails.push('Maths✗');
-        if (sheetHasMother && !motherOk) fails.push('Mother✗');
+        if (maths && !mathsOk) fails.push('Maths✗');
+        if (mother && !motherOk) fails.push('Mother✗');
         reason = `Failed (${fails.join(', ')})`;
     }
 
@@ -1128,11 +1084,10 @@ function initTermAnalysisModule() {
             const student = idx ? docs[0] : docs[Math.floor(Math.random() * docs.length)];
             const results = student.results || {};
             const subjects = getSubjects(results);
-            const allNames = subjects.map(([n]) => n);
             const gradeNum = parseInt(student.grade);
             let passStatus = 'N/A', statusText = 'Pass/Fail calculation available for O/L & A/L only';
             if (gradeNum === 10 || gradeNum === 11) {
-                const r = checkOlPass(subjects, allNames);
+                const r = checkOlPass(subjects);
                 passStatus = r.pass ? 'PASS' : 'FAIL';
                 statusText = r.reason;
             } else if (gradeNum === 12 || gradeNum === 13) {
@@ -1228,6 +1183,36 @@ function collectClassSheets(mode) {
     return result;
 }
 
+/* ---------- Read all sheets with per-sheet status ---------- */
+async function readAllSheets(classes, gradeDefaultMap) {
+    // Parallel read; keep per-sheet status
+    const results = await Promise.allSettled(
+        classes.map(async item => {
+            const students = await fetchAndParseGoogleSheet(item.url);
+            return { item, students };
+        })
+    );
+
+    const allStudents = [];
+    const sheetStatus = [];
+
+    for (let i = 0; i < results.length; i++) {
+        const r = results[i];
+        const item = classes[i];
+        const grade = item.grade || gradeDefaultMap;
+        if (r.status === 'fulfilled') {
+            const students = r.value.students;
+            students.forEach(s => { s.class = item.cls; s.grade = grade; });
+            allStudents.push(...students);
+            sheetStatus.push({ cls: item.cls, grade, ok: true, count: students.length });
+        } else {
+            const err = r.reason?.message || String(r.reason) || 'Unknown error';
+            sheetStatus.push({ cls: item.cls, grade, ok: false, error: err });
+        }
+    }
+    return { allStudents, sheetStatus };
+}
+
 /* ---------- Generate O/L Analysis ---------- */
 async function generateOlAnalysis() {
     const year = document.getElementById('olAnalysisYear').value.trim();
@@ -1242,28 +1227,16 @@ async function generateOlAnalysis() {
     const originalHTML = btn.innerHTML;
     btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Reading ${classes.length} sheet(s)...`;
 
-    const allStudents = [];
-    let okCount = 0;
-    let allSubjectNamesSet = new Set();
-    for (const item of classes) {
-        try {
-            const students = await fetchAndParseGoogleSheet(item.url);
-            students.forEach(s => {
-                s.class = item.cls;
-                s.grade = item.grade;
-                Object.keys(s.results || {}).forEach(k => allSubjectNamesSet.add(k));
-            });
-            allStudents.push(...students);
-            okCount++;
-        } catch (err) {
-            console.error(`Class ${item.cls} error:`, err);
-            showToast(`Class ${item.cls} read failed: ${err.message}`, 'error');
-        }
-    }
+    const { allStudents, sheetStatus } = await readAllSheets(classes, '11');
+
     btn.disabled = false;
     btn.innerHTML = originalHTML;
 
-    if (!allStudents.length) { showToast('Sheets වලින් කිසිම Data එකක් ලැබුණේ නෑ!', 'error'); return; }
+    if (!allStudents.length) {
+        showToast('Sheets වලින් කිසිම Data එකක් ලැබුණේ නෑ!', 'error');
+        renderSheetStatus('ol', sheetStatus);
+        return;
+    }
 
     const filtered = gradeFilter === 'all'
         ? allStudents
@@ -1273,14 +1246,18 @@ async function generateOlAnalysis() {
     olAnalysisData = {
         year, term, grade: gradeFilter,
         class: classes.map(c => c.cls).join(','),
-        allSubjectNames: Array.from(allSubjectNamesSet),
-        summary: computeAnalysis(filtered, 'ol', Array.from(allSubjectNamesSet))
+        sheetStatus,
+        summary: computeAnalysis(filtered, 'ol')
     };
     renderAnalysis('ol', olAnalysisData.summary);
+    renderSheetStatus('ol', sheetStatus);
     document.getElementById('olAnalysisResult').style.display = 'block';
     document.getElementById('btnSaveOl').disabled = false;
     document.getElementById('btnPdfPreviewOl').disabled = false;
-    showToast(`O/L Analysis ready: ${filtered.length} students from ${okCount} sheet(s)`, 'ok');
+
+    const okCount = sheetStatus.filter(s => s.ok).length;
+    const failCount = sheetStatus.filter(s => !s.ok).length;
+    showToast(`O/L: ${filtered.length} students from ${okCount} sheet(s)${failCount ? ` • ${failCount} failed` : ''}`, okCount ? 'ok' : 'error');
 }
 
 /* ---------- Generate A/L Analysis ---------- */
@@ -1298,50 +1275,90 @@ async function generateAlAnalysis() {
     const originalHTML = btn.innerHTML;
     btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Reading ${classes.length} sheet(s)...`;
 
-    const allStudents = [];
-    let okCount = 0;
-    for (const item of classes) {
-        try {
-            const students = await fetchAndParseGoogleSheet(item.url);
-            students.forEach(s => { s.class = item.cls; s.grade = item.grade; s.stream = stream; });
-            allStudents.push(...students);
-            okCount++;
-        } catch (err) {
-            console.error(`Class ${item.cls} error:`, err);
-            showToast(`Class ${item.cls} read failed: ${err.message}`, 'error');
-        }
-    }
+    const { allStudents, sheetStatus } = await readAllSheets(classes, '13');
+
     btn.disabled = false;
     btn.innerHTML = originalHTML;
 
-    if (!allStudents.length) { showToast('Sheets වලින් කිසිම Data එකක් ලැබුණේ නෑ!', 'error'); return; }
+    if (!allStudents.length) {
+        showToast('Sheets වලින් කිසිම Data එකක් ලැබුණේ නෑ!', 'error');
+        renderSheetStatus('al', sheetStatus);
+        return;
+    }
 
     const filtered = gradeFilter === 'all'
         ? allStudents
         : allStudents.filter(s => String(s.grade) === gradeFilter);
     if (!filtered.length) { showToast('Matching records නෑ!', 'error'); return; }
 
+    filtered.forEach(s => s.stream = stream);
+
     alAnalysisData = {
         year, term, grade: gradeFilter, stream,
         class: classes.map(c => c.cls).join(','),
-        summary: computeAnalysis(filtered, 'al', [])
+        sheetStatus,
+        summary: computeAnalysis(filtered, 'al')
     };
     renderAnalysis('al', alAnalysisData.summary);
+    renderSheetStatus('al', sheetStatus);
     document.getElementById('alAnalysisResult').style.display = 'block';
     document.getElementById('btnSaveAl').disabled = false;
     document.getElementById('btnPdfPreviewAl').disabled = false;
-    showToast(`A/L Analysis ready: ${filtered.length} students from ${okCount} sheet(s)`, 'ok');
+
+    const okCount = sheetStatus.filter(s => s.ok).length;
+    const failCount = sheetStatus.filter(s => !s.ok).length;
+    showToast(`A/L: ${filtered.length} students from ${okCount} sheet(s)${failCount ? ` • ${failCount} failed` : ''}`, okCount ? 'ok' : 'error');
+}
+
+/* ---------- Render per-sheet status ---------- */
+function renderSheetStatus(mode, sheetStatus) {
+    const resultBox = document.getElementById(mode === 'ol' ? 'olAnalysisResult' : 'alAnalysisResult');
+    if (!resultBox) return;
+
+    let statusDiv = document.getElementById(`${mode}SheetStatusBox`);
+    if (!statusDiv) {
+        statusDiv = document.createElement('div');
+        statusDiv.id = `${mode}SheetStatusBox`;
+        statusDiv.style.cssText = 'margin-bottom:18px; padding:14px; background:#0b1220; border:1px solid #334155; border-radius:10px;';
+        resultBox.insertBefore(statusDiv, resultBox.firstChild);
+    }
+
+    const okCount = sheetStatus.filter(s => s.ok).length;
+    const failCount = sheetStatus.filter(s => !s.ok).length;
+
+    statusDiv.innerHTML = `
+        <div style="font-weight:800; margin-bottom:10px; color:#60a5fa; font-size:0.92rem;">
+            <i class="fa-solid fa-list-check"></i> Sheet Read Status — 
+            <span style="color:#34d399;">${okCount} OK</span>
+            ${failCount ? ` • <span style="color:#f87171;">${failCount} Failed</span>` : ''}
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            ${sheetStatus.map(s => `
+                <div style="padding:7px 12px; border-radius:8px; font-size:0.8rem; font-weight:700; ${s.ok 
+                    ? 'background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.45); color:#6ee7b7;' 
+                    : 'background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.5); color:#fca5a5;'}">
+                    ${s.ok ? '✓' : '✗'} Class ${s.cls} (Gr ${s.grade})${s.ok ? ` — ${s.count} students` : ` — ${s.error}`}
+                </div>
+            `).join('')}
+        </div>
+    `;
 }
 
 /* ---------- Compute Analysis ---------- */
-function computeAnalysis(students, mode, allSubjectNames = []) {
+function computeAnalysis(students, mode) {
     const summary = {
         total: students.length, passed: 0, failed: 0,
         gradeBreakdown: {}, subjectStats: {}, students: [],
         achievers: { '9A': 0, '8A': 0, '7A': 0, '6A': 0 },
-        detectedMathsSubject: allSubjectNames.find(n => isMathsSubject(n)) || null,
-        detectedMotherSubject: allSubjectNames.find(n => isMotherTongueSubject(n)) || null
+        detectedMathsSubject: null,
+        detectedMotherSubject: null
     };
+
+    // Detect maths/mother tongue names (for debug display only)
+    const allNames = new Set();
+    students.forEach(st => Object.keys(st.results || {}).forEach(k => allNames.add(k)));
+    summary.detectedMathsSubject = Array.from(allNames).find(n => isMathsSubject(n)) || null;
+    summary.detectedMotherSubject = Array.from(allNames).find(n => isMotherTongueSubject(n)) || null;
 
     students.forEach(st => {
         const g = String(st.grade || '');
@@ -1352,7 +1369,7 @@ function computeAnalysis(students, mode, allSubjectNames = []) {
         let isPass = false, detail = '', aCount = 0;
 
         if (mode === 'ol') {
-            const r = checkOlPass(subjects, allSubjectNames);
+            const r = checkOlPass(subjects);
             isPass = r.pass; detail = r.reason; aCount = r.aCount;
             if (aCount === 9) summary.achievers['9A']++;
             else if (aCount === 8) summary.achievers['8A']++;
@@ -1368,7 +1385,8 @@ function computeAnalysis(students, mode, allSubjectNames = []) {
 
         subjects.forEach(([sub, m]) => {
             const grade = calcGrade(m);
-            if (!summary.subjectStats[sub]) summary.subjectStats[sub] = { A:0, B:0, C:0, S:0, W:0 };
+            if (!summary.subjectStats[sub]) summary.subjectStats[sub] = { A:0, B:0, C:0, S:0, W:0, AB:0 };
+            if (!(grade in summary.subjectStats[sub])) summary.subjectStats[sub][grade] = 0;
             summary.subjectStats[sub][grade]++;
         });
 
@@ -1421,8 +1439,8 @@ function renderAnalysis(mode, summary) {
                     <div style="background:#1e293b; padding:10px 15px; border-radius:8px; border:1px solid #334155;"><strong>6A:</strong> <span style="color:#34d399">${summary.achievers['6A']}</span></div>
                 </div>
                 <div style="margin-top:15px; padding:10px 14px; background:#1e293b; border:1px solid #334155; border-radius:8px; font-size:0.82rem; color:#94a3b8;">
-                    <div><strong style="color:#60a5fa;">Detected Maths:</strong> ${summary.detectedMathsSubject || '<span style="color:#f87171;">Not found (lenient mode)</span>'}</div>
-                    <div style="margin-top:4px;"><strong style="color:#60a5fa;">Detected Mother Tongue:</strong> ${summary.detectedMotherSubject || '<span style="color:#f87171;">Not found (lenient mode)</span>'}</div>
+                    <div><strong style="color:#60a5fa;">Detected Maths:</strong> ${summary.detectedMathsSubject || '<span style="color:#fbbf24;">Not detected</span>'}</div>
+                    <div style="margin-top:4px;"><strong style="color:#60a5fa;">Detected Mother Tongue:</strong> ${summary.detectedMotherSubject || '<span style="color:#fbbf24;">Not detected</span>'}</div>
                 </div>
             `;
         }
@@ -1506,6 +1524,7 @@ async function saveAnalysis(mode) {
         subjectStats: data.summary.subjectStats,
         achievers: data.summary.achievers || {},
         students: data.summary.students,
+        sheetStatus: data.sheetStatus || [],
         detectedMaths: data.summary.detectedMathsSubject || null,
         detectedMotherTongue: data.summary.detectedMotherSubject || null,
         generatedAt: serverTimestamp(),
@@ -1520,7 +1539,7 @@ async function saveAnalysis(mode) {
     }
 }
 
-/* ---------- PDF Export (A4 properly sized) ---------- */
+/* ---------- PDF Export ---------- */
 async function exportPdf(mode) {
     const data = mode === 'ol' ? olAnalysisData : alAnalysisData;
     if (!data) { showToast('Generate data first!', 'error'); return; }
@@ -1532,8 +1551,8 @@ async function exportPdf(mode) {
     students.forEach(st => {
         Object.keys(st.results || {}).forEach(sub => {
             const k = String(sub).toLowerCase().trim();
-            if (k.includes('grade') || k.includes('class') || k.includes('stream') || k.includes('position')) return;
-            if (k.includes('total') || k.includes('average') || k.includes('result')) return;
+            if (k === 'grade' || k === 'class' || k === 'stream' || k === 'position') return;
+            if (k === 'total' || k === 'average' || k === 'result') return;
             subjectSet.add(sub);
         });
     });
@@ -1632,6 +1651,7 @@ async function exportPdf(mode) {
                 td.g-C { color: #b45309; font-weight: 800; }
                 td.g-S { color: #c2410c; font-weight: 700; }
                 td.g-W { color: #b91c1c; font-weight: 800; }
+                td.g-AB { color: #7c3aed; font-weight: 800; background: #f3e8ff; }
                 td.empty { color: #cbd5e1; }
                 tr.row-fail { background: #fff5f5; }
                 @media print {
@@ -1645,7 +1665,7 @@ async function exportPdf(mode) {
         <body>
             <div class="report-header">
                 <img src="school bage.png" alt="Badge" onerror="this.style.display='none';">
-                <h1>A/Maithripalanayake Central College</h1>
+                <h1>A/Maithripala Senanayake Central College</h1>
                 <h2>MSNS - Medawachchiya</h2>
                 <div class="meta">
                     <span>${modeLabel}</span>
