@@ -32,6 +32,10 @@ const doNotTranslateList = [
    '#previewOverlay',
    '#paperModalOverlay',
    '.contact-detail',
+   '.subject-grid',
+   '.grade-grid',
+   '.paper-modal-body',
+   '.paperModalTitle'
 ];
 
 /* 2. STYLES & FONTS INJECT කිරීම */
