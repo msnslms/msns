@@ -725,8 +725,19 @@ function parseRowsToStudentResults(rows) {
         } else if (lower.includes('position') || lower.includes('rank') || lower.includes('place') || lower.includes('ස්ථානය')) {
             colMap.position = i;
         } else {
-            const ignored = ['bucket', 'main subject', 'optional', 'result', 'grade', 'class', 'stream'];
-            const skip = ignored.some(k => lower === k || lower.startsWith(k + ' '));
+            // ==========================================
+            // ★ FIXED: "MAIN SUBJECT(S)" prefix එකක් තියෙනවා නම් ඒ column එක subject එකක් විදියට
+            //          capture වෙන්න ඕන. ඒ නිසා 'main subject' / 'main subjects' සඳහා
+            //          exact match එකක් විතරක් skip කරන්න.
+            // ==========================================
+            const ignored = ['bucket', 'main subject', 'main subjects', 'optional', 'result', 'grade', 'class', 'stream'];
+            const skip = ignored.some(k => {
+                // "main subject" / "main subjects" නම් exact match එක විතරක් skip කරන්න
+                if (k === 'main subject' || k === 'main subjects') {
+                    return lower === k;
+                }
+                return lower === k || lower.startsWith(k + ' ');
+            });
             if (!skip && i !== colMap.index && i !== colMap.name && colName.length > 0) {
                 colMap.subjects.push({ index: i, name: colName });
             }
