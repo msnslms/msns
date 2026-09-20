@@ -932,3 +932,53 @@ html {
 .mt-2 { margin-top: 10px; }
 .mb-2 { margin-bottom: 10px; }
 .mt-4 { margin-top: 20px; }
+/* ==========================================================
+   Disclaimer Modal CSS
+   ========================================================== */
+.disclaimer-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.disclaimer-overlay.active {
+    opacity: 1;
+}
+
+.disclaimer-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 30px 24px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+}
+
+.disclaimer-overlay.active .disclaimer-card {
+    transform: translateY(0);
+}
+
+.disclaimer-icon { font-size: 45px; margin-bottom: 15px; }
+.disclaimer-card h3 { color: #b91c1c; font-weight: 800; margin-bottom: 15px; font-size: 1.3rem; }
+.disclaimer-card p { color: #52525b; font-size: 0.95rem; line-height: 1.6; margin-bottom: 15px; }
+.disclaimer-actions { display: flex; gap: 12px; margin-top: 25px; }
+
+.btn-agree, .btn-disagree {
+    flex: 1; padding: 14px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; transition: all 0.3s; font-size: 1rem;
+}
+
+.btn-agree { background: linear-gradient(135deg, #dc2626, #b91c1c); color: #fff; }
+.btn-agree:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(185, 28, 28, 0.35); }
+.btn-disagree { background: #e4e4e7; color: #0f172a; }
+.btn-disagree:hover { background: #d4d4d8; transform: translateY(-2px); }
