@@ -20,6 +20,7 @@ const db = getFirestore(app);
 let currentAdminRole = null;
 let activeUserRoleTab = 'student';
 let loadedUsers = [];
+let loadedAdminUsers = [];   // ★ NEW
 
 const $ = (id) => document.getElementById(id);
 const IMGBB_API_KEY = "3c7f31bff91c8f5f4a9aef96751ac2db";
@@ -37,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initGeminiModule();
     initTermAnalysisModule();
     initMainTabs();
+    initAdminUsersModule();   // ★ NEW
 });
 
 function showToast(msg, type = 'ok') {
@@ -107,7 +109,8 @@ function applyRolePermissions() {
     }
     const navLinks = {
         users: $('navUsers'), news: $('navNews'), exams: $('navExams'),
-        termTest: $('navTermTest'), documents: $('navDocuments'), gemini: $('navGemini')
+        termTest: $('navTermTest'), documents: $('navDocuments'), gemini: $('navGemini'),
+        adminUsers: $('navAdminUsers')   // ★ NEW
     };
     Object.values(navLinks).forEach(el => { if (el) el.style.display = 'none'; });
     if (currentAdminRole === 'media-unit') {
@@ -119,6 +122,10 @@ function applyRolePermissions() {
         switchSection('examSection');
     } else {
         Object.values(navLinks).forEach(el => { if (el) el.style.display = 'flex'; });
+        // ★ Owner ට විතරක් Admin Users section එක පෙන්නන්න
+        if (navLinks.adminUsers) {
+            navLinks.adminUsers.style.display = (currentAdminRole === 'owner') ? 'flex' : 'none';
+        }
         switchSection('usersSection');
         loadUsersData();
     }
@@ -149,7 +156,10 @@ function switchSection(sectionId) {
     if ($(sectionId)) $(sectionId).classList.add('active');
     const activeBtn = Array.from(document.querySelectorAll('.nav-link')).find(l => l.dataset.section === sectionId);
     if (activeBtn) activeBtn.classList.add('active-link');
+    // ★ Admin Users section එකට යනකොට data auto-load කරන්න
+    if (sectionId === 'adminUsersSection') loadAdminUsers();
 }
+
 // ==========================================
 // 2. USERS
 // ==========================================
@@ -397,7 +407,6 @@ async function loadNewsList() {
 // 4. EXAMS (O/L, A/L National) — Google Sheet Links
 // ==========================================
 function initExamsModule() {
-    // Option A: Static HTML use කරනවා නම් මේ function එක skip කරන්න පුළුවන්
     const container = $('examButtonsContainer');
     if (!container) return;
 
@@ -619,14 +628,8 @@ function parseRowsToStudentResults(rows) {
         } else if (lower.includes('position') || lower.includes('rank') || lower.includes('place') || lower.includes('ස්ථානය')) {
             colMap.position = i;
         } else {
-            // ==========================================
-            // ★ FIXED: "MAIN SUBJECT(S)" prefix එකක් තියෙනවා නම් ඒ column එක subject එකක් විදියට
-            //          capture වෙන්න ඕන. ඒ නිසා 'main subject' / 'main subjects' සඳහා
-            //          exact match එකක් විතරක් skip කරන්න.
-            // ==========================================
             const ignored = ['bucket', 'main subject', 'main subjects', 'optional', 'result', 'grade', 'class', 'stream'];
             const skip = ignored.some(k => {
-                // "main subject" / "main subjects" නම් exact match එක විතරක් skip කරන්න
                 if (k === 'main subject' || k === 'main subjects') {
                     return lower === k;
                 }
@@ -819,17 +822,13 @@ let alCharts = { pf: null, grade: null };
 let olAnalysisData = null;
 let alAnalysisData = null;
 
-/* ---------- Grade helper (FIXED: keep AB) ---------- */
 function calcGrade(m) {
     if (m === undefined || m === null) return 'W';
     const s = String(m).trim().toUpperCase();
     if (!s) return 'W';
-    // Keep AB (absent) as its own grade
     if (s === 'AB' || s === 'ABS' || s === 'ABSENT') return 'AB';
-    // Already letter grade
     if (s === 'A' || s === 'B' || s === 'C' || s === 'S') return s;
     if (s === 'W' || s === 'F' || s === 'FAIL') return 'W';
-    // Numeric
     const x = parseFloat(s);
     if (isNaN(x)) return 'W';
     if (x >= 75) return 'A';
@@ -845,7 +844,6 @@ function getSubjects(resultsObj) {
     if (!resultsObj) return [];
     return Object.entries(resultsObj).filter(([s]) => {
         const k = String(s).toLowerCase().trim();
-        // Exclude meta fields — but DO NOT exclude subject names
         if (k === 'grade' || k === 'class' || k === 'stream' || k === 'position') return false;
         if (k === 'total' || k === 'average' || k === 'avg' || k === 'result') return false;
         if (k.startsWith('grade ') || k.startsWith('class ')) return false;
@@ -853,7 +851,6 @@ function getSubjects(resultsObj) {
     });
 }
 
-/* ---------- Subject detection ---------- */
 function normalizeSubject(name) {
     return String(name || '')
         .toLowerCase()
@@ -914,7 +911,6 @@ function isAlExcludedSubject(name) {
     return false;
 }
 
-/* ---------- O/L Pass/Fail — PER-STUDENT LENIENT ---------- */
 function checkOlPass(subjects) {
     const graded = subjects.map(([name, mark]) => ({
         name, mark, grade: calcGrade(mark)
@@ -926,9 +922,6 @@ function checkOlPass(subjects) {
     const maths  = graded.find(g => isMathsSubject(g.name));
     const mother = graded.find(g => isMotherTongueSubject(g.name));
 
-    // Per-student lenient:
-    //  - If the student's row has NO maths/mother-tongue → skip that requirement
-    //  - If the student's row HAS it → must be S or above
     const mathsOk  = !maths  ? true : isPassGrade(maths.grade);
     const motherOk = !mother ? true : isPassGrade(mother.grade);
 
@@ -950,7 +943,6 @@ function checkOlPass(subjects) {
     return { pass, aCount, passes: passes.length, credits: credits.length, mathsOk, motherOk, reason };
 }
 
-/* ---------- A/L Pass/Fail ---------- */
 function checkAlPass(subjects) {
     const mainSubjects = subjects.filter(([name]) => !isAlExcludedSubject(name));
     const sPasses = mainSubjects.filter(([, mark]) => isPassGrade(calcGrade(mark)));
@@ -963,7 +955,6 @@ function checkAlPass(subjects) {
     };
 }
 
-/* ---------- Init analysis ---------- */
 function initTermAnalysisModule() {
     document.getElementById('btnTestResult')?.addEventListener('click', async () => {
         const year = document.getElementById('testYear')?.value.trim();
@@ -1052,7 +1043,6 @@ function initTermAnalysisModule() {
     });
 }
 
-/* ---------- Class sheet rows ---------- */
 function initClassSheetRows(mode) {
     const defaultClasses = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
     defaultClasses.forEach(cls => addClassSheetRow(mode, cls));
@@ -1088,9 +1078,7 @@ function collectClassSheets(mode) {
     return result;
 }
 
-/* ---------- Read all sheets with per-sheet status ---------- */
 async function readAllSheets(classes, gradeDefaultMap) {
-    // Parallel read; keep per-sheet status
     const results = await Promise.allSettled(
         classes.map(async item => {
             const students = await fetchAndParseGoogleSheet(item.url);
@@ -1118,7 +1106,6 @@ async function readAllSheets(classes, gradeDefaultMap) {
     return { allStudents, sheetStatus };
 }
 
-/* ---------- Generate O/L Analysis ---------- */
 async function generateOlAnalysis() {
     const year = document.getElementById('olAnalysisYear').value.trim();
     const term = document.getElementById('olAnalysisTerm').value;
@@ -1165,7 +1152,6 @@ async function generateOlAnalysis() {
     showToast(`O/L: ${filtered.length} students from ${okCount} sheet(s)${failCount ? ` • ${failCount} failed` : ''}`, okCount ? 'ok' : 'error');
 }
 
-/* ---------- Generate A/L Analysis ---------- */
 async function generateAlAnalysis() {
     const year = document.getElementById('alAnalysisYear').value.trim();
     const term = document.getElementById('alAnalysisTerm').value;
@@ -1215,7 +1201,6 @@ async function generateAlAnalysis() {
     showToast(`A/L: ${filtered.length} students from ${okCount} sheet(s)${failCount ? ` • ${failCount} failed` : ''}`, okCount ? 'ok' : 'error');
 }
 
-/* ---------- Render per-sheet status ---------- */
 function renderSheetStatus(mode, sheetStatus) {
     const resultBox = document.getElementById(mode === 'ol' ? 'olAnalysisResult' : 'alAnalysisResult');
     if (!resultBox) return;
@@ -1249,7 +1234,6 @@ function renderSheetStatus(mode, sheetStatus) {
     `;
 }
 
-/* ---------- Compute Analysis ---------- */
 function computeAnalysis(students, mode) {
     const summary = {
         total: students.length, passed: 0, failed: 0,
@@ -1259,7 +1243,6 @@ function computeAnalysis(students, mode) {
         detectedMotherSubject: null
     };
 
-    // Detect maths/mother tongue names (for debug display only)
     const allNames = new Set();
     students.forEach(st => Object.keys(st.results || {}).forEach(k => allNames.add(k)));
     summary.detectedMathsSubject = Array.from(allNames).find(n => isMathsSubject(n)) || null;
@@ -1306,7 +1289,6 @@ function computeAnalysis(students, mode) {
     return summary;
 }
 
-/* ---------- Render Analysis ---------- */
 function renderAnalysis(mode, summary) {
     const prefix = mode === 'ol' ? 'ol' : 'al';
     document.getElementById(`${prefix}StatTotal`).textContent = summary.total;
@@ -1413,7 +1395,6 @@ function renderAnalysis(mode, summary) {
     });
 }
 
-/* ---------- Save Analysis ---------- */
 async function saveAnalysis(mode) {
     const data = mode === 'ol' ? olAnalysisData : alAnalysisData;
     if (!data) return;
@@ -1444,7 +1425,6 @@ async function saveAnalysis(mode) {
     }
 }
 
-/* ---------- PDF Export ---------- */
 async function exportPdf(mode) {
     const data = mode === 'ol' ? olAnalysisData : alAnalysisData;
     if (!data) { showToast('Generate data first!', 'error'); return; }
@@ -1642,6 +1622,166 @@ function initMainTabs() {
             analysisMainWrapper.style.display = 'block';
             manageResultsWrapper.style.display = 'none';
         });
+    }
+}
+
+// ==========================================
+// 10. ADMIN USERS (OWNER ONLY) — ★ NEW
+// ==========================================
+function initAdminUsersModule() {
+    $('btnAddAdminUser')?.addEventListener('click', addAdminUser);
+    // Owner නම් data load කරන්න (already loaded වුනොත් skip)
+    if (currentAdminRole === 'owner') loadAdminUsers();
+}
+
+async function loadAdminUsers() {
+    const container = $('adminUsersContainer');
+    if (!container) return;
+    try {
+        const snap = await getDocs(collection(db, 'admin-users'));
+        loadedAdminUsers = [];
+        snap.forEach(d => loadedAdminUsers.push({ id: d.id, ...d.data() }));
+        // Owner මුලින්ම පෙන්නන්න
+        loadedAdminUsers.sort((a, b) => (a.id === 'owner' ? -1 : b.id === 'owner' ? 1 : a.id.localeCompare(b.id)));
+        renderAdminUsersList();
+    } catch (err) {
+        console.error(err);
+        showToast('Admin users load error: ' + err.message, 'error');
+    }
+}
+
+function renderAdminUsersList() {
+    const container = $('adminUsersContainer');
+    if (!container) return;
+    if (!loadedAdminUsers.length) {
+        container.innerHTML = `<p style="color:var(--text-muted); padding:15px;">Admin users කිසිවක් හමු නොවුණි.</p>`;
+        return;
+    }
+    container.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+
+    loadedAdminUsers.forEach((u) => {
+        const isOwner = u.id === 'owner';
+        const card = document.createElement('div');
+        card.className = 'form-card';
+        card.style.marginBottom = '16px';
+        card.style.borderLeft = isOwner ? '4px solid #c99a2e' : '4px solid #3b82f6';
+        card.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg, #3b82f6, #8b5cf6); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.05rem; color:#fff;">
+                        ${(u.username || u.id || 'A').charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <h4 style="margin:0; color:#fff; font-size:1rem;">${u.username || u.id}</h4>
+                        <small style="color:var(--text-muted); font-size:0.75rem;">Doc ID: <code style="background:rgba(0,0,0,0.3); padding:1px 5px; border-radius:4px;">${u.id}</code></small>
+                    </div>
+                </div>
+                <span class="admin-badge" style="font-size:0.68rem; ${isOwner ? 'background:rgba(201,154,46,0.2); border-color:rgba(201,154,46,0.5); color:#c99a2e;' : ''}">
+                    ${isOwner ? '★ OWNER' : u.id.toUpperCase()}
+                </span>
+            </div>
+            <div class="field-2col">
+                <div class="field" style="margin-bottom:10px;">
+                    <label>Username</label>
+                    <input type="text" class="custom-input admin-username-input" data-id="${u.id}" value="${u.username || ''}" />
+                </div>
+                <div class="field" style="margin-bottom:10px;">
+                    <label>Password</label>
+                    <input type="text" class="custom-input admin-password-input" data-id="${u.id}" value="${u.password || ''}" />
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:6px; flex-wrap:wrap;">
+                <button class="btn btn-primary btn-save-admin-user" data-id="${u.id}">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                </button>
+                ${!isOwner ? `<button class="btn btn-danger btn-delete-admin-user" data-id="${u.id}">
+                    <i class="fa-solid fa-trash"></i> Delete
+                </button>` : ''}
+            </div>
+        `;
+        fragment.appendChild(card);
+    });
+    container.appendChild(fragment);
+
+    container.querySelectorAll('.btn-save-admin-user').forEach(btn => {
+        btn.addEventListener('click', () => saveAdminUser(btn.dataset.id));
+    });
+    container.querySelectorAll('.btn-delete-admin-user').forEach(btn => {
+        btn.addEventListener('click', () => deleteAdminUser(btn.dataset.id));
+    });
+}
+
+async function saveAdminUser(docId) {
+    const usernameInput = document.querySelector(`.admin-username-input[data-id="${docId}"]`);
+    const passwordInput = document.querySelector(`.admin-password-input[data-id="${docId}"]`);
+    if (!usernameInput || !passwordInput) return;
+    const newUsername = usernameInput.value.trim();
+    const newPassword = passwordInput.value.trim();
+    if (!newUsername || !newPassword) {
+        showToast('Username සහ Password හිස් විය නොහැක!', 'error');
+        return;
+    }
+    // Owner account එකේ username එක 'owner' විදියටම තියෙන්න ඕන (login එකට)
+    if (docId === 'owner' && newUsername.toLowerCase() !== 'owner') {
+        if (!confirm('Owner username එක වෙනස් කිරීමෙන් පසු ඔබට login වෙන්න අලුත් username එක භාවිතා කරන්න වේ. කරගෙන යන්නද?')) {
+            return;
+        }
+    }
+    try {
+        await updateDoc(doc(db, 'admin-users', docId), {
+            username: newUsername,
+            password: newPassword
+        });
+        showToast(`"${docId}" සාර්ථකව Update විය!`, 'ok');
+        loadAdminUsers();
+    } catch (err) {
+        showToast('Update error: ' + err.message, 'error');
+    }
+}
+
+async function deleteAdminUser(docId) {
+    if (docId === 'owner') {
+        showToast('Owner account එක ඉවත් කල නොහැක!', 'error');
+        return;
+    }
+    if (!confirm(`"${docId}" admin user එක ඉවත් කිරීමට තහවුරු කරන්න?`)) return;
+    try {
+        await deleteDoc(doc(db, 'admin-users', docId));
+        showToast('සාර්ථකව Delete විය!', 'ok');
+        loadAdminUsers();
+    } catch (err) {
+        showToast('Delete error: ' + err.message, 'error');
+    }
+}
+
+async function addAdminUser() {
+    const idInput = $('newAdminDocId');
+    const unameInput = $('newAdminUsername');
+    const pwdInput = $('newAdminPassword');
+    if (!idInput || !unameInput || !pwdInput) return;
+    const docId = idInput.value.trim().toLowerCase().replace(/\s+/g, '-');
+    const uname = unameInput.value.trim();
+    const pwd = pwdInput.value.trim();
+    if (!docId || !uname || !pwd) {
+        showToast('සියලුම fields පුරවන්න!', 'error');
+        return;
+    }
+    try {
+        const existing = await getDoc(doc(db, 'admin-users', docId));
+        if (existing.exists()) {
+            showToast('මෙම Document ID එක දැනටමත් පවතී!', 'error');
+            return;
+        }
+        await setDoc(doc(db, 'admin-users', docId), {
+            username: uname,
+            password: pwd
+        });
+        showToast('අලුත් Admin User එකතු විය!', 'ok');
+        idInput.value = ''; unameInput.value = ''; pwdInput.value = '';
+        loadAdminUsers();
+    } catch (err) {
+        showToast('Add error: ' + err.message, 'error');
     }
 }
 
