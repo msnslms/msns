@@ -66,6 +66,10 @@
                 <i class="fa-solid fa-robot"></i>
                 <span>Gemini API</span>
             </a>
+          <a href="#" class="menu-item nav-link" data-section="adminUsersSection" id="navAdminUsers" style="display:none;">
+        <i class="fa-solid fa-user-shield"></i>
+       <span>Admin Users (Owner)</span>
+          </a>
         </nav>
         
         <div class="sidebar-footer">
@@ -631,6 +635,36 @@
             <h3 class="sub-title">Saved API Keys</h3>
             <div id="geminiKeysContainer" class="keys-list"></div>
         </section>
+      <section id="adminUsersSection" class="admin-section">
+    <div class="section-header">
+        <h2>Admin Users Management</h2>
+        <p>Owner only — Admin accounts වල username සහ password වෙනස් කරන්න.</p>
+    </div>
+
+    <div class="form-card">
+        <h3 style="margin-bottom: 15px; color:#60a5fa;"><i class="fa-solid fa-user-plus"></i> Add New Admin User</h3>
+        <div class="field-3col">
+            <div class="field">
+                <label>Document ID (role key)</label>
+                <input type="text" id="newAdminDocId" class="custom-input" placeholder="e.g. ict-unit" />
+            </div>
+            <div class="field">
+                <label>Username</label>
+                <input type="text" id="newAdminUsername" class="custom-input" placeholder="Login username" />
+            </div>
+            <div class="field">
+                <label>Password</label>
+                <input type="text" id="newAdminPassword" class="custom-input" placeholder="Password" />
+            </div>
+        </div>
+        <button type="button" class="btn btn-primary" id="btnAddAdminUser">
+            <i class="fa-solid fa-plus"></i> Add Admin User
+        </button>
+    </div>
+
+    <h3 class="sub-title" style="margin-bottom:15px;"><i class="fa-solid fa-users-gear"></i> Existing Admin Users</h3>
+    <div id="adminUsersContainer"></div>
+      </section>
     </main>
 
     <div id="toastBox" class="toast-box"></div>
