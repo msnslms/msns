@@ -18,12 +18,35 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let currentAdminRole = null;
+let currentAdminDocId = null;          // ★ NEW
+let currentPermissions = [];           // ★ NEW
 let activeUserRoleTab = 'student';
 let loadedUsers = [];
-let loadedAdminUsers = [];   // ★ NEW
+let loadedAdminUsers = [];
 
 const $ = (id) => document.getElementById(id);
 const IMGBB_API_KEY = "3c7f31bff91c8f5f4a9aef96751ac2db";
+
+// ★ NEW — Section definitions (order matters for default start section)
+const SECTION_OPTIONS = [
+    { id: 'usersSection',       label: 'Users' },
+    { id: 'newsSection',        label: 'Update News' },
+    { id: 'examSection',        label: 'O/L and A/L Results' },
+    { id: 'termTestSection',    label: 'Term Test Result' },
+    { id: 'documentsSection',   label: 'Past Papers & Documents' },
+    { id: 'geminiSection',      label: 'Gemini API' },
+    { id: 'adminUsersSection',  label: 'Admin Users (Owner Only)' }
+];
+
+// ★ NEW — Helper: default permissions per role/id
+function getDefaultPermissions(roleOrId) {
+    const r = String(roleOrId || '').toLowerCase();
+    if (r === 'owner') return SECTION_OPTIONS.map(o => o.id);
+    if (r === 'media-unit') return ['newsSection'];
+    if (r === 'ict-unit') return ['examSection', 'termTestSection', 'newsSection'];
+    // Default for admin/unknown: everything except adminUsers
+    return SECTION_OPTIONS.map(o => o.id).filter(id => id !== 'adminUsersSection');
+}
 
 // ==========================================
 // 1. INIT
@@ -38,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initGeminiModule();
     initTermAnalysisModule();
     initMainTabs();
-    initAdminUsersModule();   // ★ NEW
+    initAdminUsersModule();
 });
 
 function showToast(msg, type = 'ok') {
@@ -53,8 +76,12 @@ function showToast(msg, type = 'ok') {
 
 function initAuth() {
     const savedRole = sessionStorage.getItem('adminRole');
+    const savedDocId = sessionStorage.getItem('adminDocId');       // ★ NEW
+    const savedPerms = sessionStorage.getItem('adminPermissions'); // ★ NEW
     if (savedRole) {
         currentAdminRole = savedRole;
+        currentAdminDocId = savedDocId || savedRole;
+        try { currentPermissions = JSON.parse(savedPerms || '[]'); } catch (e) { currentPermissions = []; }
         applyRolePermissions();
         $('loginModal')?.classList.remove('active');
     } else {
@@ -70,10 +97,12 @@ function initAuth() {
         try {
             let userData = null;
             let detectedRole = null;
+            let detectedDocId = uname;
             let adminSnap = await getDoc(doc(db, 'admin-users', uname));
             if (adminSnap.exists()) {
                 userData = adminSnap.data();
                 detectedRole = userData.role || adminSnap.id;
+                detectedDocId = adminSnap.id;
             } else {
                 const q = query(collection(db, 'admin-users'), where('username', '==', uname));
                 const querySnap = await getDocs(q);
@@ -81,11 +110,30 @@ function initAuth() {
                     const matchedDoc = querySnap.docs[0];
                     userData = matchedDoc.data();
                     detectedRole = userData.role || matchedDoc.id;
+                    detectedDocId = matchedDoc.id;
                 }
             }
             if (userData && (userData.password === pwd || userData.pwd === pwd)) {
                 currentAdminRole = (detectedRole || 'admin').toLowerCase();
+                currentAdminDocId = detectedDocId;
+
+                // ★ NEW — Determine permissions
+                let perms = userData.permissions;
+                if (!Array.isArray(perms) || perms.length === 0) {
+                    perms = getDefaultPermissions(currentAdminRole);
+                }
+                if (currentAdminRole === 'owner') {
+                    perms = SECTION_OPTIONS.map(o => o.id);
+                }
+                if (currentAdminRole !== 'owner') {
+                    perms = perms.filter(p => p !== 'adminUsersSection');
+                }
+                currentPermissions = perms;
+
                 sessionStorage.setItem('adminRole', currentAdminRole);
+                sessionStorage.setItem('adminDocId', currentAdminDocId);
+                sessionStorage.setItem('adminPermissions', JSON.stringify(perms));
+
                 $('loginModal')?.classList.remove('active');
                 applyRolePermissions();
                 showToast('සාර්ථකව Login විය!', 'ok');
@@ -99,6 +147,8 @@ function initAuth() {
     });
     $('btnLogout')?.addEventListener('click', () => {
         sessionStorage.removeItem('adminRole');
+        sessionStorage.removeItem('adminDocId');
+        sessionStorage.removeItem('adminPermissions');
         location.reload();
     });
 }
@@ -107,28 +157,58 @@ function applyRolePermissions() {
     if ($('adminRoleBadge')) {
         $('adminRoleBadge').innerText = currentAdminRole ? currentAdminRole.toUpperCase() : 'GUEST';
     }
-    const navLinks = {
-        users: $('navUsers'), news: $('navNews'), exams: $('navExams'),
-        termTest: $('navTermTest'), documents: $('navDocuments'), gemini: $('navGemini'),
-        adminUsers: $('navAdminUsers')   // ★ NEW
+
+    const navMap = {
+        usersSection:       $('navUsers'),
+        newsSection:        $('navNews'),
+        examSection:        $('navExams'),
+        termTestSection:    $('navTermTest'),
+        documentsSection:   $('navDocuments'),
+        geminiSection:      $('navGemini'),
+        adminUsersSection:  $('navAdminUsers')
     };
-    Object.values(navLinks).forEach(el => { if (el) el.style.display = 'none'; });
-    if (currentAdminRole === 'media-unit') {
-        if (navLinks.news) navLinks.news.style.display = 'flex';
-        switchSection('newsSection');
-    } else if (currentAdminRole === 'ict-unit') {
-        if (navLinks.exams) navLinks.exams.style.display = 'flex';
-        if (navLinks.termTest) navLinks.termTest.style.display = 'flex';
-        switchSection('examSection');
-    } else {
-        Object.values(navLinks).forEach(el => { if (el) el.style.display = 'flex'; });
-        // ★ Owner ට විතරක් Admin Users section එක පෙන්නන්න
-        if (navLinks.adminUsers) {
-            navLinks.adminUsers.style.display = (currentAdminRole === 'owner') ? 'flex' : 'none';
-        }
-        switchSection('usersSection');
-        loadUsersData();
+
+    // ★ NEW — Resolve permissions
+    let perms = currentPermissions;
+    if (!Array.isArray(perms) || perms.length === 0) {
+        try { perms = JSON.parse(sessionStorage.getItem('adminPermissions') || '[]'); } catch (e) { perms = []; }
     }
+    if (!Array.isArray(perms) || perms.length === 0) {
+        perms = getDefaultPermissions(currentAdminRole);
+    }
+    if (currentAdminRole === 'owner') {
+        perms = SECTION_OPTIONS.map(o => o.id);
+    }
+    if (currentAdminRole !== 'owner') {
+        perms = perms.filter(p => p !== 'adminUsersSection');
+    }
+    currentPermissions = perms;
+
+    // Hide everything first
+    Object.values(navMap).forEach(el => { if (el) el.style.display = 'none'; });
+
+    // Show only allowed sections
+    Object.entries(navMap).forEach(([sectionId, el]) => {
+        if (!el) return;
+        el.style.display = perms.includes(sectionId) ? 'flex' : 'none';
+    });
+
+    // ★ NEW — Smart starting section
+    let startSection = 'usersSection';
+    if (currentAdminRole === 'owner' && perms.includes('usersSection')) {
+        startSection = 'usersSection';
+    } else if (currentAdminRole === 'ict-unit' && perms.includes('examSection')) {
+        startSection = 'examSection';
+    } else if (currentAdminRole === 'media-unit' && perms.includes('newsSection')) {
+        startSection = 'newsSection';
+    } else {
+        startSection = SECTION_OPTIONS.find(o => perms.includes(o.id))?.id || 'usersSection';
+    }
+
+    switchSection(startSection);
+
+    if (startSection === 'usersSection') loadUsersData();
+    if (currentAdminRole === 'owner') loadAdminUsers();
 }
 
 function initNavigation() {
@@ -156,7 +236,6 @@ function switchSection(sectionId) {
     if ($(sectionId)) $(sectionId).classList.add('active');
     const activeBtn = Array.from(document.querySelectorAll('.nav-link')).find(l => l.dataset.section === sectionId);
     if (activeBtn) activeBtn.classList.add('active-link');
-    // ★ Admin Users section එකට යනකොට data auto-load කරන්න
     if (sectionId === 'adminUsersSection') loadAdminUsers();
 }
 
@@ -403,32 +482,24 @@ async function loadNewsList() {
         container.innerHTML = `<p style="color:#e74c3c; text-align:center; padding:20px;">ලෝඩ් කිරීමේ දෝෂයක්: ${err.message}</p>`;
     }
 }
+
 // ==========================================
-// 4. EXAMS (O/L, A/L National) — Google Sheet Links
+// 4. EXAMS
 // ==========================================
 function initExamsModule() {
     const container = $('examButtonsContainer');
     if (!container) return;
-
     const links = [
-        {
-            label: 'Edit O/L Results',
-            url: 'https://docs.google.com/spreadsheets/d/15LFm1voMhABzehIGzlrvGgmatgcNE1OKt1ydiyqWpVU/edit?usp=drivesdk',
-            icon: 'fa-graduation-cap'
-        },
-        {
-            label: 'Edit A/L Results',
-            url: 'https://docs.google.com/spreadsheets/d/1n3lZO20WvCZAl58FIVAyDhz3GWTgVN3OwWPAOfQJz6g/edit?usp=drivesdk',
-            icon: 'fa-user-graduate'
-        }
+        { label: 'Edit O/L Results', url: 'https://docs.google.com/spreadsheets/d/15LFm1voMhABzehIGzlrvGgmatgcNE1OKt1ydiyqWpVU/edit?usp=drivesdk', icon: 'fa-graduation-cap' },
+        { label: 'Edit A/L Results', url: 'https://docs.google.com/spreadsheets/d/1n3lZO20WvCZAl58FIVAyDhz3GWTgVN3OwWPAOfQJz6g/edit?usp=drivesdk', icon: 'fa-user-graduate' }
     ];
-
     container.innerHTML = links.map(item => `
         <a href="${item.url}" target="_blank" class="btn btn-primary" style="display:flex; align-items:center; gap:10px; padding:12px 20px; font-weight:bold; font-size:15px; text-decoration:none; margin-bottom:12px; border-radius:8px;">
             <i class="fa-solid ${item.icon}"></i> ${item.label}
         </a>
     `).join('');
 }
+
 // ==========================================
 // 5. TERM TEST MANAGE
 // ==========================================
@@ -815,7 +886,7 @@ async function loadGeminiKeys() {
 }
 
 // ==========================================
-// 8. TERM TEST — ANALYSIS (SHEETS FROM UI) + PDF
+// 8. TERM TEST ANALYSIS + PDF
 // ==========================================
 let olCharts = { pf: null, grade: null };
 let alCharts = { pf: null, grade: null };
@@ -852,11 +923,7 @@ function getSubjects(resultsObj) {
 }
 
 function normalizeSubject(name) {
-    return String(name || '')
-        .toLowerCase()
-        .replace(/[\r\n]+/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
+    return String(name || '').toLowerCase().replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 function isMathsSubject(name) {
@@ -874,20 +941,14 @@ function isSinhalaLit(name) {
     const compact = normalizeSubject(name).replace(/[\s\.\-_\(\)&]+/g, '');
     if (!compact) return false;
     if (!compact.includes('sinhala') && !compact.includes('සිංහල')) return false;
-    return compact.includes('literature') || 
-           compact.includes('lit') ||
-           compact.includes('සාහිත්‍ය') || 
-           compact.includes('සාහිත');
+    return compact.includes('literature') || compact.includes('lit') || compact.includes('සාහිත්‍ය') || compact.includes('සාහිත');
 }
 
 function isTamilLit(name) {
     const compact = normalizeSubject(name).replace(/[\s\.\-_\(\)&]+/g, '');
     if (!compact) return false;
     if (!compact.includes('tamil') && !compact.includes('දෙමළ')) return false;
-    return compact.includes('literature') || 
-           compact.includes('lit') ||
-           compact.includes('සාහිත්‍ය') || 
-           compact.includes('සාහිත');
+    return compact.includes('literature') || compact.includes('lit') || compact.includes('සාහිත්‍ය') || compact.includes('සාහිත');
 }
 
 function isMotherTongueSubject(name) {
@@ -912,22 +973,15 @@ function isAlExcludedSubject(name) {
 }
 
 function checkOlPass(subjects) {
-    const graded = subjects.map(([name, mark]) => ({
-        name, mark, grade: calcGrade(mark)
-    }));
-
+    const graded = subjects.map(([name, mark]) => ({ name, mark, grade: calcGrade(mark) }));
     const passes  = graded.filter(g => isPassGrade(g.grade));
     const credits = graded.filter(g => isCreditGrade(g.grade));
-
     const maths  = graded.find(g => isMathsSubject(g.name));
     const mother = graded.find(g => isMotherTongueSubject(g.name));
-
     const mathsOk  = !maths  ? true : isPassGrade(maths.grade);
     const motherOk = !mother ? true : isPassGrade(mother.grade);
-
     const pass = passes.length >= 6 && credits.length >= 3 && mathsOk && motherOk;
     const aCount = graded.filter(g => g.grade === 'A').length;
-
     let reason = '';
     if (pass) {
         reason = `Passed (${passes.length}P, ${credits.length}C)`;
@@ -939,7 +993,6 @@ function checkOlPass(subjects) {
         if (mother && !motherOk) fails.push('Mother✗');
         reason = `Failed (${fails.join(', ')})`;
     }
-
     return { pass, aCount, passes: passes.length, credits: credits.length, mathsOk, motherOk, reason };
 }
 
@@ -947,12 +1000,7 @@ function checkAlPass(subjects) {
     const mainSubjects = subjects.filter(([name]) => !isAlExcludedSubject(name));
     const sPasses = mainSubjects.filter(([, mark]) => isPassGrade(calcGrade(mark)));
     const aCount = mainSubjects.filter(([, mark]) => calcGrade(mark) === 'A').length;
-    return {
-        pass: sPasses.length >= 3,
-        count: sPasses.length,
-        aCount,
-        reason: `Main S-passes: ${sPasses.length}/3`
-    };
+    return { pass: sPasses.length >= 3, count: sPasses.length, aCount, reason: `Main S-passes: ${sPasses.length}/3` };
 }
 
 function initTermAnalysisModule() {
@@ -1085,10 +1133,8 @@ async function readAllSheets(classes, gradeDefaultMap) {
             return { item, students };
         })
     );
-
     const allStudents = [];
     const sheetStatus = [];
-
     for (let i = 0; i < results.length; i++) {
         const r = results[i];
         const item = classes[i];
@@ -1113,28 +1159,20 @@ async function generateOlAnalysis() {
     if (!year) { showToast('Year එක type කරන්න!', 'error'); return; }
     const classes = collectClassSheets('ol');
     if (!classes.length) { showToast('අවම වශයෙන් එක Class Sheet එකක් add කරන්න!', 'error'); return; }
-
     const btn = document.getElementById('btnGenerateOl');
     btn.disabled = true;
     const originalHTML = btn.innerHTML;
     btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Reading ${classes.length} sheet(s)...`;
-
     const { allStudents, sheetStatus } = await readAllSheets(classes, '11');
-
     btn.disabled = false;
     btn.innerHTML = originalHTML;
-
     if (!allStudents.length) {
         showToast('Sheets වලින් කිසිම Data එකක් ලැබුණේ නෑ!', 'error');
         renderSheetStatus('ol', sheetStatus);
         return;
     }
-
-    const filtered = gradeFilter === 'all'
-        ? allStudents
-        : allStudents.filter(s => String(s.grade) === gradeFilter);
+    const filtered = gradeFilter === 'all' ? allStudents : allStudents.filter(s => String(s.grade) === gradeFilter);
     if (!filtered.length) { showToast('Matching records නෑ!', 'error'); return; }
-
     olAnalysisData = {
         year, term, grade: gradeFilter,
         class: classes.map(c => c.cls).join(','),
@@ -1146,7 +1184,6 @@ async function generateOlAnalysis() {
     document.getElementById('olAnalysisResult').style.display = 'block';
     document.getElementById('btnSaveOl').disabled = false;
     document.getElementById('btnPdfPreviewOl').disabled = false;
-
     const okCount = sheetStatus.filter(s => s.ok).length;
     const failCount = sheetStatus.filter(s => !s.ok).length;
     showToast(`O/L: ${filtered.length} students from ${okCount} sheet(s)${failCount ? ` • ${failCount} failed` : ''}`, okCount ? 'ok' : 'error');
@@ -1160,30 +1197,21 @@ async function generateAlAnalysis() {
     if (!year) { showToast('Year එක type කරන්න!', 'error'); return; }
     const classes = collectClassSheets('al');
     if (!classes.length) { showToast('අවම වශයෙන් එක Class Sheet එකක් add කරන්න!', 'error'); return; }
-
     const btn = document.getElementById('btnGenerateAl');
     btn.disabled = true;
     const originalHTML = btn.innerHTML;
     btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Reading ${classes.length} sheet(s)...`;
-
     const { allStudents, sheetStatus } = await readAllSheets(classes, '13');
-
     btn.disabled = false;
     btn.innerHTML = originalHTML;
-
     if (!allStudents.length) {
         showToast('Sheets වලින් කිසිම Data එකක් ලැබුණේ නෑ!', 'error');
         renderSheetStatus('al', sheetStatus);
         return;
     }
-
-    const filtered = gradeFilter === 'all'
-        ? allStudents
-        : allStudents.filter(s => String(s.grade) === gradeFilter);
+    const filtered = gradeFilter === 'all' ? allStudents : allStudents.filter(s => String(s.grade) === gradeFilter);
     if (!filtered.length) { showToast('Matching records නෑ!', 'error'); return; }
-
     filtered.forEach(s => s.stream = stream);
-
     alAnalysisData = {
         year, term, grade: gradeFilter, stream,
         class: classes.map(c => c.cls).join(','),
@@ -1195,7 +1223,6 @@ async function generateAlAnalysis() {
     document.getElementById('alAnalysisResult').style.display = 'block';
     document.getElementById('btnSaveAl').disabled = false;
     document.getElementById('btnPdfPreviewAl').disabled = false;
-
     const okCount = sheetStatus.filter(s => s.ok).length;
     const failCount = sheetStatus.filter(s => !s.ok).length;
     showToast(`A/L: ${filtered.length} students from ${okCount} sheet(s)${failCount ? ` • ${failCount} failed` : ''}`, okCount ? 'ok' : 'error');
@@ -1204,7 +1231,6 @@ async function generateAlAnalysis() {
 function renderSheetStatus(mode, sheetStatus) {
     const resultBox = document.getElementById(mode === 'ol' ? 'olAnalysisResult' : 'alAnalysisResult');
     if (!resultBox) return;
-
     let statusDiv = document.getElementById(`${mode}SheetStatusBox`);
     if (!statusDiv) {
         statusDiv = document.createElement('div');
@@ -1212,10 +1238,8 @@ function renderSheetStatus(mode, sheetStatus) {
         statusDiv.style.cssText = 'margin-bottom:18px; padding:14px; background:#0b1220; border:1px solid #334155; border-radius:10px;';
         resultBox.insertBefore(statusDiv, resultBox.firstChild);
     }
-
     const okCount = sheetStatus.filter(s => s.ok).length;
     const failCount = sheetStatus.filter(s => !s.ok).length;
-
     statusDiv.innerHTML = `
         <div style="font-weight:800; margin-bottom:10px; color:#60a5fa; font-size:0.92rem;">
             <i class="fa-solid fa-list-check"></i> Sheet Read Status — 
@@ -1242,20 +1266,16 @@ function computeAnalysis(students, mode) {
         detectedMathsSubject: null,
         detectedMotherSubject: null
     };
-
     const allNames = new Set();
     students.forEach(st => Object.keys(st.results || {}).forEach(k => allNames.add(k)));
     summary.detectedMathsSubject = Array.from(allNames).find(n => isMathsSubject(n)) || null;
     summary.detectedMotherSubject = Array.from(allNames).find(n => isMotherTongueSubject(n)) || null;
-
     students.forEach(st => {
         const g = String(st.grade || '');
         if (!summary.gradeBreakdown[g]) summary.gradeBreakdown[g] = { total: 0, passed: 0, failed: 0 };
         summary.gradeBreakdown[g].total++;
-
         const subjects = getSubjects(st.results || {});
         let isPass = false, detail = '', aCount = 0;
-
         if (mode === 'ol') {
             const r = checkOlPass(subjects);
             isPass = r.pass; detail = r.reason; aCount = r.aCount;
@@ -1267,24 +1287,20 @@ function computeAnalysis(students, mode) {
             const r = checkAlPass(subjects);
             isPass = r.pass; detail = r.reason; aCount = r.aCount;
         }
-
         if (isPass) { summary.passed++; summary.gradeBreakdown[g].passed++; }
         else { summary.failed++; summary.gradeBreakdown[g].failed++; }
-
         subjects.forEach(([sub, m]) => {
             const grade = calcGrade(m);
             if (!summary.subjectStats[sub]) summary.subjectStats[sub] = { A:0, B:0, C:0, S:0, W:0, AB:0 };
             if (!(grade in summary.subjectStats[sub])) summary.subjectStats[sub][grade] = 0;
             summary.subjectStats[sub][grade]++;
         });
-
         summary.students.push({
             index: st.indexNumber, name: st.name, grade: st.grade, class: st.class,
             total: st.total, average: st.average, position: st.position,
             pass: isPass, detail, aCount, results: st.results || {}
         });
     });
-
     summary.passRate = summary.total ? ((summary.passed / summary.total) * 100).toFixed(1) : '0.0';
     return summary;
 }
@@ -1295,7 +1311,6 @@ function renderAnalysis(mode, summary) {
     document.getElementById(`${prefix}StatPass`).textContent = summary.passed;
     document.getElementById(`${prefix}StatFail`).textContent = summary.failed;
     document.getElementById(`${prefix}StatRate`).textContent = `${summary.passRate}%`;
-
     const tbody = document.getElementById(`${prefix}BreakdownBody`);
     if (tbody) {
         tbody.innerHTML = Object.keys(summary.gradeBreakdown).sort().map(g => {
@@ -1304,7 +1319,6 @@ function renderAnalysis(mode, summary) {
             return `<tr><td><strong>Grade ${g}</strong></td><td>${b.total}</td><td style="color:#34d399; font-weight:800;">${b.passed}</td><td style="color:#f87171; font-weight:800;">${b.failed}</td><td><strong>${rate}%</strong></td></tr>`;
         }).join('');
     }
-
     if (mode === 'ol') {
         let achieversBox = document.getElementById('olAchieversBox');
         if (!achieversBox) {
@@ -1332,17 +1346,14 @@ function renderAnalysis(mode, summary) {
             `;
         }
     }
-
     const pfId = prefix === 'ol' ? 'olPassFailChart' : 'alPassFailChart';
     const gradeId = prefix === 'ol' ? 'olGradeChart' : 'alGradeChart';
     const pfCanvas = document.getElementById(pfId);
     const gradeCanvas = document.getElementById(gradeId);
     if (!pfCanvas || !gradeCanvas) return;
-
     const charts = mode === 'ol' ? olCharts : alCharts;
     if (charts.pf) charts.pf.destroy();
     if (charts.grade) charts.grade.destroy();
-
     charts.pf = new Chart(pfCanvas, {
         type: 'doughnut',
         data: {
@@ -1370,11 +1381,9 @@ function renderAnalysis(mode, summary) {
             }
         }
     });
-
     const gradeLabels = Object.keys(summary.gradeBreakdown).sort().map(g => `Grade ${g}`);
     const passData = Object.keys(summary.gradeBreakdown).sort().map(g => summary.gradeBreakdown[g].passed);
     const failData = Object.keys(summary.gradeBreakdown).sort().map(g => summary.gradeBreakdown[g].failed);
-
     charts.grade = new Chart(gradeCanvas, {
         type: 'bar',
         data: {
@@ -1428,10 +1437,8 @@ async function saveAnalysis(mode) {
 async function exportPdf(mode) {
     const data = mode === 'ol' ? olAnalysisData : alAnalysisData;
     if (!data) { showToast('Generate data first!', 'error'); return; }
-
     const students = data.summary.students || [];
     const modeLabel = mode === 'ol' ? 'O/L (Grade 10 & 11)' : 'A/L (Grade 12 & 13)';
-
     const subjectSet = new Set();
     students.forEach(st => {
         Object.keys(st.results || {}).forEach(sub => {
@@ -1442,13 +1449,11 @@ async function exportPdf(mode) {
         });
     });
     const subjectCols = Array.from(subjectSet).sort();
-
     const sorted = [...students].sort((a, b) => {
         if (b.aCount !== a.aCount) return b.aCount - a.aCount;
         if (a.pass !== b.pass) return a.pass ? -1 : 1;
         return String(a.name || '').localeCompare(String(b.name || ''));
     });
-
     const achievers = { A9: [], A8: [], A7: [], A6: [] };
     students.forEach(st => {
         if (st.aCount === 9) achievers.A9.push(st);
@@ -1456,20 +1461,16 @@ async function exportPdf(mode) {
         else if (st.aCount === 7) achievers.A7.push(st);
         else if (st.aCount === 6) achievers.A6.push(st);
     });
-
     function achieverLine(grade, label) {
         const arr = achievers[grade];
         if (!arr.length) return '';
         const names = arr.map(s => `${s.name || s.index || 'N/A'} (${s.index || '—'})`).join(', ');
         return `<div class="ach-line"><strong>${label} (${arr.length}):</strong> ${names}</div>`;
     }
-
     const achieverHTML = mode === 'ol'
         ? (achieverLine('A9', '9A') + achieverLine('A8', '8A') + achieverLine('A7', '7A') + achieverLine('A6', '6A')) || '<div class="ach-line" style="color:#666;">No 6A+ achievers.</div>'
         : '';
-
     const subjectHeaders = subjectCols.map(s => `<th>${s}</th>`).join('');
-
     const rowsHTML = sorted.map((st, idx) => {
         const grades = subjectCols.map(sub => {
             const mark = (st.results || {})[sub];
@@ -1489,7 +1490,6 @@ async function exportPdf(mode) {
             <td class="status ${st.pass ? 'pass' : 'fail'}">${st.pass ? 'PASS' : 'FAIL'}</td>
         </tr>`;
     }).join('');
-
     const html = `
         <!DOCTYPE html>
         <html>
@@ -1590,7 +1590,6 @@ async function exportPdf(mode) {
         </body>
         </html>
     `;
-
     const printWindow = window.open('', '_blank');
     printWindow.document.open();
     printWindow.document.write(html);
@@ -1626,11 +1625,32 @@ function initMainTabs() {
 }
 
 // ==========================================
-// 10. ADMIN USERS (OWNER ONLY) — ★ NEW
+// 10. ADMIN USERS (OWNER ONLY) — ★ UPDATED
 // ==========================================
 function initAdminUsersModule() {
+    // ★ NEW — Inject permission checkboxes into the Add form
+    if (!$('newAdminPermissionsBox')) {
+        const addBtn = $('btnAddAdminUser');
+        if (addBtn && addBtn.parentElement) {
+            const box = document.createElement('div');
+            box.id = 'newAdminPermissionsBox';
+            box.className = 'field';
+            box.style.marginTop = '14px';
+            box.innerHTML = `
+                <label style="color:#60a5fa; font-weight:800;"><i class="fa-solid fa-shield-halved"></i> Page Access (Allowed Sections)</label>
+                <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
+                    ${SECTION_OPTIONS.filter(o => o.id !== 'adminUsersSection').map(opt => `
+                        <label style="display:flex; align-items:center; gap:8px; padding:9px 15px; background:rgba(255,255,255,0.05); border:1px solid var(--border-color); border-radius:10px; cursor:pointer; font-size:0.85rem; font-weight:600; transition:0.2s;">
+                            <input type="checkbox" class="new-admin-perm-checkbox" value="${opt.id}" />
+                            ${opt.label}
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+            addBtn.parentElement.insertBefore(box, addBtn);
+        }
+    }
     $('btnAddAdminUser')?.addEventListener('click', addAdminUser);
-    // Owner නම් data load කරන්න (already loaded වුනොත් skip)
     if (currentAdminRole === 'owner') loadAdminUsers();
 }
 
@@ -1641,7 +1661,7 @@ async function loadAdminUsers() {
         const snap = await getDocs(collection(db, 'admin-users'));
         loadedAdminUsers = [];
         snap.forEach(d => loadedAdminUsers.push({ id: d.id, ...d.data() }));
-        // Owner මුලින්ම පෙන්නන්න
+        // Owner first
         loadedAdminUsers.sort((a, b) => (a.id === 'owner' ? -1 : b.id === 'owner' ? 1 : a.id.localeCompare(b.id)));
         renderAdminUsersList();
     } catch (err) {
@@ -1662,6 +1682,13 @@ function renderAdminUsersList() {
 
     loadedAdminUsers.forEach((u) => {
         const isOwner = u.id === 'owner';
+        // Resolve permissions
+        let userPerms = u.permissions;
+        if (!Array.isArray(userPerms) || userPerms.length === 0) {
+            userPerms = getDefaultPermissions(u.id);
+        }
+        if (isOwner) userPerms = SECTION_OPTIONS.map(o => o.id);
+
         const card = document.createElement('div');
         card.className = 'form-card';
         card.style.marginBottom = '16px';
@@ -1689,6 +1716,25 @@ function renderAdminUsersList() {
                 <div class="field" style="margin-bottom:10px;">
                     <label>Password</label>
                     <input type="text" class="custom-input admin-password-input" data-id="${u.id}" value="${u.password || ''}" />
+                </div>
+            </div>
+            <div class="field" style="margin-bottom:10px;">
+                <label style="color:#60a5fa; font-weight:800;">
+                    <i class="fa-solid fa-shield-halved"></i> Page Access
+                    ${isOwner ? '<span style="color:#c99a2e; font-size:0.75rem; margin-left:6px;">(Owner — All Access)</span>' : ''}
+                </label>
+                <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
+                    ${SECTION_OPTIONS.map(opt => {
+                        const checked = userPerms.includes(opt.id);
+                        const isAdminUsersOpt = opt.id === 'adminUsersSection';
+                        const disabled = isOwner || isAdminUsersOpt;
+                        return `
+                            <label style="display:flex; align-items:center; gap:8px; padding:8px 14px; background:rgba(255,255,255,0.05); border:1px solid var(--border-color); border-radius:10px; cursor:${disabled ? 'not-allowed' : 'pointer'}; font-size:0.83rem; font-weight:600; opacity:${disabled && !checked ? '0.45' : '1'};">
+                                <input type="checkbox" class="admin-perm-checkbox" data-id="${u.id}" value="${opt.id}" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''} />
+                                ${opt.label}
+                            </label>
+                        `;
+                    }).join('')}
                 </div>
             </div>
             <div style="display:flex; gap:10px; margin-top:6px; flex-wrap:wrap;">
@@ -1722,18 +1768,35 @@ async function saveAdminUser(docId) {
         showToast('Username සහ Password හිස් විය නොහැක!', 'error');
         return;
     }
-    // Owner account එකේ username එක 'owner' විදියටම තියෙන්න ඕන (login එකට)
+
+    // ★ NEW — Collect permissions
+    const permCheckboxes = document.querySelectorAll(`.admin-perm-checkbox[data-id="${docId}"]:checked`);
+    let perms = Array.from(permCheckboxes).map(c => c.value);
+    if (docId === 'owner') {
+        perms = SECTION_OPTIONS.map(o => o.id); // Owner always all
+    }
+
     if (docId === 'owner' && newUsername.toLowerCase() !== 'owner') {
         if (!confirm('Owner username එක වෙනස් කිරීමෙන් පසු ඔබට login වෙන්න අලුත් username එක භාවිතා කරන්න වේ. කරගෙන යන්නද?')) {
             return;
         }
     }
+
     try {
         await updateDoc(doc(db, 'admin-users', docId), {
             username: newUsername,
-            password: newPassword
+            password: newPassword,
+            permissions: perms
         });
         showToast(`"${docId}" සාර්ථකව Update විය!`, 'ok');
+
+        // ★ NEW — If current logged-in user updated themselves, refresh session + UI
+        if (docId === currentAdminDocId) {
+            sessionStorage.setItem('adminPermissions', JSON.stringify(perms));
+            currentPermissions = perms;
+            applyRolePermissions();
+        }
+
         loadAdminUsers();
     } catch (err) {
         showToast('Update error: ' + err.message, 'error');
@@ -1767,6 +1830,14 @@ async function addAdminUser() {
         showToast('සියලුම fields පුරවන්න!', 'error');
         return;
     }
+
+    // ★ NEW — Collect permissions
+    const perms = Array.from(document.querySelectorAll('.new-admin-perm-checkbox:checked')).map(c => c.value);
+    if (!perms.length) {
+        showToast('අවම වශයෙන් එක Section එකක්වත් select කරන්න!', 'error');
+        return;
+    }
+
     try {
         const existing = await getDoc(doc(db, 'admin-users', docId));
         if (existing.exists()) {
@@ -1775,10 +1846,12 @@ async function addAdminUser() {
         }
         await setDoc(doc(db, 'admin-users', docId), {
             username: uname,
-            password: pwd
+            password: pwd,
+            permissions: perms
         });
         showToast('අලුත් Admin User එකතු විය!', 'ok');
         idInput.value = ''; unameInput.value = ''; pwdInput.value = '';
+        document.querySelectorAll('.new-admin-perm-checkbox').forEach(c => c.checked = false);
         loadAdminUsers();
     } catch (err) {
         showToast('Add error: ' + err.message, 'error');
