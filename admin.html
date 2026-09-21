@@ -184,69 +184,20 @@
         </section>
 
         <section id="examSection" class="admin-section">
-            <div class="section-header">
-                <h2>O/L and A/L Examination Results</h2>
-                <p>Update statistics and high achievers list for national examinations.</p>
-            </div>
-            <div class="tab-pills">
-                <button class="tab-pill active" id="tabOlExam">O/L Examination</button>
-                <button class="tab-pill" id="tabAlExam">A/L Examination</button>
-            </div>
-
-            <div id="olFormWrapper" class="form-card">
-                <h3>Ordinary Level (O/L) Results Entry</h3>
-                <div class="field-2col" style="margin-top: 15px;">
-                    <div class="field">
-                        <label>Exam Year</label>
-                        <input type="number" id="olYear" class="custom-input" placeholder="2025" />
-                    </div>
-                    <div class="field">
-                        <label>Full Document (Google Drive Link)</label>
-                        <input type="text" id="olDriveLink" class="custom-input" placeholder="https://drive.google.com/..." />
-                    </div>
-                </div>
-                <div class="field-3col">
-                    <div class="field">
-                        <label>Total Sat (සහභාගී වූ ගණන)</label>
-                        <input type="number" id="olTotal" class="custom-input" />
-                    </div>
-                    <div class="field">
-                        <label>Passed Count (පාස් ගණන)</label>
-                        <input type="number" id="olPass" class="custom-input" />
-                    </div>
-                    <div class="field">
-                        <label>Failed Count (ෆේල් ගණන)</label>
-                        <input type="number" id="olFail" class="custom-input" />
-                    </div>
-                </div>
-                <div class="calc-box">Auto Pass Percentage: <span id="olPassRate">0%</span></div>
-                <h4 style="margin: 20px 0 10px; color:#60a5fa;">Top Achievers (9A, 8A, 7A, 6A etc.)</h4>
-                <div id="olAchieversContainer"></div>
-                <button type="button" class="btn btn-ghost" id="btnAddOlAchiever" style="margin-top:10px;">
-                    <i class="fa-solid fa-plus"></i> Add Student Result
-                </button>
-                <div style="margin-top: 25px;">
-                    <button type="button" class="btn btn-primary" id="btnSaveOl">Save O/L Results</button>
-                </div>
-            </div>
-
-            <div id="alFormWrapper" class="form-card" style="display: none;">
-                <h3>Advanced Level (A/L) Results Entry</h3>
-                <div class="field-2col" style="margin-top: 15px;">
-                    <div class="field">
-                        <label>Exam Year</label>
-                        <input type="number" id="alYear" class="custom-input" placeholder="2025" />
-                    </div>
-                    <div class="field">
-                        <label>Full Document (Google Drive Link)</label>
-                        <input type="text" id="alDriveLink" class="custom-input" placeholder="https://drive.google.com/..." />
-                    </div>
-                </div>
-                <div id="alStreamsContainer"></div>
-                <div style="margin-top: 25px;">
-                    <button type="button" class="btn btn-primary" id="btnSaveAl">Save A/L Results</button>
-                </div>
-            </div>
+    <div class="section-header">
+        <h2>O/L and A/L Examination Results</h2>
+        <p>Direct links to Google Sheets managing examination results.</p>
+    </div>
+    <div class="sheets-btn-grid">
+        <a href="https://docs.google.com/spreadsheets/d/15LFm1voMhABzehIGzlrvGgmatgcNE1OKt1ydiyqWpVU/edit?usp=drivesdk" target="_blank" class="doc-link-card">
+            <i class="fa-solid fa-graduation-cap"></i>
+            <div class="doc-info"><h4>Edit O/L Results</h4><span>Google Spreadsheet</span></div>
+        </a>
+        <a href="https://docs.google.com/spreadsheets/d/1n3lZO20WvCZAl58FIVAyDhz3GWTgVN3OwWPAOfQJz6g/edit?usp=drivesdk" target="_blank" class="doc-link-card">
+            <i class="fa-solid fa-user-graduate"></i>
+            <div class="doc-info"><h4>Edit A/L Results</h4><span>Google Spreadsheet</span></div>
+        </a>
+    </div>
         </section>
 
         <section id="termTestSection" class="admin-section">
