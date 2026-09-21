@@ -150,7 +150,6 @@ function switchSection(sectionId) {
     const activeBtn = Array.from(document.querySelectorAll('.nav-link')).find(l => l.dataset.section === sectionId);
     if (activeBtn) activeBtn.classList.add('active-link');
 }
-
 // ==========================================
 // 2. USERS
 // ==========================================
@@ -173,7 +172,7 @@ function renderUsersList() {
         const matchesRole = userRole === activeUserRoleTab;
         const matchesSearch = (u.fullName || u.displayName || u.name || '').toLowerCase().includes(searchTerm) ||
                               (u.email || '').toLowerCase().includes(searchTerm) ||
-                              (u.indexNumber || u.indexNum || '').toLowerCase().includes(searchTerm);
+                              (u.indexNo || u.indexNumber || u.indexNum || '').toLowerCase().includes(searchTerm);
         return matchesRole && matchesSearch;
     });
     if (filtered.length === 0) {
@@ -184,9 +183,9 @@ function renderUsersList() {
     filtered.forEach(user => {
         const card = document.createElement('div');
         card.className = 'user-card';
-        const name = user.fullName || user.displayName || user.name || 'Unnamed User';
-        const index = user.indexNum || user.indexNumber || 'N/A';
-        const className = user.className || user.class || 'N/A';
+        const name = user.displayName || user.fullName || user.name || 'Unnamed User';
+        const index = user.indexNo || user.indexNum || user.indexNumber || 'N/A';
+        const className = user.studentClass || user.className || user.class || 'N/A';
         card.innerHTML = `
             <div class="user-card-top" style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
                 <div class="user-avatar" style="width:40px; height:40px; border-radius:50%; background:#ffd966; color:#000; display:flex; align-items:center; justify-content:center; font-weight:bold;">
@@ -220,14 +219,12 @@ function renderUsersList() {
 
 $('tabStudents')?.addEventListener('click', () => {
     activeUserRoleTab = 'student';
-    $('tabStudents').classList.add('active');
-    $('tabTeachers')?.classList.remove('active');
+    $('tabStudents').classList.add('active');$('tabTeachers')?.classList.remove('active');
     renderUsersList();
 });
 $('tabTeachers')?.addEventListener('click', () => {
     activeUserRoleTab = 'teacher';
-    $('tabTeachers').classList.add('active');
-    $('tabStudents')?.classList.remove('active');
+    $('tabTeachers').classList.add('active');$('tabStudents')?.classList.remove('active');
     renderUsersList();
 });
 $('userSearchInput')?.addEventListener('input', renderUsersList);
@@ -396,136 +393,33 @@ async function loadNewsList() {
         container.innerHTML = `<p style="color:#e74c3c; text-align:center; padding:20px;">ලෝඩ් කිරීමේ දෝෂයක්: ${err.message}</p>`;
     }
 }
-
 // ==========================================
-// 4. EXAMS (O/L, A/L National)
+// 4. EXAMS (O/L, A/L National) — Google Sheet Links
 // ==========================================
 function initExamsModule() {
-    const calcOl = () => {
-        const total = parseFloat($('olTotal')?.value) || 0;
-        const pass = parseFloat($('olPass')?.value) || 0;
-        const rate = total > 0 ? ((pass / total) * 100).toFixed(2) : 0;
-        if ($('olPassRate')) $('olPassRate').innerText = `${rate}%`;
-    };
-    $('olTotal')?.addEventListener('input', calcOl);
-    $('olPass')?.addEventListener('input', calcOl);
-
-    $('tabOlExam')?.addEventListener('click', () => {
-        if (confirm('Do you want to clear old results and enter new results?')) {
-            $('olFormWrapper').style.display = 'block';
-            $('alFormWrapper').style.display = 'none';
-            $('tabOlExam').classList.add('active');
-            $('tabAlExam').classList.remove('active');
-        }
-    });
-    $('tabAlExam')?.addEventListener('click', () => {
-        if (confirm('Do you want to clear old results and enter new results?')) {
-            $('olFormWrapper').style.display = 'none';
-            $('alFormWrapper').style.display = 'block';
-            $('tabAlExam').classList.add('active');
-            $('tabOlExam').classList.remove('active');
-            renderAlStreamsForm();
-        }
-    });
-    $('btnAddOlAchiever')?.addEventListener('click', () => addOlAchieverRow());
-
-    $('btnSaveOl')?.addEventListener('click', async () => {
-        const achievers = [];
-        document.querySelectorAll('.ol-achiever-row').forEach(row => {
-            achievers.push({
-                name: row.querySelector('.achiever-name')?.value || '',
-                indexNum: row.querySelector('.achiever-index')?.value || '',
-                resultsText: row.querySelector('.achiever-text')?.value || ''
-            });
-        });
-        const olData = {
-            year: $('olYear')?.value || '', driveLink: $('olDriveLink')?.value || '',
-            totalStudents: $('olTotal')?.value || 0, passCount: $('olPass')?.value || 0,
-            failCount: $('olFail')?.value || 0, passRate: $('olPassRate')?.innerText || '0%',
-            achievers, updatedAt: new Date().toISOString()
-        };
-        try { await setDoc(doc(db, 'exam', 'ol-exam'), olData); showToast('O/L Results Save විය!', 'ok'); }
-        catch (err) { showToast(err.message, 'error'); }
-    });
-
-    $('btnSaveAl')?.addEventListener('click', async () => {
-        const streamsData = {};
-        const streams = ['A/L Technology', 'A/L Biological Science', 'A/L Physical Science (Maths)', 'A/L Arts', 'A/L Commerce'];
-        streams.forEach(st => {
-            const stSlug = st.toLowerCase().replace(/[^a-z0-9]/g, '');
-            const achievers = [];
-            document.querySelectorAll(`.al-achiever-row-${stSlug}`).forEach(row => {
-                achievers.push({
-                    name: row.querySelector('.achiever-name')?.value || '',
-                    indexNum: row.querySelector('.achiever-index')?.value || '',
-                    resultsText: row.querySelector('.achiever-text')?.value || ''
-                });
-            });
-            streamsData[stSlug] = {
-                streamName: st, total: $(`alTotal_${stSlug}`)?.value || 0,
-                pass: $(`alPass_${stSlug}`)?.value || 0, fail: $(`alFail_${stSlug}`)?.value || 0,
-                achievers
-            };
-        });
-        const alData = { year: $('alYear')?.value || '', driveLink: $('alDriveLink')?.value || '', streams: streamsData, updatedAt: new Date().toISOString() };
-        try { await setDoc(doc(db, 'exam', 'al-exam'), alData); showToast('A/L Results Save විය!', 'ok'); }
-        catch (err) { showToast(err.message, 'error'); }
-    });
-}
-
-function addOlAchieverRow(data = {}) {
-    const container = $('olAchieversContainer');
+    // Option A: Static HTML use කරනවා නම් මේ function එක skip කරන්න පුළුවන්
+    const container = $('examButtonsContainer');
     if (!container) return;
-    const row = document.createElement('div');
-    row.className = 'field-3col ol-achiever-row';
-    row.style.marginBottom = '10px';
-    row.innerHTML = `
-        <input type="text" class="custom-input achiever-name" placeholder="Name" value="${data.name || ''}" />
-        <input type="text" class="custom-input achiever-index" placeholder="Index Num" value="${data.indexNum || ''}" />
-        <input type="text" class="custom-input achiever-text" placeholder="Result (e.g. 9A)" value="${data.resultsText || ''}" />
-    `;
-    container.appendChild(row);
-}
 
-function renderAlStreamsForm() {
-    const container = $('alStreamsContainer');
-    if (!container) return;
-    container.innerHTML = '';
-    const streams = ['A/L Technology', 'A/L Biological Science', 'A/L Physical Science (Maths)', 'A/L Arts', 'A/L Commerce'];
-    streams.forEach(st => {
-        const stSlug = st.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const box = document.createElement('div');
-        box.style.marginTop = '20px';
-        box.style.borderTop = '1px solid var(--border-color)';
-        box.style.paddingTop = '15px';
-        box.innerHTML = `
-            <h4 style="color:#ffd966; margin-bottom:10px;">${st}</h4>
-            <div class="field-3col" style="display:flex; gap:10px; margin-bottom:10px;">
-                <input type="number" id="alTotal_${stSlug}" class="custom-input" placeholder="Total Sat" />
-                <input type="number" id="alPass_${stSlug}" class="custom-input" placeholder="Pass Count" />
-                <input type="number" id="alFail_${stSlug}" class="custom-input" placeholder="Fail Count" />
-            </div>
-            <div id="alAchieversContainer_${stSlug}"></div>
-            <button type="button" class="btn btn-ghost btn-add-al-student" data-slug="${stSlug}" style="margin-top:8px;">
-                <i class="fa-solid fa-plus"></i> Add Student Result
-            </button>
-        `;
-        container.appendChild(box);
-        box.querySelector('.btn-add-al-student').addEventListener('click', () => {
-            const stContainer = $(`alAchieversContainer_${stSlug}`);
-            const row = document.createElement('div');
-            row.className = `field-3col al-achiever-row-${stSlug}`;
-            row.style.cssText = 'display:flex; gap:10px; margin-bottom:8px;';
-            row.innerHTML = `
-                <input type="text" class="custom-input achiever-name" placeholder="Name" />
-                <input type="text" class="custom-input achiever-index" placeholder="Index Num" />
-                <input type="text" class="custom-input achiever-text" placeholder="Result (3A, 2A 1B)" />
-            `;
-            stContainer.appendChild(row);
-        });
-    });
-}
+    const links = [
+        {
+            label: 'Edit O/L Results',
+            url: 'https://docs.google.com/spreadsheets/d/15LFm1voMhABzehIGzlrvGgmatgcNE1OKt1ydiyqWpVU/edit?usp=drivesdk',
+            icon: 'fa-graduation-cap'
+        },
+        {
+            label: 'Edit A/L Results',
+            url: 'https://docs.google.com/spreadsheets/d/1n3lZO20WvCZAl58FIVAyDhz3GWTgVN3OwWPAOfQJz6g/edit?usp=drivesdk',
+            icon: 'fa-user-graduate'
+        }
+    ];
 
+    container.innerHTML = links.map(item => `
+        <a href="${item.url}" target="_blank" class="btn btn-primary" style="display:flex; align-items:center; gap:10px; padding:12px 20px; font-weight:bold; font-size:15px; text-decoration:none; margin-bottom:12px; border-radius:8px;">
+            <i class="fa-solid ${item.icon}"></i> ${item.label}
+        </a>
+    `).join('');
+}
 // ==========================================
 // 5. TERM TEST MANAGE
 // ==========================================
