@@ -338,74 +338,84 @@ document.addEventListener('DOMContentLoaded', () => {
     startAutoSlide();
 });
 document.addEventListener("DOMContentLoaded", function () {
-    const SHEET_ID = '1mN5jfN4P3FFevv2Aq0ygWmTzrF7-dVWfdy-8cDFa7ro';
-    const TAB_NAME = 'governing-body';
+    const sheetId = '1mN5jfN4P3FFevv2Aq0ygWmTzrF7-dVWfdy-8cDFa7ro';
+    const sheetName = 'governing-body';
     
-    // Google Sheets GViz API URL
-    const fetchUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(TAB_NAME)}`;
+    // headers=1 යෙදීමෙන් A1, B1, C1 (Title Row) එක අයින් කර ඊට යටින් ඇති Data විතරක් Fetch කරයි
+    const gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&headers=1`;
 
-    // Google Drive URL එකක් direct image viewable link එකකට හරවන Helper function එක
-    function formatImageUrl(url) {
-        if (!url || url.trim() === '') {
-            // රූපයක් නැතිනම් Default රූපයක link එකක් (අවශ්‍ය නම් වෙනස් කරගන්න)
-            return 'https://via.placeholder.com/300x300?text=No+Image';
+    // Direct Image URL එකක් බවට හරවන Function එක
+    function formatImageUrl(rawUrl) {
+        if (!rawUrl) return 'https://via.placeholder.com/300x350?text=No+Image';
+
+        let url = rawUrl.toString().trim();
+
+        // වැරදීමකින් Link දෙකක් එකට Paste වී ඇත්නම් අවසාන Link එක වෙන් කර ගැනීම
+        if (url.includes('http') && url.lastIndexOf('http') > 0) {
+            url = url.substring(url.lastIndexOf('http'));
         }
-        
-        url = url.trim();
 
-        // Google Drive link එකක් නම් File ID එක වෙන්කරගෙන Image URL එක හදයි
+        // Google Drive View Link එක Direct Image Link එකක් බවට හැරවීම
         if (url.includes('drive.google.com')) {
             const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
-            if (match && (match[1] || match[2])) {
-                const fileId = match[1] || match[2];
-                return `https://lh3.googleusercontent.com/d/${fileId}`;
+            if (match && match[1]) {
+                return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
             }
         }
-        
+
         return url;
     }
 
-    // Google Sheet එකෙන් data fetch කිරීම
-    fetch(fetchUrl)
+    fetch(gvizUrl)
         .then(response => response.text())
         .then(data => {
-            // Google visualization JSON wrapper එක ඉවත් කිරීම
-            const jsonString = data.substring(47, data.length - 2);
+            // GViz JSON Response එක සුද්ධ කරගැනීම
+            const jsonString = data.substring(data.indexOf('{'), data.lastIndexOf('}') + 1);
             const json = JSON.parse(jsonString);
             const rows = json.table.rows;
 
-            const trackContainer = document.getElementById('governingTrack');
-            trackContainer.innerHTML = ''; // Loading text එක අයින් කිරීම
+            const governingTrack = document.getElementById('governingTrack');
+            if (!governingTrack) return;
 
-            if (!rows || rows.length === 0) {
-                trackContainer.innerHTML = '<p>No data found.</p>';
-                return;
-            }
+            let cardsHtml = '';
 
-            // එක එක Row එකක් හරහා යමින් Cards එකතු කිරීම
+            // Title එකට යටින් තියෙන සෑම Data පේළියක්ම පරීක්ෂා කිරීම
             rows.forEach(row => {
-                // Column A (index 0) = url
-                // Column B (index 1) = name
-                // Column C (index 2) = position
-                const rawUrl = row.c && row.c[0] ? row.c[0].v : '';
-                const name = row.c && row.c[1] ? row.c[1].v : '';
-                const position = row.c && row.c[2] ? row.c[2].v : '';
+                if (!row.c) return;
 
-                const imageUrl = formatImageUrl(rawUrl);
+                // A2, A3... = URL (c[0])
+                // B2, B3... = Name (c[1])
+                // C2, C3... = Position (c[2])
+                const rawUrl = row.c[0] && row.c[0].v ? row.c[0].v : '';
+                const name = row.c[1] && row.c[1].v ? row.c[1].v : '';
+                const position = row.c[2] && row.c[2].v ? row.c[2].v : '';
 
-                const cardHTML = `
+                // Title පේළිය අහම්බෙන් ආවොත් හෝ හිස් පේළි තිබුණොත් මඟ හැරීම
+                if (rawUrl.toString().toLowerCase() === 'url' || (!name && !position)) {
+                    return;
+                }
+
+                const finalImgUrl = formatImageUrl(rawUrl);
+
+                // Card එක සාදා ගැනීම
+                cardsHtml += `
                     <div class="people-card">
-                        <img src="${imageUrl}" alt="${position || 'Governing Member'}">
+                        <img src="${finalImgUrl}" alt="${position}" onerror="this.src='https://via.placeholder.com/300x350?text=No+Image'">
                         <h3>${position}</h3>
                         <p>${name}</p>
                     </div>
                 `;
-
-                trackContainer.insertAdjacentHTML('beforeend', cardHTML);
             });
+
+            // Dynamic HTML එක Element එකට එකතු කිරීම
+            governingTrack.innerHTML = cardsHtml;
+
+            // Slider එක Re-initialize කිරීමට අවශ්‍ය නම්
+            if (typeof initSlider === 'function') {
+                initSlider();
+            }
         })
         .catch(error => {
-            console.error('Error fetching data from Google Sheet:', error);
-            document.getElementById('governingTrack').innerHTML = '<p>Error loading data.</p>';
+            console.error('Data loading error:', error);
         });
 });
