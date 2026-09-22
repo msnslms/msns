@@ -337,3 +337,75 @@ document.addEventListener('DOMContentLoaded', () => {
     showSlide(currentIndex);
     startAutoSlide();
 });
+document.addEventListener("DOMContentLoaded", function () {
+    const SHEET_ID = '1mN5jfN4P3FFevv2Aq0ygWmTzrF7-dVWfdy-8cDFa7ro';
+    const TAB_NAME = 'governing-body';
+    
+    // Google Sheets GViz API URL
+    const fetchUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(TAB_NAME)}`;
+
+    // Google Drive URL එකක් direct image viewable link එකකට හරවන Helper function එක
+    function formatImageUrl(url) {
+        if (!url || url.trim() === '') {
+            // රූපයක් නැතිනම් Default රූපයක link එකක් (අවශ්‍ය නම් වෙනස් කරගන්න)
+            return 'https://via.placeholder.com/300x300?text=No+Image';
+        }
+        
+        url = url.trim();
+
+        // Google Drive link එකක් නම් File ID එක වෙන්කරගෙන Image URL එක හදයි
+        if (url.includes('drive.google.com')) {
+            const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
+            if (match && (match[1] || match[2])) {
+                const fileId = match[1] || match[2];
+                return `https://lh3.googleusercontent.com/d/${fileId}`;
+            }
+        }
+        
+        return url;
+    }
+
+    // Google Sheet එකෙන් data fetch කිරීම
+    fetch(fetchUrl)
+        .then(response => response.text())
+        .then(data => {
+            // Google visualization JSON wrapper එක ඉවත් කිරීම
+            const jsonString = data.substring(47, data.length - 2);
+            const json = JSON.parse(jsonString);
+            const rows = json.table.rows;
+
+            const trackContainer = document.getElementById('governingTrack');
+            trackContainer.innerHTML = ''; // Loading text එක අයින් කිරීම
+
+            if (!rows || rows.length === 0) {
+                trackContainer.innerHTML = '<p>No data found.</p>';
+                return;
+            }
+
+            // එක එක Row එකක් හරහා යමින් Cards එකතු කිරීම
+            rows.forEach(row => {
+                // Column A (index 0) = url
+                // Column B (index 1) = name
+                // Column C (index 2) = position
+                const rawUrl = row.c && row.c[0] ? row.c[0].v : '';
+                const name = row.c && row.c[1] ? row.c[1].v : '';
+                const position = row.c && row.c[2] ? row.c[2].v : '';
+
+                const imageUrl = formatImageUrl(rawUrl);
+
+                const cardHTML = `
+                    <div class="people-card">
+                        <img src="${imageUrl}" alt="${position || 'Governing Member'}">
+                        <h3>${position}</h3>
+                        <p>${name}</p>
+                    </div>
+                `;
+
+                trackContainer.insertAdjacentHTML('beforeend', cardHTML);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching data from Google Sheet:', error);
+            document.getElementById('governingTrack').innerHTML = '<p>Error loading data.</p>';
+        });
+});
