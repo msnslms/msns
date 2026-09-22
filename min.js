@@ -337,85 +337,225 @@ document.addEventListener('DOMContentLoaded', () => {
     showSlide(currentIndex);
     startAutoSlide();
 });
-document.addEventListener("DOMContentLoaded", function () {
-    const sheetId = '1mN5jfN4P3FFevv2Aq0ygWmTzrF7-dVWfdy-8cDFa7ro';
-    const sheetName = 'governing-body';
-    
-    // headers=1 යෙදීමෙන් A1, B1, C1 (Title Row) එක අයින් කර ඊට යටින් ඇති Data විතරක් Fetch කරයි
-    const gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&headers=1`;
+(function () {
+    "use strict";
 
-    // Direct Image URL එකක් බවට හරවන Function එක
-    function formatImageUrl(rawUrl) {
-        if (!rawUrl) return 'https://via.placeholder.com/300x350?text=No+Image';
+    /* ================= SETTINGS ================= */
+    var SHEET_ID   = "1mN5jfN4P3FFevv2Aq0ygWmTzrF7-dVWfdy-8cDFa7ro";
+    var SHEET_NAME = "governing-body";   // tab එකේ නම හරියටම
+    var AUTO_MS    = 3000;               // තත්පර 3කට සැරයක් මාරු වෙනවා
 
-        let url = rawUrl.toString().trim();
+    var API = "https://docs.google.com/spreadsheets/d/" + SHEET_ID +
+              "/gviz/tq?tqx=out:json&sheet=" + encodeURIComponent(SHEET_NAME);
 
-        // වැරදීමකින් Link දෙකක් එකට Paste වී ඇත්නම් අවසාන Link එක වෙන් කර ගැනීම
-        if (url.includes('http') && url.lastIndexOf('http') > 0) {
-            url = url.substring(url.lastIndexOf('http'));
-        }
+    var track   = document.getElementById("governingTrack");
+    var dotsBox = document.getElementById("sliderDots");
+    if (!track) return;
 
-        // Google Drive View Link එක Direct Image Link එකක් බවට හැරවීම
-        if (url.includes('drive.google.com')) {
-            const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
-            if (match && match[1]) {
-                return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
-            }
-        }
-
-        return url;
+    /* ================= HELPERS ================= */
+    // cell එකක text එක ගන්නවා
+    function cellText(cell) {
+        if (!cell) return "";
+        var v = (cell.f !== null && cell.f !== undefined) ? cell.f : cell.v;
+        return (v === null || v === undefined) ? "" : String(v).trim();
     }
 
-    fetch(gvizUrl)
-        .then(response => response.text())
-        .then(data => {
-            // GViz JSON Response එක සුද්ධ කරගැනීම
-            const jsonString = data.substring(data.indexOf('{'), data.lastIndexOf('}') + 1);
-            const json = JSON.parse(jsonString);
-            const rows = json.table.rows;
+    // cell එකක URL එක ගන්නවා (hyperlink / plain text දෙකටම)
+    function cellUrl(cell) {
+        if (!cell) return "";
+        var f = (cell.f !== null && cell.f !== undefined) ? String(cell.f).trim() : "";
+        var v = (cell.v !== null && cell.v !== undefined) ? String(cell.v).trim() : "";
+        if (/^https?:\/\//i.test(f)) return f;
+        if (/^https?:\/\//i.test(v)) return v;
+        return v || f;
+    }
 
-            const governingTrack = document.getElementById('governingTrack');
-            if (!governingTrack) return;
+    // Google Drive link එක කෙලින්ම පෙන්නන පුළුවන් link එකක් කරනවා
+    function directImage(url) {
+        if (!url) return "";
+        url = url.trim();
+        var m = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+        if (!m) m = url.match(/drive\.google\.com\/[^#]*[?&]id=([a-zA-Z0-9_-]+)/);
+        if (m && /drive\.google\.com/i.test(url)) {
+            return "https://drive.google.com/thumbnail?id=" + m[1] + "&sz=w1000";
+        }
+        return url;   // imgbb / වෙනත් සාමාන්‍ය link එකක් නම් එහෙමම
+    }
 
-            let cardsHtml = '';
+    /* ================= CARDS හදනවා ================= */
+    function buildCards(list) {
+        track.innerHTML = "";
 
-            // Title එකට යටින් තියෙන සෑම Data පේළියක්ම පරීක්ෂා කිරීම
-            rows.forEach(row => {
-                if (!row.c) return;
+        list.forEach(function (p) {
+            var card = document.createElement("div");
+            card.className = "people-card";          // class එක වෙනස් කරලා නෑ
 
-                // A2, A3... = URL (c[0])
-                // B2, B3... = Name (c[1])
-                // C2, C3... = Position (c[2])
-                const rawUrl = row.c[0] && row.c[0].v ? row.c[0].v : '';
-                const name = row.c[1] && row.c[1].v ? row.c[1].v : '';
-                const position = row.c[2] && row.c[2].v ? row.c[2].v : '';
+            var img = document.createElement("img");
+            img.src = directImage(p.url);
+            img.alt = p.position || p.name || "Governing Body";
+            img.loading = "lazy";
+            img.onerror = function () {
+                this.onerror = null;
+                this.src = "courses-01.jpg";          // image එක load නොවුනොත් fallback
+            };
 
-                // Title පේළිය අහම්බෙන් ආවොත් හෝ හිස් පේළි තිබුණොත් මඟ හැරීම
-                if (rawUrl.toString().toLowerCase() === 'url' || (!name && !position)) {
-                    return;
-                }
+            var h3 = document.createElement("h3");
+            h3.textContent = p.position;              // C තීරුව → තනතුර
 
-                const finalImgUrl = formatImageUrl(rawUrl);
+            var para = document.createElement("p");
+            para.textContent = p.name;                // B තීරුව → නම
 
-                // Card එක සාදා ගැනීම
-                cardsHtml += `
-                    <div class="people-card">
-                        <img src="${finalImgUrl}" alt="${position}" onerror="this.src='https://via.placeholder.com/300x350?text=No+Image'">
-                        <h3>${position}</h3>
-                        <p>${name}</p>
-                    </div>
-                `;
+            card.appendChild(img);
+            card.appendChild(h3);
+            card.appendChild(para);
+            track.appendChild(card);
+        });
+    }
+
+    /* ================= SLIDER ================= */
+    var index = 0, maxIndex = 0, stepPx = 0, timer = null, dots = [];
+
+    function buildDots() {
+        if (!dotsBox) return;
+        dotsBox.innerHTML = "";
+        dots = [];
+        if (maxIndex < 1) return;
+
+        for (var i = 0; i <= maxIndex; i++) {
+            (function (i) {
+                var d = document.createElement("span");
+                d.className = "dot";
+                d.addEventListener("click", function () {
+                    index = i;
+                    move(true);
+                    start();
+                });
+                dotsBox.appendChild(d);
+                dots.push(d);
+            })(i);
+        }
+        updateDots();
+    }
+
+    function updateDots() {
+        for (var i = 0; i < dots.length; i++) {
+            if (i === index) dots[i].classList.add("active");
+            else dots[i].classList.remove("active");
+        }
+    }
+
+    function move(animate) {
+        track.style.transition = animate ? "transform .6s ease" : "none";
+        track.style.transform  = "translateX(" + (-index * stepPx) + "px)";
+        updateDots();
+    }
+
+    function measure() {
+        var card = track.querySelector(".people-card");
+        if (!card) return;
+
+        var cs  = window.getComputedStyle(track);
+        var gap = parseFloat(cs.columnGap || cs.gap) || 0;
+
+        stepPx = card.getBoundingClientRect().width + gap;
+        if (stepPx <= 0) return;
+
+        var viewport = (track.parentElement ? track.parentElement.clientWidth : window.innerWidth) || window.innerWidth;
+        var visible  = Math.max(1, Math.round(viewport / stepPx));
+        maxIndex     = Math.max(0, track.children.length - visible);
+
+        if (index > maxIndex) index = maxIndex;
+
+        buildDots();
+        move(false);
+    }
+
+    function next() {
+        if (maxIndex < 1) return;
+        index = (index >= maxIndex) ? 0 : index + 1;   // අන්තිමට ගියාම මුලට
+        move(true);
+    }
+
+    function start() {
+        stop();
+        if (maxIndex < 1) return;
+        timer = setInterval(next, AUTO_MS);
+    }
+
+    function stop() {
+        if (timer) { clearInterval(timer); timer = null; }
+    }
+
+    /* hover කරාම නවතිනවා, අයින් කරාම ආයෙ පටන් ගන්නවා */
+    var box = track.parentElement;
+    if (box) {
+        box.addEventListener("mouseenter", stop);
+        box.addEventListener("mouseleave", start);
+
+        /* mobile swipe */
+        var sx = 0;
+        box.addEventListener("touchstart", function (e) {
+            sx = e.touches[0].clientX; stop();
+        }, { passive: true });
+        box.addEventListener("touchend", function (e) {
+            var dx = e.changedTouches[0].clientX - sx;
+            if (Math.abs(dx) > 40) {
+                if (dx < 0) index = (index >= maxIndex) ? 0 : index + 1;
+                else        index = (index <= 0) ? maxIndex : index - 1;
+                move(true);
+            }
+            start();
+        }, { passive: true });
+    }
+
+    /* resize වුනාම නැවත ගණනය */
+    var rT;
+    window.addEventListener("resize", function () {
+        clearTimeout(rT);
+        rT = setTimeout(function () { measure(); start(); }, 200);
+    });
+
+    /* ================= SHEET එකෙන් DATA ගන්නවා ================= */
+    fetch(API)
+        .then(function (res) {
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            return res.text();
+        })
+        .then(function (text) {
+            var s = text.indexOf("{");
+            var e = text.lastIndexOf("}");
+            if (s === -1 || e === -1) throw new Error("Invalid sheet response");
+
+            var json = JSON.parse(text.slice(s, e + 1));
+            var rows = (json.table && json.table.rows) || [];
+
+            var list = [];
+            rows.forEach(function (row) {
+                var c    = row.c || [];
+                var url  = cellUrl(c[0]);     // A තීරුව → image link
+                var name = cellText(c[1]);    // B තීරුව → නම
+                var pos  = cellText(c[2]);    // C තීරුව → තනතුර
+
+                if (!url && !name && !pos) return;
+                list.push({ url: url, name: name, position: pos });
             });
 
-            // Dynamic HTML එක Element එකට එකතු කිරීම
-            governingTrack.innerHTML = cardsHtml;
-
-            // Slider එක Re-initialize කිරීමට අවශ්‍ය නම්
-            if (typeof initSlider === 'function') {
-                initSlider();
+            /* header row එක (url | name | position) අයින් කරනවා */
+            if (list.length) {
+                var f = list[0];
+                if (/^(url|image|img|link)$/i.test(f.url) || /^(name|position)$/i.test(f.name)) {
+                    list.shift();
+                }
             }
+
+            if (!list.length) return;
+
+            buildCards(list);
+            measure();
+            start();
         })
-        .catch(error => {
-            console.error('Data loading error:', error);
+        .catch(function (err) {
+            console.error("Governing Body load error:", err);
         });
-});
+
+})();
