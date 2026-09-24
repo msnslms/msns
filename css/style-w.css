@@ -13,17 +13,43 @@ html {
     height: 100%;
 }
 
+/* ==========================================================
+   🌈 BODY BACKGROUND — Mostly White + Subtle Color Mix
+   ========================================================== */
 body {
-    /* 🍶 Liquid Glass Base — Cream / Rose / Amber mix */
-    background-color: #fef7f0;
+    /* Base: Clean white */
+    background-color: #ffffff;
+    
+    /* Soft color blobs — mostly white with warm red/gold hints */
     background-image:
-        radial-gradient(at 12% 8%, rgba(251, 191, 36, 0.22) 0px, transparent 45%),
-        radial-gradient(at 88% 4%, rgba(239, 68, 68, 0.18) 0px, transparent 45%),
-        radial-gradient(at 50% 50%, rgba(254, 243, 199, 0.55) 0px, transparent 60%),
-        radial-gradient(at 5% 95%, rgba(220, 38, 38, 0.14) 0px, transparent 50%),
-        radial-gradient(at 95% 100%, rgba(245, 158, 11, 0.18) 0px, transparent 50%),
-        linear-gradient(135deg, #fffaf3 0%, #fef4ec 45%, #fdeee6 100%);
+        /* Top-left subtle red glow */
+        radial-gradient(ellipse 800px 600px at 8% 5%, rgba(220, 38, 38, 0.08) 0%, transparent 55%),
+        
+        /* Top-right warm amber glow */
+        radial-gradient(ellipse 700px 500px at 92% 3%, rgba(245, 158, 11, 0.10) 0%, transparent 55%),
+        
+        /* Center soft cream wash */
+        radial-gradient(ellipse 900px 700px at 50% 45%, rgba(254, 243, 199, 0.35) 0%, transparent 60%),
+        
+        /* Bottom-left gentle gold */
+        radial-gradient(ellipse 800px 600px at 5% 98%, rgba(234, 179, 8, 0.08) 0%, transparent 55%),
+        
+        /* Bottom-right soft rose */
+        radial-gradient(ellipse 750px 550px at 95% 100%, rgba(239, 68, 68, 0.07) 0%, transparent 55%),
+        
+        /* Very light diagonal sheen */
+        linear-gradient(135deg, 
+            rgba(255, 255, 255, 1) 0%, 
+            rgba(255, 252, 248, 1) 25%, 
+            rgba(255, 250, 243, 1) 50%, 
+            rgba(255, 252, 248, 1) 75%, 
+            rgba(255, 255, 255, 1) 100%
+        );
+    
     background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-size: cover;
+    
     color: #52525b;
     min-height: 100vh;
     min-height: 100dvh;
