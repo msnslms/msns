@@ -1,74 +1,38 @@
 /* ==========================================================
-   🎡 MSNS ALL-IN-ONE GALLERY SYSTEM (Firestore + Sheet + Cache)
+   🎡 MSNS ALL-IN-ONE GALLERY SYSTEM
    Hero Banner | Mini Card Gallery | Grid Gallery | Modal View
-   Firestore : google-sheet/details → field: link
-   Sheet     : mini-image-library
-   Columns   : url | titel | discretion | home | home-heder
-   Cache     : localStorage — 1 day (24h)
+   Sheet: mini-image-library
+   Columns: url | titel | discretion | home | home-heder
    ========================================================== */
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 (function () {
     'use strict';
 
     /* ==========================================================
-       🔥 FIREBASE CONFIG
-       ========================================================== */
-    const firebaseConfig = {
-        apiKey: "AIzaSyDgg7n1LwcrRiV2kjgSM5E3XX27twweMg8",
-        authDomain: "msns-79.firebaseapp.com",
-        databaseURL: "https://msns-79-default-rtdb.firebaseio.com",
-        projectId: "msns-79",
-        storageBucket: "msns-79.firebasestorage.app",
-        messagingSenderId: "108137376740",
-        appId: "1:108137376740:web:78ed2f442c035a072f75f1",
-        measurementId: "G-3GTFJKTS7D"
-    };
-
-    let db = null;
-    try {
-        const firebaseApp = initializeApp(firebaseConfig);
-        db = getFirestore(firebaseApp);
-        console.log('🔥 Firebase initialized');
-    } catch (e) {
-        console.warn('⚠️ Firebase init failed — using fallback sheet ID:', e);
-    }
-
-    /* ==========================================================
        📌 CONFIGURATION
        ========================================================== */
     const CONFIG = {
-        // Firestore source
-        firestoreCollection: 'google-sheet',
-        firestoreDoc:        'details',
-        firestoreField:      'link',
-
-        // Fallback sheet ID (used if Firestore fails)
-        sheetIdFallback: '1mN5jfN4P3FFevv2Aq0ygWmTzrF7-dVWfdy-8cDFa7ro',
-
-        // Sheet tab name
+        sheetId: '1mN5jfN4P3FFevv2Aq0ygWmTzrF7-dVWfdy-8cDFa7ro',
         sheetName: 'mini-image-library',
-
-        // UI
-        autoRotateMs: 5000,
-        transitionMs: 700,
-        maxItems: 60,
-
-        // Cache
-        cacheKey:        'msns_gallery_cache_v2',   // bumped to clear old broken cache
-        cacheDurationMs: 24 * 60 * 60 * 1000
+        autoRotateMs: 5000,         // Hero & Mini Gallery interval (5s)
+        transitionMs: 700,          // Transition duration
+        maxItems: 60                // Max items to fetch
     };
 
     /* ==========================================================
-       📌 DOM ELEMENTS
+       📌 DOM ELEMENTS DETECT
        ========================================================== */
+    // Hero Banner
     const heroContainer = document.getElementById('heroSliderContainer');
+
+    // Mini Card Gallery
     const milContainer  = document.getElementById('milContainer');
     const milDotsWrap   = document.getElementById('milDots');
+
+    // Grid Gallery (image-library.html)
     const gridContainer = document.getElementById('galleryGrid');
 
+    // Modal Elements
     const modal         = document.getElementById('galleryModal');
     const modalImg      = document.getElementById('modalImage');
     const modalTitle    = document.getElementById('modalTitle');
@@ -78,10 +42,8 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
     const modalPrev     = document.getElementById('modalPrev');
     const modalNext     = document.getElementById('modalNext');
 
-    if (!heroContainer && !milContainer && !gridContainer) {
-        console.log('ℹ️ No gallery containers on this page');
-        return;
-    }
+    // Early return if no gallery components on this page
+    if (!heroContainer && !milContainer && !gridContainer) return;
 
     /* ==========================================================
        🎯 GLOBAL STATE
@@ -91,138 +53,46 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
     let miniItems = [];
     let gridItems = [];
 
+    // Hero state
     let heroCurrentIndex = 0;
     let heroAutoTimer = null;
     let isHeroAnimating = false;
 
+    // Mini gallery state
     let miniCurrentIndex = 0;
     let miniAutoTimer = null;
     let isMiniAnimating = false;
 
+    // Modal state - which gallery opened it
     let modalSourceItems = [];
     let modalIndex = 0;
 
     /* ==========================================================
-       💾 CACHE HELPERS
+       🎨 URL NORMALIZER
        ========================================================== */
-    function readCache() {
-        try {
-            const raw = localStorage.getItem(CONFIG.cacheKey);
-            if (!raw) return null;
+    function normalizeUrl(rawUrl) {
+        if (!rawUrl) return '';
+        let url = rawUrl.trim().replace(/^["']|["']$/g, '');
 
-            const cache = JSON.parse(raw);
-            if (!cache || !cache.timestamp || !Array.isArray(cache.items)) return null;
-
-            // ⚠️ Never trust empty caches — force refetch
-            if (cache.items.length === 0) {
-                console.log('⚠️ Cache has 0 items — ignoring');
-                localStorage.removeItem(CONFIG.cacheKey);
-                return null;
-            }
-
-            const age = Date.now() - cache.timestamp;
-            if (age > CONFIG.cacheDurationMs) {
-                console.log('⏰ Cache expired — refetching…');
-                localStorage.removeItem(CONFIG.cacheKey);
-                return null;
-            }
-
-            const hours = (age / 3600000).toFixed(2);
-            console.log(`✅ Cache fresh (${hours}h old) — ${cache.items.length} items`);
-            return cache;
-        } catch (e) {
-            console.warn('⚠️ Cache read failed:', e);
-            return null;
+        const driveMatch = url.match(/(?:\/file\/d\/|id=|uc\?.*id=|\/d\/)([a-zA-Z0-9_-]+)/);
+        if ((url.includes('drive.google.com') || url.includes('docs.google.com')) && driveMatch) {
+            return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
         }
-    }
-
-    function writeCache(items) {
-        try {
-            if (!items || items.length === 0) {
-                console.warn('⚠️ Skipping cache write (0 items)');
-                return;
-            }
-            localStorage.setItem(CONFIG.cacheKey, JSON.stringify({
-                timestamp: Date.now(),
-                items: items
-            }));
-            console.log('💾 Cached', items.length, 'items for 24h');
-        } catch (e) {
-            console.warn('⚠️ Cache write failed:', e);
-        }
+        return url;
     }
 
     /* ==========================================================
-       🔥 FIRESTORE → SHEET ID
+       📥 FETCH SHEET DATA
        ========================================================== */
-    async function getSheetIdFromFirestore() {
-        if (!db) throw new Error('Firestore not initialized');
-
-        console.log(`🔥 Reading Firestore: ${CONFIG.firestoreCollection}/${CONFIG.firestoreDoc}`);
-        const ref  = doc(db, CONFIG.firestoreCollection, CONFIG.firestoreDoc);
-        const snap = await getDoc(ref);
-
-        if (!snap.exists()) {
-            throw new Error(`Firestore doc not found: ${CONFIG.firestoreCollection}/${CONFIG.firestoreDoc}`);
-        }
-
-        const data = snap.data();
-        const link = (data[CONFIG.firestoreField] || '').toString().trim();
-
-        if (!link) {
-            throw new Error(`Field "${CONFIG.firestoreField}" is empty`);
-        }
-
-        // Extract ID from full URL OR use raw ID
-        const urlMatch = link.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
-        const sheetId  = urlMatch ? urlMatch[1] : link;
-
-        console.log('📄 Sheet ID from Firestore:', sheetId);
-        return sheetId;
-    }
-
-    /* ==========================================================
-       📥 FETCH SHEET (CSV)
-       ========================================================== */
-    async function fetchSheetData(sheetId) {
-        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(CONFIG.sheetName)}`;
-        console.log('📥 Fetching:', url);
+    async function fetchSheetData() {
+        const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(CONFIG.sheetName)}`;
+        console.log('📥 Fetching Sheet:', url);
 
         const response = await fetch(url);
         if (!response.ok) throw new Error('Sheet fetch failed: ' + response.status);
 
         const csv = await response.text();
-        console.log('📄 CSV length:', csv.length);
-
-        if (!csv || csv.trim().length === 0) throw new Error('Sheet returned empty CSV');
-
         return parseCSV(csv);
-    }
-
-    /* ==========================================================
-       🎯 MAIN LOADER (cache → Firestore → Sheet → fallback)
-       ========================================================== */
-    async function loadGalleryItems() {
-        // 1️⃣ Cache
-        const cache = readCache();
-        if (cache) return cache.items;
-
-        // 2️⃣ Firestore → Sheet ID (with fallback)
-        let sheetId;
-        try {
-            sheetId = await getSheetIdFromFirestore();
-        } catch (e) {
-            console.warn('⚠️ Firestore failed — using fallback sheet ID:', e.message);
-            sheetId = CONFIG.sheetIdFallback;
-        }
-
-        // 3️⃣ Fetch Sheet
-        const items = await fetchSheetData(sheetId);
-
-        // 4️⃣ Cache
-        writeCache(items);
-
-        return items;
     }
 
     /* ==========================================================
@@ -254,20 +124,16 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
         }
         if (field !== '' || row.length > 0) { row.push(field); rows.push(row); }
 
-        console.log('🧩 CSV rows parsed:', rows.length);
         if (rows.length < 2) return [];
 
         const headers = rows[0].map(h => h.trim().toLowerCase());
-        console.log('🧩 Headers:', headers);
 
         const urlIdx    = headers.findIndex(h => h === 'url' || h.includes('url') || h === 'image');
         const titleIdx  = headers.findIndex(h => h === 'titel' || h === 'title' || h.includes('tit') || h === 'heading');
         const descIdx   = headers.findIndex(h => h.includes('discre') || h.includes('desc') || h.includes('text') || h === 'discretion');
 
         const homeHeaderIdx = headers.findIndex(h => h === 'home-heder' || h === 'home-header' || h.includes('heder') || h.includes('header') || h === 'hero');
-        const homeIdx       = headers.findIndex((h, idx) => h === 'home' && idx !== homeHeaderIdx);
-
-        console.log('🧩 Column indexes → url:', urlIdx, 'title:', titleIdx, 'desc:', descIdx, 'homeHeader:', homeHeaderIdx, 'home:', homeIdx);
+        const homeIdx       = headers.findIndex((h, idx) => (h === 'home' || h.trim() === 'home') && idx !== homeHeaderIdx);
 
         const data = [];
         for (let i = 1; i < rows.length && data.length < CONFIG.maxItems; i++) {
@@ -300,26 +166,11 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
             });
         }
 
-        console.log('🧩 Total gallery items:', data.length);
         return data;
     }
 
     /* ==========================================================
-       🎨 URL NORMALIZER
-       ========================================================== */
-    function normalizeUrl(rawUrl) {
-        if (!rawUrl) return '';
-        let url = rawUrl.trim().replace(/^["']|["']$/g, '');
-
-        const driveMatch = url.match(/(?:\/file\/d\/|id=|uc\?.*id=|\/d\/)([a-zA-Z0-9_-]+)/);
-        if ((url.includes('drive.google.com') || url.includes('docs.google.com')) && driveMatch) {
-            return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
-        }
-        return url;
-    }
-
-    /* ==========================================================
-       🎬 1. HERO SLIDER
+       🎬 1. HERO SLIDER LOGIC
        ========================================================== */
     function renderHeroSlider() {
         if (!heroContainer) return;
@@ -327,10 +178,8 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
         heroItems = allItems.filter(item => item.isHero);
         if (heroItems.length === 0) heroItems = allItems.filter(item => item.hasImage);
 
-        console.log('🎬 Hero items:', heroItems.length);
-
         if (heroItems.length === 0) {
-            heroContainer.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#0f172a;color:#94a3b8;font-weight:bold;">No Hero Images Available</div>`;
+            heroContainer.innerHTML = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#0f172a; color:#94a3b8; font-weight:bold;">No Hero Images Available</div>`;
             return;
         }
 
@@ -434,15 +283,13 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
     }
 
     /* ==========================================================
-       🎬 2. MINI CARD GALLERY
+       🎬 2. MINI CARD GALLERY LOGIC
        ========================================================== */
     function renderMiniCard() {
         if (!milContainer) return;
 
         miniItems = allItems.filter(item => item.isHome);
         if (miniItems.length === 0) miniItems = allItems.filter(item => item.hasImage);
-
-        console.log('🎬 Mini items:', miniItems.length);
 
         if (miniItems.length === 0) {
             milContainer.innerHTML = `<div class="mil-empty"><i class="fa-regular fa-images"></i><span>No gallery items available</span></div>`;
@@ -579,13 +426,13 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
     }
 
     /* ==========================================================
-       🎬 3. GRID GALLERY
+       🎬 3. GRID GALLERY LOGIC (image-library.html)
        ========================================================== */
     function renderGridGallery() {
         if (!gridContainer) return;
 
+        // Show all items (or only isHome ones — let's use all)
         gridItems = allItems;
-        console.log('🎬 Grid items:', gridItems.length);
 
         if (gridItems.length === 0) {
             gridContainer.innerHTML = `
@@ -608,8 +455,8 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
             }
             return `
                 <div class="gallery-card" data-index="${i}">
-                    <img src="${escapeHTML(item.url)}"
-                         alt="${escapeHTML(item.title)}"
+                    <img src="${escapeHTML(item.url)}" 
+                         alt="${escapeHTML(item.title)}" 
                          loading="lazy"
                          onerror="this.parentElement.classList.add('no-image'); this.parentElement.innerHTML='<i class=&quot;fa-regular fa-image&quot;></i><span>No Image</span>';">
                     <div class="gallery-card-title">${escapeHTML(item.title)}</div>
@@ -617,6 +464,7 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
             `;
         }).join('');
 
+        // Card click → open modal (with gridItems as source)
         gridContainer.querySelectorAll('.gallery-card').forEach(card => {
             card.addEventListener('click', () => {
                 const idx = parseInt(card.dataset.index, 10);
@@ -626,7 +474,7 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
     }
 
     /* ==========================================================
-       🖼️ 4. MODAL
+       🖼️ 4. MODAL LOGIC (Works with Mini + Grid)
        ========================================================== */
     function openModal(index, sourceItems) {
         if (!modal) return;
@@ -684,6 +532,7 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
         if (e.key === 'ArrowRight') modalNextSlide();
     });
 
+    // Touch swipe on modal
     let touchStartX = 0;
     modal?.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
     modal?.addEventListener('touchend', (e) => {
@@ -725,32 +574,28 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
     (async function init() {
         try {
             console.log('🖼️ MSNS Gallery System Loading...');
-            allItems = await loadGalleryItems();
+            allItems = await fetchSheetData();
             console.log('✅ Loaded total items:', allItems.length);
 
-            if (allItems.length === 0) {
-                throw new Error('No items returned (check sheet has data & is public)');
-            }
-
+            // Render whichever components exist on the current page
             renderHeroSlider();
             renderMiniCard();
             renderGridGallery();
 
         } catch (err) {
-            console.error('❌ Gallery init error:', err);
+            console.error('❌ Gallery initialization error:', err);
 
-            const errMsg = escapeHTML(err.message || 'Unknown error');
             if (heroContainer) {
-                heroContainer.innerHTML = `<div style="padding:20px;text-align:center;color:#ef4444;font-weight:bold;">Failed to load hero: ${errMsg}</div>`;
+                heroContainer.innerHTML = `<div style="padding:20px; text-align:center; color:#ef4444; font-weight:bold;">Failed to load hero banner</div>`;
             }
             if (milContainer) {
-                milContainer.innerHTML = `<div class="mil-empty"><i class="fa-solid fa-triangle-exclamation"></i><span>Failed: ${errMsg}</span></div>`;
+                milContainer.innerHTML = `<div class="mil-empty"><i class="fa-solid fa-triangle-exclamation"></i><span>Failed to load mini gallery</span></div>`;
             }
             if (gridContainer) {
                 gridContainer.innerHTML = `
                     <div class="gallery-empty-state">
                         <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span>Failed: ${errMsg}</span>
+                        <span>Failed to load gallery</span>
                     </div>
                 `;
             }
