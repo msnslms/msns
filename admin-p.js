@@ -27,7 +27,7 @@ let loadedAdminUsers = [];
 const $ = (id) => document.getElementById(id);
 const IMGBB_API_KEY = "3c7f31bff91c8f5f4a9aef96751ac2db";
 
-// ★ NEW — Section definitions (order matters for default start section)
+// ★ Section definitions
 const SECTION_OPTIONS = [
     { id: 'usersSection',       label: 'Users' },
     { id: 'newsSection',        label: 'Update News' },
@@ -38,7 +38,6 @@ const SECTION_OPTIONS = [
     { id: 'adminUsersSection',  label: 'Admin Users (Owner Only)' }
 ];
 
-// ★ NEW — Helper: default permissions per role/id
 function getDefaultPermissions(roleOrId) {
     const r = String(roleOrId || '').toLowerCase();
     if (r === 'owner') return SECTION_OPTIONS.map(o => o.id);
@@ -231,6 +230,13 @@ function switchSection(sectionId) {
     const activeBtn = Array.from(document.querySelectorAll('.nav-link')).find(l => l.dataset.section === sectionId);
     if (activeBtn) activeBtn.classList.add('active-link');
     if (sectionId === 'adminUsersSection') loadAdminUsers();
+
+    // ★ NEW — Sheet sections වලට switch වෙද්දි auto refresh
+    if (sectionId === 'examSection') {
+        refreshExamSheets();
+    } else if (sectionId === 'documentsSection') {
+        refreshDocumentSheets();
+    }
 }
 
 // ==========================================
@@ -482,38 +488,54 @@ async function loadNewsList() {
 // ==========================================
 let _googleSheetCache = null;
 let _googleSheetPromise = null;
+// ★ Multiple collection names try කරන්න (fallback)
+const SHEET_COLLECTION_CANDIDATES = ['google-sheet', 'google-sheets', 'googleSheets', 'sheets'];
 
 async function loadGoogleSheetCollection(force = false) {
     if (_googleSheetCache && !force) return _googleSheetCache;
     if (_googleSheetPromise && !force) return _googleSheetPromise;
     _googleSheetPromise = (async () => {
-        try {
-            const snap = await getDocs(collection(db, 'google-sheet'));
-            const items = [];
-            snap.forEach(d => items.push({ id: d.id, ...d.data() }));
-            _googleSheetCache = items;
-            return items;
-        } catch (err) {
-            console.error('google-sheet load error:', err);
-            return [];
-        } finally {
-            _googleSheetPromise = null;
+        for (const colName of SHEET_COLLECTION_CANDIDATES) {
+            try {
+                const snap = await getDocs(collection(db, colName));
+                if (!snap.empty) {
+                    const items = [];
+                    snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+                    console.log(`[google-sheet] Loaded ${items.length} items from "${colName}" collection.`);
+                    _googleSheetCache = items;
+                    return items;
+                } else {
+                    console.log(`[google-sheet] Collection "${colName}" is empty, trying next...`);
+                }
+            } catch (err) {
+                console.warn(`[google-sheet] Failed to read "${colName}":`, err.message);
+            }
         }
+        console.warn('[google-sheet] No items found in any candidate collection.');
+        _googleSheetCache = [];
+        return [];
     })();
-    return _googleSheetPromise;
+    try {
+        return await _googleSheetPromise;
+    } finally {
+        _googleSheetPromise = null;
+    }
 }
 
-// ★ 'link' field එකට priority දෙනවා
+// ★ 'link' field එකට priority දෙනවා + more field names support
 function getSheetLink(item) {
-    return item.link || item.url || item.sheetUrl || item.sheet || item.href || '';
+    return item.link || item.url || item.sheetUrl || item.sheet ||
+           item.href || item.sheetLink || item.sheetURL || item.sheet_url ||
+           item.googleSheet || item.google_sheet || item.google_sheet_url ||
+           item.googleSheetUrl || item.spreadsheet || item.spreadsheetUrl || '';
 }
 
 function getSheetName(item) {
-    return item.name || item.title || item.label || item.id || 'Untitled';
+    return item.name || item.title || item.label || item.displayName || item.id || 'Untitled';
 }
 
 function getSheetSubtitle(item) {
-    return item.subtitle || item.description || item.sub || 'Google Spreadsheet';
+    return item.subtitle || item.description || item.sub || item.desc || 'Google Spreadsheet';
 }
 
 // ★ 'category' field එකෙන් decide කරනවා
@@ -590,12 +612,31 @@ function renderSheetCards(container, items, category, emptyMsg) {
     }).join('');
 }
 
+// ★ Helper — Grid container එක සොයාගන්න (multiple fallback selectors)
+function findSheetsGrid(sectionId) {
+    const section = document.getElementById(sectionId);
+    if (!section) return null;
+    return section.querySelector('.sheets-btn-grid')
+        || section.querySelector('.sheets-grid')
+        || section.querySelector('.doc-links-grid')
+        || section.querySelector('[data-sheets-grid]')
+        || section.querySelector('.sheets-container');
+}
+
 // ==========================================
 // 5. EXAMS (Loads from Firestore "google-sheet")
 // ==========================================
 async function initExamsModule() {
-    const container = document.querySelector('#examSection .sheets-btn-grid');
-    if (!container) return;
+    await refreshExamSheets();
+}
+
+// ★ NEW — Refresh function (switch වෙද්දි call වෙනවා)
+async function refreshExamSheets() {
+    const container = findSheetsGrid('examSection');
+    if (!container) {
+        console.warn('[examSection] .sheets-btn-grid container not found in DOM.');
+        return;
+    }
     container.innerHTML = `<p style="color:var(--text-muted); padding:20px; text-align:center; grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> Loading sheets...</p>`;
     const items = await loadGoogleSheetCollection();
     const examItems = items.filter(it => getSheetCategory(it) === 'exam');
@@ -607,8 +648,16 @@ async function initExamsModule() {
 // 6. DOCUMENTS (Loads from Firestore "google-sheet")
 // ==========================================
 async function initDocumentsModule() {
-    const container = document.querySelector('#documentsSection .sheets-btn-grid');
-    if (!container) return;
+    await refreshDocumentSheets();
+}
+
+// ★ NEW — Refresh function (switch වෙද්දි call වෙනවා)
+async function refreshDocumentSheets() {
+    const container = findSheetsGrid('documentsSection');
+    if (!container) {
+        console.warn('[documentsSection] .sheets-btn-grid container not found in DOM.');
+        return;
+    }
     container.innerHTML = `<p style="color:var(--text-muted); padding:20px; text-align:center; grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> Loading sheets...</p>`;
     const items = await loadGoogleSheetCollection();
     const docItems = items.filter(it => getSheetCategory(it) === 'doc');
@@ -1069,8 +1118,6 @@ function isAlExcludedSubject(name) {
     return false;
 }
 
-// ★ UPDATED — O/L Pass rule:
-//   Passes ≥ 5  +  Credits (A/B/C) ≥ 3  +  (Sinhala හෝ Maths එකක් pass)
 function checkOlPass(subjects) {
     const graded = subjects.map(([name, mark]) => ({ name, mark, grade: calcGrade(mark) }));
     const passes  = graded.filter(g => isPassGrade(g.grade));
@@ -1083,7 +1130,6 @@ function checkOlPass(subjects) {
     const mathsOk  = mathsFound  ? isPassGrade(maths.grade)  : false;
     const motherOk = motherFound ? isPassGrade(mother.grade) : false;
 
-    // දෙකම sheet එකේ නැත්නම් ඒ check එක skip; එකක් හෝ දෙකක් තියෙනවනම් අඩුම එකක්වත් pass වෙන්න ඕන
     const langOrMathsOk = (!mathsFound && !motherFound)
         ? true
         : (mathsOk || motherOk);
