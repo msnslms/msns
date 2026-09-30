@@ -1,5 +1,5 @@
 /* ==========================================================
-   🎡 MSNS ALL-IN-ONE GALLERY SYSTEM
+   🎡 MSNS ALL-IN-ONE GALLERY SYSTEM (Firestore + Sheet + Cache)
    Hero Banner | Mini Card Gallery | Grid Gallery | Modal View
    Firestore : google-sheet/details → field: link
    Sheet     : mini-image-library
@@ -14,7 +14,7 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
     'use strict';
 
     /* ==========================================================
-       🔥 FIREBASE CONFIG (inline)
+       🔥 FIREBASE CONFIG
        ========================================================== */
     const firebaseConfig = {
         apiKey: "AIzaSyDgg7n1LwcrRiV2kjgSM5E3XX27twweMg8",
@@ -27,8 +27,14 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
         measurementId: "G-3GTFJKTS7D"
     };
 
-    const firebaseApp = initializeApp(firebaseConfig);
-    const db = getFirestore(firebaseApp);
+    let db = null;
+    try {
+        const firebaseApp = initializeApp(firebaseConfig);
+        db = getFirestore(firebaseApp);
+        console.log('🔥 Firebase initialized');
+    } catch (e) {
+        console.warn('⚠️ Firebase init failed — using fallback sheet ID:', e);
+    }
 
     /* ==========================================================
        📌 CONFIGURATION
@@ -39,7 +45,10 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
         firestoreDoc:        'details',
         firestoreField:      'link',
 
-        // Sheet
+        // Fallback sheet ID (used if Firestore fails)
+        sheetIdFallback: '1mN5jfN4P3FFevv2Aq0ygWmTzrF7-dVWfdy-8cDFa7ro',
+
+        // Sheet tab name
         sheetName: 'mini-image-library',
 
         // UI
@@ -48,12 +57,12 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
         maxItems: 60,
 
         // Cache
-        cacheKey:        'msns_gallery_cache_v1',
-        cacheDurationMs: 24 * 60 * 60 * 1000   // 1 day
+        cacheKey:        'msns_gallery_cache_v2',   // bumped to clear old broken cache
+        cacheDurationMs: 24 * 60 * 60 * 1000
     };
 
     /* ==========================================================
-       📌 DOM ELEMENTS DETECT
+       📌 DOM ELEMENTS
        ========================================================== */
     const heroContainer = document.getElementById('heroSliderContainer');
     const milContainer  = document.getElementById('milContainer');
@@ -69,7 +78,10 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
     const modalPrev     = document.getElementById('modalPrev');
     const modalNext     = document.getElementById('modalNext');
 
-    if (!heroContainer && !milContainer && !gridContainer) return;
+    if (!heroContainer && !milContainer && !gridContainer) {
+        console.log('ℹ️ No gallery containers on this page');
+        return;
+    }
 
     /* ==========================================================
        🎯 GLOBAL STATE
@@ -91,7 +103,7 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
     let modalIndex = 0;
 
     /* ==========================================================
-       💾 CACHE HELPERS (1 day)
+       💾 CACHE HELPERS
        ========================================================== */
     function readCache() {
         try {
@@ -101,6 +113,13 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
             const cache = JSON.parse(raw);
             if (!cache || !cache.timestamp || !Array.isArray(cache.items)) return null;
 
+            // ⚠️ Never trust empty caches — force refetch
+            if (cache.items.length === 0) {
+                console.log('⚠️ Cache has 0 items — ignoring');
+                localStorage.removeItem(CONFIG.cacheKey);
+                return null;
+            }
+
             const age = Date.now() - cache.timestamp;
             if (age > CONFIG.cacheDurationMs) {
                 console.log('⏰ Cache expired — refetching…');
@@ -109,7 +128,7 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
             }
 
             const hours = (age / 3600000).toFixed(2);
-            console.log(`✅ Cache is fresh (${hours}h old) — using cached data`);
+            console.log(`✅ Cache fresh (${hours}h old) — ${cache.items.length} items`);
             return cache;
         } catch (e) {
             console.warn('⚠️ Cache read failed:', e);
@@ -117,11 +136,14 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
         }
     }
 
-    function writeCache(items, sheetId) {
+    function writeCache(items) {
         try {
+            if (!items || items.length === 0) {
+                console.warn('⚠️ Skipping cache write (0 items)');
+                return;
+            }
             localStorage.setItem(CONFIG.cacheKey, JSON.stringify({
                 timestamp: Date.now(),
-                sheetId: sheetId,
                 items: items
             }));
             console.log('💾 Cached', items.length, 'items for 24h');
@@ -131,11 +153,13 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
     }
 
     /* ==========================================================
-       🔥 FIRESTORE — GET SHEET ID FROM `link` FIELD
+       🔥 FIRESTORE → SHEET ID
        ========================================================== */
     async function getSheetIdFromFirestore() {
-        console.log('🔥 Reading Firestore: google-sheet/details → link');
-        const ref = doc(db, CONFIG.firestoreCollection, CONFIG.firestoreDoc);
+        if (!db) throw new Error('Firestore not initialized');
+
+        console.log(`🔥 Reading Firestore: ${CONFIG.firestoreCollection}/${CONFIG.firestoreDoc}`);
+        const ref  = doc(db, CONFIG.firestoreCollection, CONFIG.firestoreDoc);
         const snap = await getDoc(ref);
 
         if (!snap.exists()) {
@@ -146,46 +170,57 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
         const link = (data[CONFIG.firestoreField] || '').toString().trim();
 
         if (!link) {
-            throw new Error(`Field "${CONFIG.firestoreField}" is empty in Firestore`);
+            throw new Error(`Field "${CONFIG.firestoreField}" is empty`);
         }
 
+        // Extract ID from full URL OR use raw ID
         const urlMatch = link.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
-        const sheetId = urlMatch ? urlMatch[1] : link;
+        const sheetId  = urlMatch ? urlMatch[1] : link;
 
         console.log('📄 Sheet ID from Firestore:', sheetId);
         return sheetId;
     }
 
     /* ==========================================================
-       📥 FETCH SHEET DATA
+       📥 FETCH SHEET (CSV)
        ========================================================== */
     async function fetchSheetData(sheetId) {
         const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(CONFIG.sheetName)}`;
-        console.log('📥 Fetching Google Sheet:', url);
+        console.log('📥 Fetching:', url);
 
         const response = await fetch(url);
         if (!response.ok) throw new Error('Sheet fetch failed: ' + response.status);
 
         const csv = await response.text();
+        console.log('📄 CSV length:', csv.length);
+
+        if (!csv || csv.trim().length === 0) throw new Error('Sheet returned empty CSV');
+
         return parseCSV(csv);
     }
 
     /* ==========================================================
-       🎯 MAIN LOADER — cache first, then Firestore + Sheet
+       🎯 MAIN LOADER (cache → Firestore → Sheet → fallback)
        ========================================================== */
     async function loadGalleryItems() {
-        // 1️⃣ Cache check
+        // 1️⃣ Cache
         const cache = readCache();
         if (cache) return cache.items;
 
-        // 2️⃣ Firestore → Sheet ID
-        const sheetId = await getSheetIdFromFirestore();
+        // 2️⃣ Firestore → Sheet ID (with fallback)
+        let sheetId;
+        try {
+            sheetId = await getSheetIdFromFirestore();
+        } catch (e) {
+            console.warn('⚠️ Firestore failed — using fallback sheet ID:', e.message);
+            sheetId = CONFIG.sheetIdFallback;
+        }
 
         // 3️⃣ Fetch Sheet
         const items = await fetchSheetData(sheetId);
 
-        // 4️⃣ Save to cache (24h)
-        writeCache(items, sheetId);
+        // 4️⃣ Cache
+        writeCache(items);
 
         return items;
     }
@@ -219,16 +254,20 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
         }
         if (field !== '' || row.length > 0) { row.push(field); rows.push(row); }
 
+        console.log('🧩 CSV rows parsed:', rows.length);
         if (rows.length < 2) return [];
 
         const headers = rows[0].map(h => h.trim().toLowerCase());
+        console.log('🧩 Headers:', headers);
 
         const urlIdx    = headers.findIndex(h => h === 'url' || h.includes('url') || h === 'image');
         const titleIdx  = headers.findIndex(h => h === 'titel' || h === 'title' || h.includes('tit') || h === 'heading');
         const descIdx   = headers.findIndex(h => h.includes('discre') || h.includes('desc') || h.includes('text') || h === 'discretion');
 
         const homeHeaderIdx = headers.findIndex(h => h === 'home-heder' || h === 'home-header' || h.includes('heder') || h.includes('header') || h === 'hero');
-        const homeIdx       = headers.findIndex((h, idx) => (h === 'home' || h.trim() === 'home') && idx !== homeHeaderIdx);
+        const homeIdx       = headers.findIndex((h, idx) => h === 'home' && idx !== homeHeaderIdx);
+
+        console.log('🧩 Column indexes → url:', urlIdx, 'title:', titleIdx, 'desc:', descIdx, 'homeHeader:', homeHeaderIdx, 'home:', homeIdx);
 
         const data = [];
         for (let i = 1; i < rows.length && data.length < CONFIG.maxItems; i++) {
@@ -261,6 +300,7 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
             });
         }
 
+        console.log('🧩 Total gallery items:', data.length);
         return data;
     }
 
@@ -279,7 +319,7 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
     }
 
     /* ==========================================================
-       🎬 1. HERO SLIDER LOGIC
+       🎬 1. HERO SLIDER
        ========================================================== */
     function renderHeroSlider() {
         if (!heroContainer) return;
@@ -287,8 +327,10 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
         heroItems = allItems.filter(item => item.isHero);
         if (heroItems.length === 0) heroItems = allItems.filter(item => item.hasImage);
 
+        console.log('🎬 Hero items:', heroItems.length);
+
         if (heroItems.length === 0) {
-            heroContainer.innerHTML = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#0f172a; color:#94a3b8; font-weight:bold;">No Hero Images Available</div>`;
+            heroContainer.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#0f172a;color:#94a3b8;font-weight:bold;">No Hero Images Available</div>`;
             return;
         }
 
@@ -392,13 +434,15 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
     }
 
     /* ==========================================================
-       🎬 2. MINI CARD GALLERY LOGIC
+       🎬 2. MINI CARD GALLERY
        ========================================================== */
     function renderMiniCard() {
         if (!milContainer) return;
 
         miniItems = allItems.filter(item => item.isHome);
         if (miniItems.length === 0) miniItems = allItems.filter(item => item.hasImage);
+
+        console.log('🎬 Mini items:', miniItems.length);
 
         if (miniItems.length === 0) {
             milContainer.innerHTML = `<div class="mil-empty"><i class="fa-regular fa-images"></i><span>No gallery items available</span></div>`;
@@ -535,12 +579,13 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
     }
 
     /* ==========================================================
-       🎬 3. GRID GALLERY LOGIC
+       🎬 3. GRID GALLERY
        ========================================================== */
     function renderGridGallery() {
         if (!gridContainer) return;
 
         gridItems = allItems;
+        console.log('🎬 Grid items:', gridItems.length);
 
         if (gridItems.length === 0) {
             gridContainer.innerHTML = `
@@ -563,8 +608,8 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
             }
             return `
                 <div class="gallery-card" data-index="${i}">
-                    <img src="${escapeHTML(item.url)}" 
-                         alt="${escapeHTML(item.title)}" 
+                    <img src="${escapeHTML(item.url)}"
+                         alt="${escapeHTML(item.title)}"
                          loading="lazy"
                          onerror="this.parentElement.classList.add('no-image'); this.parentElement.innerHTML='<i class=&quot;fa-regular fa-image&quot;></i><span>No Image</span>';">
                     <div class="gallery-card-title">${escapeHTML(item.title)}</div>
@@ -581,7 +626,7 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
     }
 
     /* ==========================================================
-       🖼️ 4. MODAL LOGIC
+       🖼️ 4. MODAL
        ========================================================== */
     function openModal(index, sourceItems) {
         if (!modal) return;
@@ -683,24 +728,29 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
             allItems = await loadGalleryItems();
             console.log('✅ Loaded total items:', allItems.length);
 
+            if (allItems.length === 0) {
+                throw new Error('No items returned (check sheet has data & is public)');
+            }
+
             renderHeroSlider();
             renderMiniCard();
             renderGridGallery();
 
         } catch (err) {
-            console.error('❌ Gallery initialization error:', err);
+            console.error('❌ Gallery init error:', err);
 
+            const errMsg = escapeHTML(err.message || 'Unknown error');
             if (heroContainer) {
-                heroContainer.innerHTML = `<div style="padding:20px; text-align:center; color:#ef4444; font-weight:bold;">Failed to load hero banner</div>`;
+                heroContainer.innerHTML = `<div style="padding:20px;text-align:center;color:#ef4444;font-weight:bold;">Failed to load hero: ${errMsg}</div>`;
             }
             if (milContainer) {
-                milContainer.innerHTML = `<div class="mil-empty"><i class="fa-solid fa-triangle-exclamation"></i><span>Failed to load mini gallery</span></div>`;
+                milContainer.innerHTML = `<div class="mil-empty"><i class="fa-solid fa-triangle-exclamation"></i><span>Failed: ${errMsg}</span></div>`;
             }
             if (gridContainer) {
                 gridContainer.innerHTML = `
                     <div class="gallery-empty-state">
                         <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span>Failed to load gallery</span>
+                        <span>Failed: ${errMsg}</span>
                     </div>
                 `;
             }
