@@ -27,6 +27,9 @@ let loadedAdminUsers = [];
 const $ = (id) => document.getElementById(id);
 const IMGBB_API_KEY = "3c7f31bff91c8f5f4a9aef96751ac2db";
 
+// ★ Firestore collection name — CONFIRMED: "google-sheet" (singular, hyphen)
+const SHEET_COLLECTION = 'google-sheet';
+
 const SECTION_OPTIONS = [
     { id: 'usersSection',       label: 'Users' },
     { id: 'newsSection',        label: 'Update News' },
@@ -478,251 +481,213 @@ async function loadNewsList() {
 }
 
 // ==========================================
-// 4. GOOGLE SHEET LINKS (with ON-PAGE diagnostics)
+// 4. GOOGLE SHEET LINKS (REWRITTEN — SIMPLE & BULLETPROOF)
 // ==========================================
-let _googleSheetCache = null;
-let _googleSheetSourceCollection = null;
 
-const SHEET_COLLECTION_CANDIDATES = [
-    'google-sheet', 'google-sheets', 'googleSheet', 'googleSheets',
-    'googlesheet', 'googlesheets', 'sheet-links', 'sheetLinks', 'sheets',
-    'googleSheetLinks', 'google_sheet', 'google_sheets', 'SheetLinks',
-    'sheet', 'Sheet', 'links', 'resources'
-];
-
-async function loadGoogleSheetCollection(force = false) {
-    if (_googleSheetCache && !force) return _googleSheetCache;
-
-    for (const colName of SHEET_COLLECTION_CANDIDATES) {
-        try {
-            const snap = await getDocs(collection(db, colName));
-            if (!snap.empty) {
-                const items = [];
-                snap.forEach(d => items.push({ id: d.id, ...d.data() }));
-                _googleSheetCache = items;
-                _googleSheetSourceCollection = colName;
-                console.log(`[sheet] ✅ Loaded ${items.length} from "${colName}"`);
-                return items;
-            }
-        } catch (err) {
-            console.warn(`[sheet] ✗ "${colName}" — ${err.message}`);
-        }
+// Load ALL docs from "google-sheet" collection, sorted by document ID
+async function loadAllSheetDocs() {
+    try {
+        const snap = await getDocs(collection(db, SHEET_COLLECTION));
+        const items = [];
+        snap.forEach(d => {
+            items.push({ _docId: d.id, ...d.data() });
+        });
+        // Sort by document ID (alphabetically)
+        items.sort((a, b) => String(a._docId).localeCompare(String(b._docId), undefined, { numeric: true }));
+        return items;
+    } catch (err) {
+        console.error('Sheet collection error:', err);
+        showToast('Sheet load error: ' + err.message, 'error');
+        return [];
     }
-    _googleSheetCache = [];
-    _googleSheetSourceCollection = null;
-    return [];
 }
 
+// Get the link — supports many field names, but "link" is primary
 function getSheetLink(item) {
-    const candidates = [
-        'link', 'url', 'sheetUrl', 'sheet', 'href', 'sheetLink', 'sheetURL',
-        'sheet_url', 'googleSheet', 'google_sheet', 'google_sheet_url',
-        'googleSheetUrl', 'spreadsheet', 'spreadsheetUrl', 'googleSheetLink',
-        'sheet_link', 'SheetLink', 'SheetURL', 'Link', 'URL', 'linkUrl', 'googleLink'
-    ];
-    for (const key of candidates) {
-        if (item[key] && typeof item[key] === 'string' && item[key].trim()) {
-            return item[key].trim();
-        }
+    if (!item) return '';
+    const keys = ['link', 'url', 'sheetUrl', 'sheetURL', 'sheet_url', 'href', 'sheetLink',
+                  'googleSheet', 'google_sheet', 'googleSheetUrl', 'spreadsheet', 'spreadsheetUrl'];
+    for (const k of keys) {
+        const v = item[k];
+        if (typeof v === 'string' && v.trim()) return v.trim();
     }
-    if (item.data && typeof item.data === 'object') return getSheetLink(item.data);
     return '';
 }
 
 function getSheetName(item) {
-    return item.name || item.title || item.label || item.displayName || item.id || 'Untitled';
+    return item.name || item.title || item.label || item.displayName || item._docId || 'Untitled';
 }
 
 function getSheetSubtitle(item) {
     return item.subtitle || item.description || item.sub || item.desc || 'Google Spreadsheet';
 }
 
-function getSheetCategory(item) {
-    if (item.category) {
-        const c = String(item.category).toLowerCase().trim();
-        if (c === 'exam' || c === 'exams' || c === 'result' || c === 'results'
-            || c.includes('exam') || c.includes('o/l') || c.includes('a/l')) return 'exam';
-        if (c === 'document' || c === 'documents' || c === 'doc' || c === 'docs'
-            || c.includes('doc') || c.includes('paper') || c.includes('book')) return 'doc';
-    }
-    const n = getSheetName(item).toLowerCase();
-    if (/o\/?l|a\/?l|exam|result/.test(n)) return 'exam';
-    return 'doc';
+// Category rule:
+//   - category === "exam" (or contains "exam") → Exam section
+//   - Everything else → Documents section
+//   - Fallback: if no category, check document ID (ol/al → exam)
+function isExamSheet(item) {
+    const cat = String(item.category || '').toLowerCase().trim();
+    if (cat === 'exam' || cat === 'exams' || cat === 'result' || cat === 'results') return true;
+    if (cat.includes('exam')) return true;
+    // No category → fall back to document ID
+    const id = String(item._docId || '').toLowerCase().trim();
+    if (id === 'ol' || id === 'al') return true;
+    if (/^o\/?l$|^a\/?l$/.test(id)) return true;
+    return false;
 }
 
-function getSheetIcon(item, category) {
-    if (item.icon) {
-        const ic = String(item.icon).trim();
-        if (ic.startsWith('fa-solid') || ic.startsWith('fa-regular') || ic.startsWith('fa-brands')) return ic;
-        if (ic.startsWith('fa-')) return `fa-solid ${ic}`;
-        return `fa-solid ${ic}`;
+// Auto icon
+function getSheetIcon(item, isExam) {
+    if (item.icon && typeof item.icon === 'string' && item.icon.trim()) {
+        const ic = item.icon.trim();
+        if (ic.startsWith('fa-')) return ic.startsWith('fa-solid') || ic.startsWith('fa-regular') || ic.startsWith('fa-brands') ? ic : `fa-solid ${ic}`;
     }
+    const id = String(item._docId || '').toLowerCase();
     const n = getSheetName(item).toLowerCase();
-    if (category === 'exam') {
-        if (n.includes('o/l') || n.includes('o.l')) return 'fa-solid fa-graduation-cap';
-        if (n.includes('a/l') || n.includes('a.l')) return 'fa-solid fa-user-graduate';
+
+    if (isExam) {
+        if (id === 'ol' || n.includes('o/l') || n.includes('o.l')) return 'fa-solid fa-graduation-cap';
+        if (id === 'al' || n.includes('a/l') || n.includes('a.l')) return 'fa-solid fa-user-graduate';
         return 'fa-solid fa-graduation-cap';
     }
+    if (n.includes('past paper')) return 'fa-solid fa-file-lines';
     if (n.includes('text book') || n.includes('textbook')) return 'fa-solid fa-book';
     if (n.includes('teacher')) return 'fa-solid fa-chalkboard-user';
     if (n.includes('short note') || n.includes('notes')) return 'fa-solid fa-note-sticky';
     if (n.includes('application')) return 'fa-solid fa-file-signature';
-    if (n.includes('past paper')) return 'fa-solid fa-file-lines';
     if (n.includes('guide')) return 'fa-solid fa-book-open';
+    if (n.includes('term-test') || n.includes('term test')) return 'fa-solid fa-clipboard-check';
     return 'fa-solid fa-book';
 }
 
-// ★ Diagnostic box එකක් page එකේම හදනවා
-function showDiagnostic(sectionId, message, isError) {
+// Find existing grid container in section, or create one
+function getGridContainer(sectionId) {
     const section = document.getElementById(sectionId);
-    if (!section) return;
-    let diag = document.getElementById(`${sectionId}-diagnostic`);
-    if (!diag) {
-        diag = document.createElement('div');
-        diag.id = `${sectionId}-diagnostic`;
-        diag.style.cssText = `padding:14px 16px; margin:10px 0; border-radius:10px; font-size:0.85rem; line-height:1.6; word-break:break-word; font-family:monospace;`;
-        section.insertBefore(diag, section.firstChild);
+    if (!section) {
+        console.warn(`[${sectionId}] section not found`);
+        return null;
     }
-    diag.style.background = isError ? 'rgba(239,68,68,0.12)' : 'rgba(59,130,246,0.12)';
-    diag.style.border = isError ? '1px solid rgba(239,68,68,0.5)' : '1px solid rgba(59,130,246,0.5)';
-    diag.style.color = isError ? '#fca5a5' : '#93c5fd';
-    diag.innerHTML = message;
-}
-
-function hideDiagnostic(sectionId) {
-    const diag = document.getElementById(`${sectionId}-diagnostic`);
-    if (diag) diag.remove();
-}
-
-function renderSheetCards(container, items, category, emptyMsg) {
-    if (!container) return;
-    container.innerHTML = '';
-    if (!items.length) {
-        container.innerHTML = `<p style="color:var(--text-muted); padding:20px; text-align:center; grid-column: 1/-1;">${emptyMsg || 'No items found.'}</p>`;
-        return;
-    }
-    container.innerHTML = items.map(it => {
-        const name = getSheetName(it);
-        const link = getSheetLink(it);
-        const icon = getSheetIcon(it, category);
-        const subtitle = getSheetSubtitle(it);
-        const safeName = String(name).replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        const safeSub  = String(subtitle).replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        if (!link) {
-            return `
-                <div class="doc-link-card" style="opacity:0.55; cursor:not-allowed; border:1px dashed #f59e0b;">
-                    <i class="${icon}"></i>
-                    <div class="doc-info"><h4>${safeName}</h4><span style="color:#f59e0b;">⚠ No link field — fields: ${Object.keys(it).filter(k=>k!=='id').join(', ')}</span></div>
-                </div>
-            `;
-        }
-        return `
-            <a href="${link}" target="_blank" rel="noopener" class="doc-link-card">
-                <i class="${icon}"></i>
-                <div class="doc-info"><h4>${safeName}</h4><span>${safeSub}</span></div>
-            </a>
-        `;
-    }).join('');
-}
-
-function findOrCreateGrid(sectionId) {
-    const section = document.getElementById(sectionId);
-    if (!section) return null;
     let grid = section.querySelector('.sheets-btn-grid')
             || section.querySelector('.sheets-grid')
             || section.querySelector('.doc-links-grid')
-            || section.querySelector('[data-sheets-grid]')
             || section.querySelector('.sheets-container')
-            || section.querySelector('.btn-grid');
+            || section.querySelector('.btn-grid')
+            || section.querySelector('[data-sheets-grid]');
     if (!grid) {
+        // Create a new one, styled as a responsive grid
         grid = document.createElement('div');
         grid.className = 'sheets-btn-grid';
         grid.style.cssText = 'display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; margin-top:16px;';
         section.appendChild(grid);
+    } else {
+        // Ensure it has grid display
+        grid.style.display = 'grid';
+        grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(260px, 1fr))';
+        grid.style.gap = '14px';
+        grid.style.marginTop = '16px';
     }
     return grid;
 }
 
+// Render cards into grid
+function renderSheetCards(grid, items, isExamContext) {
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    if (!items.length) {
+        const emptyMsg = isExamContext
+            ? 'O/L සහ A/L Results Sheets කිසිවක් හමු නොවුණි.'
+            : 'Past Papers / Documents Sheets කිසිවක් හමු නොවුණි.';
+        grid.innerHTML = `<p style="color:var(--text-muted); padding:20px; text-align:center; grid-column: 1/-1;">${emptyMsg}</p>`;
+        return;
+    }
+
+    const html = items.map(it => {
+        const name = getSheetName(it);
+        const link = getSheetLink(it);
+        const isExam = isExamSheet(it);
+        const icon = getSheetIcon(it, isExam);
+        const subtitle = getSheetSubtitle(it);
+        const docId = it._docId || '';
+
+        const safeName = String(name).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const safeSub  = String(subtitle).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const safeId   = String(docId).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        if (!link) {
+            return `
+                <div class="doc-link-card" style="opacity:0.6; cursor:not-allowed; border:1px dashed #f59e0b;">
+                    <i class="${icon}"></i>
+                    <div class="doc-info">
+                        <h4>${safeName}</h4>
+                        <span style="color:#f59e0b; font-size:0.75rem;">⚠ No "link" field (id: ${safeId})</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        return `
+            <a href="${link}" target="_blank" rel="noopener" class="doc-link-card">
+                <i class="${icon}"></i>
+                <div class="doc-info">
+                    <h4>${safeName}</h4>
+                    <span>${safeSub}</span>
+                </div>
+            </a>
+        `;
+    }).join('');
+
+    grid.innerHTML = html;
+}
+
 // ==========================================
-// 5. EXAMS
+// 5. EXAMS SECTION — loads docs with category "exam"
 // ==========================================
 async function initExamsModule() {
     await refreshExamSheets();
 }
 
 async function refreshExamSheets() {
-    const section = document.getElementById('examSection');
-    if (!section) return;
-    const container = findOrCreateGrid('examSection');
-    if (!container) return;
-    container.innerHTML = `<p style="color:var(--text-muted); padding:20px; text-align:center; grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> Loading sheets...</p>`;
+    const grid = getGridContainer('examSection');
+    if (!grid) return;
 
-    const allItems = await loadGoogleSheetCollection(true);
+    grid.innerHTML = `<p style="color:var(--text-muted); padding:20px; text-align:center; grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</p>`;
 
-    if (allItems.length === 0) {
-        showDiagnostic('examSection',
-            `❌ <strong>Google Sheet collection එකේ data නෑ!</strong><br>
-            මේ නම් වලින් try කලා: <br>
-            <span style="color:#fbbf24;">${SHEET_COLLECTION_CANDIDATES.slice(0,8).join(', ')}...</span><br><br>
-            👉 Firebase Console එකේ <strong>Firestore Database</strong> එකේ collection එකේ ඇත්ත නම මොකක්ද කියලා බලන්න.`, true);
-        renderSheetCards(container, [], 'exam', 'No sheets found.');
-        return;
+    const allItems = await loadAllSheetDocs();
+    const examItems = allItems.filter(it => isExamSheet(it));
+
+    renderSheetCards(grid, examItems, true);
+
+    // Also update any debug/info element if it exists
+    const debugEl = document.getElementById('examSection-debug');
+    if (debugEl) {
+        debugEl.textContent = `Total: ${allItems.length} | Exam: ${examItems.length}`;
     }
-
-    hideDiagnostic('examSection');
-    const examItems = allItems.filter(it => getSheetCategory(it) === 'exam');
-
-    if (examItems.length === 0 && allItems.length > 0) {
-        showDiagnostic('examSection',
-            `⚠️ Collection "<strong>${_googleSheetSourceCollection}</strong>" එකේ items <strong>${allItems.length}</strong> ක් තියෙනවා, ඒත් <strong>O/L A/L category</strong> එකට ගැලපෙන එකක් නෑ.<br>
-            👉 Firestore doc එකේ <code>category</code> field එක <strong>"exam"</strong> කියලා දාන්න. හෝ name එකේ "O/L" / "A/L" කියලා දාන්න.<br>
-            <br>👀 දැන් **හැම item එකක්ම** පෙන්නනවා 👇`, false);
-        renderSheetCards(container, allItems, 'exam', '');
-        return;
-    }
-
-    renderSheetCards(container, examItems, 'exam', 'No exam sheets.');
 }
 
 // ==========================================
-// 6. DOCUMENTS
+// 6. DOCUMENTS SECTION — loads everything NOT exam
 // ==========================================
 async function initDocumentsModule() {
     await refreshDocumentSheets();
 }
 
 async function refreshDocumentSheets() {
-    const section = document.getElementById('documentsSection');
-    if (!section) return;
-    const container = findOrCreateGrid('documentsSection');
-    if (!container) return;
-    container.innerHTML = `<p style="color:var(--text-muted); padding:20px; text-align:center; grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> Loading sheets...</p>`;
+    const grid = getGridContainer('documentsSection');
+    if (!grid) return;
 
-    const allItems = await loadGoogleSheetCollection(true);
+    grid.innerHTML = `<p style="color:var(--text-muted); padding:20px; text-align:center; grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</p>`;
 
-    if (allItems.length === 0) {
-        showDiagnostic('documentsSection',
-            `❌ <strong>Google Sheet collection එකේ data නෑ!</strong><br>
-            මේ නම් වලින් try කලා: <br>
-            <span style="color:#fbbf24;">${SHEET_COLLECTION_CANDIDATES.slice(0,8).join(', ')}...</span><br><br>
-            👉 Firebase Console එකේ <strong>Firestore Database</strong> එකේ collection එකේ ඇත්ත නම මොකක්ද කියලා බලන්න.`, true);
-        renderSheetCards(container, [], 'doc', 'No sheets found.');
-        return;
+    const allItems = await loadAllSheetDocs();
+    const docItems = allItems.filter(it => !isExamSheet(it));
+
+    renderSheetCards(grid, docItems, false);
+
+    const debugEl = document.getElementById('documentsSection-debug');
+    if (debugEl) {
+        debugEl.textContent = `Total: ${allItems.length} | Documents: ${docItems.length}`;
     }
-
-    hideDiagnostic('documentsSection');
-    const docItems = allItems.filter(it => getSheetCategory(it) === 'doc');
-
-    if (docItems.length === 0 && allItems.length > 0) {
-        showDiagnostic('documentsSection',
-            `⚠️ Collection "<strong>${_googleSheetSourceCollection}</strong>" එකේ items <strong>${allItems.length}</strong> ක් තියෙනවා, ඒත් <strong>Documents category</strong> එකට ගැලපෙන එකක් නෑ.<br>
-            👉 Firestore doc එකේ <code>category</code> field එක <strong>"document"</strong> කියලා දාන්න.<br>
-            <br>👀 දැන් **හැම item එකක්ම** පෙන්නනවා 👇`, false);
-        renderSheetCards(container, allItems, 'doc', '');
-        return;
-    }
-
-    renderSheetCards(container, docItems, 'doc', 'No document sheets.');
 }
 
 // ==========================================
