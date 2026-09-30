@@ -1,38 +1,65 @@
 /* ==========================================================
    🎡 MSNS ALL-IN-ONE GALLERY SYSTEM
    Hero Banner | Mini Card Gallery | Grid Gallery | Modal View
-   Sheet: mini-image-library
-   Columns: url | titel | discretion | home | home-heder
+   Firestore : google-sheet/details → field: link
+   Sheet     : mini-image-library
+   Columns   : url | titel | discretion | home | home-heder
+   Cache     : localStorage — 1 day (24h)
    ========================================================== */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 (function () {
     'use strict';
 
     /* ==========================================================
+       🔥 FIREBASE CONFIG (inline)
+       ========================================================== */
+    const firebaseConfig = {
+        apiKey: "AIzaSyDgg7n1LwcrRiV2kjgSM5E3XX27twweMg8",
+        authDomain: "msns-79.firebaseapp.com",
+        databaseURL: "https://msns-79-default-rtdb.firebaseio.com",
+        projectId: "msns-79",
+        storageBucket: "msns-79.firebasestorage.app",
+        messagingSenderId: "108137376740",
+        appId: "1:108137376740:web:78ed2f442c035a072f75f1",
+        measurementId: "G-3GTFJKTS7D"
+    };
+
+    const firebaseApp = initializeApp(firebaseConfig);
+    const db = getFirestore(firebaseApp);
+
+    /* ==========================================================
        📌 CONFIGURATION
        ========================================================== */
     const CONFIG = {
-        sheetId: '1mN5jfN4P3FFevv2Aq0ygWmTzrF7-dVWfdy-8cDFa7ro',
+        // Firestore source
+        firestoreCollection: 'google-sheet',
+        firestoreDoc:        'details',
+        firestoreField:      'link',
+
+        // Sheet
         sheetName: 'mini-image-library',
-        autoRotateMs: 5000,         // Hero & Mini Gallery interval (5s)
-        transitionMs: 700,          // Transition duration
-        maxItems: 60                // Max items to fetch
+
+        // UI
+        autoRotateMs: 5000,
+        transitionMs: 700,
+        maxItems: 60,
+
+        // Cache
+        cacheKey:        'msns_gallery_cache_v1',
+        cacheDurationMs: 24 * 60 * 60 * 1000   // 1 day
     };
 
     /* ==========================================================
        📌 DOM ELEMENTS DETECT
        ========================================================== */
-    // Hero Banner
     const heroContainer = document.getElementById('heroSliderContainer');
-
-    // Mini Card Gallery
     const milContainer  = document.getElementById('milContainer');
     const milDotsWrap   = document.getElementById('milDots');
-
-    // Grid Gallery (image-library.html)
     const gridContainer = document.getElementById('galleryGrid');
 
-    // Modal Elements
     const modal         = document.getElementById('galleryModal');
     const modalImg      = document.getElementById('modalImage');
     const modalTitle    = document.getElementById('modalTitle');
@@ -42,7 +69,6 @@
     const modalPrev     = document.getElementById('modalPrev');
     const modalNext     = document.getElementById('modalNext');
 
-    // Early return if no gallery components on this page
     if (!heroContainer && !milContainer && !gridContainer) return;
 
     /* ==========================================================
@@ -53,46 +79,115 @@
     let miniItems = [];
     let gridItems = [];
 
-    // Hero state
     let heroCurrentIndex = 0;
     let heroAutoTimer = null;
     let isHeroAnimating = false;
 
-    // Mini gallery state
     let miniCurrentIndex = 0;
     let miniAutoTimer = null;
     let isMiniAnimating = false;
 
-    // Modal state - which gallery opened it
     let modalSourceItems = [];
     let modalIndex = 0;
 
     /* ==========================================================
-       🎨 URL NORMALIZER
+       💾 CACHE HELPERS (1 day)
        ========================================================== */
-    function normalizeUrl(rawUrl) {
-        if (!rawUrl) return '';
-        let url = rawUrl.trim().replace(/^["']|["']$/g, '');
+    function readCache() {
+        try {
+            const raw = localStorage.getItem(CONFIG.cacheKey);
+            if (!raw) return null;
 
-        const driveMatch = url.match(/(?:\/file\/d\/|id=|uc\?.*id=|\/d\/)([a-zA-Z0-9_-]+)/);
-        if ((url.includes('drive.google.com') || url.includes('docs.google.com')) && driveMatch) {
-            return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+            const cache = JSON.parse(raw);
+            if (!cache || !cache.timestamp || !Array.isArray(cache.items)) return null;
+
+            const age = Date.now() - cache.timestamp;
+            if (age > CONFIG.cacheDurationMs) {
+                console.log('⏰ Cache expired — refetching…');
+                localStorage.removeItem(CONFIG.cacheKey);
+                return null;
+            }
+
+            const hours = (age / 3600000).toFixed(2);
+            console.log(`✅ Cache is fresh (${hours}h old) — using cached data`);
+            return cache;
+        } catch (e) {
+            console.warn('⚠️ Cache read failed:', e);
+            return null;
         }
-        return url;
+    }
+
+    function writeCache(items, sheetId) {
+        try {
+            localStorage.setItem(CONFIG.cacheKey, JSON.stringify({
+                timestamp: Date.now(),
+                sheetId: sheetId,
+                items: items
+            }));
+            console.log('💾 Cached', items.length, 'items for 24h');
+        } catch (e) {
+            console.warn('⚠️ Cache write failed:', e);
+        }
+    }
+
+    /* ==========================================================
+       🔥 FIRESTORE — GET SHEET ID FROM `link` FIELD
+       ========================================================== */
+    async function getSheetIdFromFirestore() {
+        console.log('🔥 Reading Firestore: google-sheet/details → link');
+        const ref = doc(db, CONFIG.firestoreCollection, CONFIG.firestoreDoc);
+        const snap = await getDoc(ref);
+
+        if (!snap.exists()) {
+            throw new Error(`Firestore doc not found: ${CONFIG.firestoreCollection}/${CONFIG.firestoreDoc}`);
+        }
+
+        const data = snap.data();
+        const link = (data[CONFIG.firestoreField] || '').toString().trim();
+
+        if (!link) {
+            throw new Error(`Field "${CONFIG.firestoreField}" is empty in Firestore`);
+        }
+
+        const urlMatch = link.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+        const sheetId = urlMatch ? urlMatch[1] : link;
+
+        console.log('📄 Sheet ID from Firestore:', sheetId);
+        return sheetId;
     }
 
     /* ==========================================================
        📥 FETCH SHEET DATA
        ========================================================== */
-    async function fetchSheetData() {
-        const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(CONFIG.sheetName)}`;
-        console.log('📥 Fetching Sheet:', url);
+    async function fetchSheetData(sheetId) {
+        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(CONFIG.sheetName)}`;
+        console.log('📥 Fetching Google Sheet:', url);
 
         const response = await fetch(url);
         if (!response.ok) throw new Error('Sheet fetch failed: ' + response.status);
 
         const csv = await response.text();
         return parseCSV(csv);
+    }
+
+    /* ==========================================================
+       🎯 MAIN LOADER — cache first, then Firestore + Sheet
+       ========================================================== */
+    async function loadGalleryItems() {
+        // 1️⃣ Cache check
+        const cache = readCache();
+        if (cache) return cache.items;
+
+        // 2️⃣ Firestore → Sheet ID
+        const sheetId = await getSheetIdFromFirestore();
+
+        // 3️⃣ Fetch Sheet
+        const items = await fetchSheetData(sheetId);
+
+        // 4️⃣ Save to cache (24h)
+        writeCache(items, sheetId);
+
+        return items;
     }
 
     /* ==========================================================
@@ -167,6 +262,20 @@
         }
 
         return data;
+    }
+
+    /* ==========================================================
+       🎨 URL NORMALIZER
+       ========================================================== */
+    function normalizeUrl(rawUrl) {
+        if (!rawUrl) return '';
+        let url = rawUrl.trim().replace(/^["']|["']$/g, '');
+
+        const driveMatch = url.match(/(?:\/file\/d\/|id=|uc\?.*id=|\/d\/)([a-zA-Z0-9_-]+)/);
+        if ((url.includes('drive.google.com') || url.includes('docs.google.com')) && driveMatch) {
+            return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+        }
+        return url;
     }
 
     /* ==========================================================
@@ -426,12 +535,11 @@
     }
 
     /* ==========================================================
-       🎬 3. GRID GALLERY LOGIC (image-library.html)
+       🎬 3. GRID GALLERY LOGIC
        ========================================================== */
     function renderGridGallery() {
         if (!gridContainer) return;
 
-        // Show all items (or only isHome ones — let's use all)
         gridItems = allItems;
 
         if (gridItems.length === 0) {
@@ -464,7 +572,6 @@
             `;
         }).join('');
 
-        // Card click → open modal (with gridItems as source)
         gridContainer.querySelectorAll('.gallery-card').forEach(card => {
             card.addEventListener('click', () => {
                 const idx = parseInt(card.dataset.index, 10);
@@ -474,7 +581,7 @@
     }
 
     /* ==========================================================
-       🖼️ 4. MODAL LOGIC (Works with Mini + Grid)
+       🖼️ 4. MODAL LOGIC
        ========================================================== */
     function openModal(index, sourceItems) {
         if (!modal) return;
@@ -532,7 +639,6 @@
         if (e.key === 'ArrowRight') modalNextSlide();
     });
 
-    // Touch swipe on modal
     let touchStartX = 0;
     modal?.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
     modal?.addEventListener('touchend', (e) => {
@@ -574,10 +680,9 @@
     (async function init() {
         try {
             console.log('🖼️ MSNS Gallery System Loading...');
-            allItems = await fetchSheetData();
+            allItems = await loadGalleryItems();
             console.log('✅ Loaded total items:', allItems.length);
 
-            // Render whichever components exist on the current page
             renderHeroSlider();
             renderMiniCard();
             renderGridGallery();
