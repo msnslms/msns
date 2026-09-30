@@ -188,20 +188,12 @@
         </section>
 
         <section id="examSection" class="admin-section">
-    <div class="section-header">
-        <h2>O/L and A/L Examination Results</h2>
-        <p>Direct links to Google Sheets managing examination results.</p>
-    </div>
-    <div class="sheets-btn-grid">
-        <a href="https://docs.google.com/spreadsheets/d/15LFm1voMhABzehIGzlrvGgmatgcNE1OKt1ydiyqWpVU/edit?usp=drivesdk" target="_blank" class="doc-link-card">
-            <i class="fa-solid fa-graduation-cap"></i>
-            <div class="doc-info"><h4>Edit O/L Results</h4><span>Google Spreadsheet</span></div>
-        </a>
-        <a href="https://docs.google.com/spreadsheets/d/1n3lZO20WvCZAl58FIVAyDhz3GWTgVN3OwWPAOfQJz6g/edit?usp=drivesdk" target="_blank" class="doc-link-card">
-            <i class="fa-solid fa-user-graduate"></i>
-            <div class="doc-info"><h4>Edit A/L Results</h4><span>Google Spreadsheet</span></div>
-        </a>
-    </div>
+            <div class="section-header">
+                <h2>O/L and A/L Examination Results</h2>
+                <p>Direct links to Google Sheets managing examination results.</p>
+            </div>
+            <!-- ★ Dynamic: Firestore "google-sheet" collection එකෙන් load වේ -->
+            <div class="sheets-btn-grid" id="examSheetsGrid"></div>
         </section>
 
         <section id="termTestSection" class="admin-section">
@@ -596,24 +588,8 @@
                 <h2>Past Papers & Academic Documents Update</h2>
                 <p>Direct links to Google Sheets managing resource pages.</p>
             </div>
-            <div class="sheets-btn-grid">
-                <a href="https://docs.google.com/spreadsheets/d/1WZ13wzcv_Ca7u3ohBZnLgEUrs7h7wgQBo83-A-n4Ne0/edit?usp=drivesdk" target="_blank" class="doc-link-card">
-                    <i class="fa-solid fa-book"></i>
-                    <div class="doc-info"><h4>Edit Text Books</h4><span>Google Spreadsheet</span></div>
-                </a>
-                <a href="https://docs.google.com/spreadsheets/d/1eOlkqUHWBo_PT9rc9IdwPaQtBWcBQ_pK2Z3g7XTqRXM/edit?usp=drivesdk" target="_blank" class="doc-link-card">
-                    <i class="fa-solid fa-chalkboard-user"></i>
-                    <div class="doc-info"><h4>Edit Teacher's Guide</h4><span>Google Spreadsheet</span></div>
-                </a>
-                <a href="https://docs.google.com/spreadsheets/d/1FuK5JY1SP33OOrACsoFxC5WyZYqbyj_Q4-K4C54TEv4/edit?usp=drivesdk" target="_blank" class="doc-link-card">
-                    <i class="fa-solid fa-note-sticky"></i>
-                    <div class="doc-info"><h4>Edit Short Notes</h4><span>Google Spreadsheet</span></div>
-                </a>
-                <a href="https://docs.google.com/spreadsheets/d/19zyl4ZulZc8iTbodIEosWaJlZgFLn3SVqIomV_9tP5o/edit?usp=drivesdk" target="_blank" class="doc-link-card">
-                    <i class="fa-solid fa-file-signature"></i>
-                    <div class="doc-info"><h4>Edit Application</h4><span>Google Spreadsheet</span></div>
-                </a>
-            </div>
+            <!-- ★ Dynamic: Firestore "google-sheet" collection එකෙන් load වේ -->
+            <div class="sheets-btn-grid" id="documentsSheetsGrid"></div>
         </section>
 
         <section id="geminiSection" class="admin-section">
@@ -672,4 +648,3 @@
     <script type="module" src="admin-p.js?v=2"></script>
 </body>
 </html>
-
