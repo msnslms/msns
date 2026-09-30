@@ -27,7 +27,6 @@ let loadedAdminUsers = [];
 const $ = (id) => document.getElementById(id);
 const IMGBB_API_KEY = "3c7f31bff91c8f5f4a9aef96751ac2db";
 
-// ★ Section definitions
 const SECTION_OPTIONS = [
     { id: 'usersSection',       label: 'Users' },
     { id: 'newsSection',        label: 'Update News' },
@@ -230,13 +229,8 @@ function switchSection(sectionId) {
     const activeBtn = Array.from(document.querySelectorAll('.nav-link')).find(l => l.dataset.section === sectionId);
     if (activeBtn) activeBtn.classList.add('active-link');
     if (sectionId === 'adminUsersSection') loadAdminUsers();
-
-    // ★ NEW — Sheet sections වලට switch වෙද්දි auto refresh
-    if (sectionId === 'examSection') {
-        refreshExamSheets();
-    } else if (sectionId === 'documentsSection') {
-        refreshDocumentSheets();
-    }
+    if (sectionId === 'examSection') refreshExamSheets();
+    if (sectionId === 'documentsSection') refreshDocumentSheets();
 }
 
 // ==========================================
@@ -484,50 +478,55 @@ async function loadNewsList() {
 }
 
 // ==========================================
-// 4. GOOGLE SHEET LINKS (Firestore "google-sheet" collection)
+// 4. GOOGLE SHEET LINKS (with ON-PAGE diagnostics)
 // ==========================================
 let _googleSheetCache = null;
-let _googleSheetPromise = null;
-// ★ Multiple collection names try කරන්න (fallback)
-const SHEET_COLLECTION_CANDIDATES = ['google-sheet', 'google-sheets', 'googleSheets', 'sheets'];
+let _googleSheetSourceCollection = null;
+
+const SHEET_COLLECTION_CANDIDATES = [
+    'google-sheet', 'google-sheets', 'googleSheet', 'googleSheets',
+    'googlesheet', 'googlesheets', 'sheet-links', 'sheetLinks', 'sheets',
+    'googleSheetLinks', 'google_sheet', 'google_sheets', 'SheetLinks',
+    'sheet', 'Sheet', 'links', 'resources'
+];
 
 async function loadGoogleSheetCollection(force = false) {
     if (_googleSheetCache && !force) return _googleSheetCache;
-    if (_googleSheetPromise && !force) return _googleSheetPromise;
-    _googleSheetPromise = (async () => {
-        for (const colName of SHEET_COLLECTION_CANDIDATES) {
-            try {
-                const snap = await getDocs(collection(db, colName));
-                if (!snap.empty) {
-                    const items = [];
-                    snap.forEach(d => items.push({ id: d.id, ...d.data() }));
-                    console.log(`[google-sheet] Loaded ${items.length} items from "${colName}" collection.`);
-                    _googleSheetCache = items;
-                    return items;
-                } else {
-                    console.log(`[google-sheet] Collection "${colName}" is empty, trying next...`);
-                }
-            } catch (err) {
-                console.warn(`[google-sheet] Failed to read "${colName}":`, err.message);
+
+    for (const colName of SHEET_COLLECTION_CANDIDATES) {
+        try {
+            const snap = await getDocs(collection(db, colName));
+            if (!snap.empty) {
+                const items = [];
+                snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+                _googleSheetCache = items;
+                _googleSheetSourceCollection = colName;
+                console.log(`[sheet] ✅ Loaded ${items.length} from "${colName}"`);
+                return items;
             }
+        } catch (err) {
+            console.warn(`[sheet] ✗ "${colName}" — ${err.message}`);
         }
-        console.warn('[google-sheet] No items found in any candidate collection.');
-        _googleSheetCache = [];
-        return [];
-    })();
-    try {
-        return await _googleSheetPromise;
-    } finally {
-        _googleSheetPromise = null;
     }
+    _googleSheetCache = [];
+    _googleSheetSourceCollection = null;
+    return [];
 }
 
-// ★ 'link' field එකට priority දෙනවා + more field names support
 function getSheetLink(item) {
-    return item.link || item.url || item.sheetUrl || item.sheet ||
-           item.href || item.sheetLink || item.sheetURL || item.sheet_url ||
-           item.googleSheet || item.google_sheet || item.google_sheet_url ||
-           item.googleSheetUrl || item.spreadsheet || item.spreadsheetUrl || '';
+    const candidates = [
+        'link', 'url', 'sheetUrl', 'sheet', 'href', 'sheetLink', 'sheetURL',
+        'sheet_url', 'googleSheet', 'google_sheet', 'google_sheet_url',
+        'googleSheetUrl', 'spreadsheet', 'spreadsheetUrl', 'googleSheetLink',
+        'sheet_link', 'SheetLink', 'SheetURL', 'Link', 'URL', 'linkUrl', 'googleLink'
+    ];
+    for (const key of candidates) {
+        if (item[key] && typeof item[key] === 'string' && item[key].trim()) {
+            return item[key].trim();
+        }
+    }
+    if (item.data && typeof item.data === 'object') return getSheetLink(item.data);
+    return '';
 }
 
 function getSheetName(item) {
@@ -538,25 +537,19 @@ function getSheetSubtitle(item) {
     return item.subtitle || item.description || item.sub || item.desc || 'Google Spreadsheet';
 }
 
-// ★ 'category' field එකෙන් decide කරනවා
 function getSheetCategory(item) {
     if (item.category) {
         const c = String(item.category).toLowerCase().trim();
         if (c === 'exam' || c === 'exams' || c === 'result' || c === 'results'
-            || c.includes('exam') || c.includes('o/l') || c.includes('a/l')) {
-            return 'exam';
-        }
+            || c.includes('exam') || c.includes('o/l') || c.includes('a/l')) return 'exam';
         if (c === 'document' || c === 'documents' || c === 'doc' || c === 'docs'
-            || c.includes('doc') || c.includes('paper') || c.includes('book')) {
-            return 'doc';
-        }
+            || c.includes('doc') || c.includes('paper') || c.includes('book')) return 'doc';
     }
     const n = getSheetName(item).toLowerCase();
     if (/o\/?l|a\/?l|exam|result/.test(n)) return 'exam';
     return 'doc';
 }
 
-// ★ Category එකට ගැලපෙන icon එක auto-assign
 function getSheetIcon(item, category) {
     if (item.icon) {
         const ic = String(item.icon).trim();
@@ -565,13 +558,11 @@ function getSheetIcon(item, category) {
         return `fa-solid ${ic}`;
     }
     const n = getSheetName(item).toLowerCase();
-
     if (category === 'exam') {
-        if (n.includes('o/l') || n.includes('o.l') || n.includes('ol result')) return 'fa-solid fa-graduation-cap';
-        if (n.includes('a/l') || n.includes('a.l') || n.includes('al result')) return 'fa-solid fa-user-graduate';
+        if (n.includes('o/l') || n.includes('o.l')) return 'fa-solid fa-graduation-cap';
+        if (n.includes('a/l') || n.includes('a.l')) return 'fa-solid fa-user-graduate';
         return 'fa-solid fa-graduation-cap';
     }
-
     if (n.includes('text book') || n.includes('textbook')) return 'fa-solid fa-book';
     if (n.includes('teacher')) return 'fa-solid fa-chalkboard-user';
     if (n.includes('short note') || n.includes('notes')) return 'fa-solid fa-note-sticky';
@@ -581,10 +572,33 @@ function getSheetIcon(item, category) {
     return 'fa-solid fa-book';
 }
 
+// ★ Diagnostic box එකක් page එකේම හදනවා
+function showDiagnostic(sectionId, message, isError) {
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+    let diag = document.getElementById(`${sectionId}-diagnostic`);
+    if (!diag) {
+        diag = document.createElement('div');
+        diag.id = `${sectionId}-diagnostic`;
+        diag.style.cssText = `padding:14px 16px; margin:10px 0; border-radius:10px; font-size:0.85rem; line-height:1.6; word-break:break-word; font-family:monospace;`;
+        section.insertBefore(diag, section.firstChild);
+    }
+    diag.style.background = isError ? 'rgba(239,68,68,0.12)' : 'rgba(59,130,246,0.12)';
+    diag.style.border = isError ? '1px solid rgba(239,68,68,0.5)' : '1px solid rgba(59,130,246,0.5)';
+    diag.style.color = isError ? '#fca5a5' : '#93c5fd';
+    diag.innerHTML = message;
+}
+
+function hideDiagnostic(sectionId) {
+    const diag = document.getElementById(`${sectionId}-diagnostic`);
+    if (diag) diag.remove();
+}
+
 function renderSheetCards(container, items, category, emptyMsg) {
     if (!container) return;
+    container.innerHTML = '';
     if (!items.length) {
-        container.innerHTML = `<p style="color:var(--text-muted); padding:20px; text-align:center; grid-column: 1/-1;">${emptyMsg || 'මෙම කොටසට Sheets කිසිවක් හමු නොවුණි.'}</p>`;
+        container.innerHTML = `<p style="color:var(--text-muted); padding:20px; text-align:center; grid-column: 1/-1;">${emptyMsg || 'No items found.'}</p>`;
         return;
     }
     container.innerHTML = items.map(it => {
@@ -594,12 +608,11 @@ function renderSheetCards(container, items, category, emptyMsg) {
         const subtitle = getSheetSubtitle(it);
         const safeName = String(name).replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const safeSub  = String(subtitle).replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
         if (!link) {
             return `
-                <div class="doc-link-card" style="opacity:0.55; cursor:not-allowed;">
+                <div class="doc-link-card" style="opacity:0.55; cursor:not-allowed; border:1px dashed #f59e0b;">
                     <i class="${icon}"></i>
-                    <div class="doc-info"><h4>${safeName}</h4><span>No link set</span></div>
+                    <div class="doc-info"><h4>${safeName}</h4><span style="color:#f59e0b;">⚠ No link field — fields: ${Object.keys(it).filter(k=>k!=='id').join(', ')}</span></div>
                 </div>
             `;
         }
@@ -612,57 +625,104 @@ function renderSheetCards(container, items, category, emptyMsg) {
     }).join('');
 }
 
-// ★ Helper — Grid container එක සොයාගන්න (multiple fallback selectors)
-function findSheetsGrid(sectionId) {
+function findOrCreateGrid(sectionId) {
     const section = document.getElementById(sectionId);
     if (!section) return null;
-    return section.querySelector('.sheets-btn-grid')
-        || section.querySelector('.sheets-grid')
-        || section.querySelector('.doc-links-grid')
-        || section.querySelector('[data-sheets-grid]')
-        || section.querySelector('.sheets-container');
+    let grid = section.querySelector('.sheets-btn-grid')
+            || section.querySelector('.sheets-grid')
+            || section.querySelector('.doc-links-grid')
+            || section.querySelector('[data-sheets-grid]')
+            || section.querySelector('.sheets-container')
+            || section.querySelector('.btn-grid');
+    if (!grid) {
+        grid = document.createElement('div');
+        grid.className = 'sheets-btn-grid';
+        grid.style.cssText = 'display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; margin-top:16px;';
+        section.appendChild(grid);
+    }
+    return grid;
 }
 
 // ==========================================
-// 5. EXAMS (Loads from Firestore "google-sheet")
+// 5. EXAMS
 // ==========================================
 async function initExamsModule() {
     await refreshExamSheets();
 }
 
-// ★ NEW — Refresh function (switch වෙද්දි call වෙනවා)
 async function refreshExamSheets() {
-    const container = findSheetsGrid('examSection');
-    if (!container) {
-        console.warn('[examSection] .sheets-btn-grid container not found in DOM.');
+    const section = document.getElementById('examSection');
+    if (!section) return;
+    const container = findOrCreateGrid('examSection');
+    if (!container) return;
+    container.innerHTML = `<p style="color:var(--text-muted); padding:20px; text-align:center; grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> Loading sheets...</p>`;
+
+    const allItems = await loadGoogleSheetCollection(true);
+
+    if (allItems.length === 0) {
+        showDiagnostic('examSection',
+            `❌ <strong>Google Sheet collection එකේ data නෑ!</strong><br>
+            මේ නම් වලින් try කලා: <br>
+            <span style="color:#fbbf24;">${SHEET_COLLECTION_CANDIDATES.slice(0,8).join(', ')}...</span><br><br>
+            👉 Firebase Console එකේ <strong>Firestore Database</strong> එකේ collection එකේ ඇත්ත නම මොකක්ද කියලා බලන්න.`, true);
+        renderSheetCards(container, [], 'exam', 'No sheets found.');
         return;
     }
-    container.innerHTML = `<p style="color:var(--text-muted); padding:20px; text-align:center; grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> Loading sheets...</p>`;
-    const items = await loadGoogleSheetCollection();
-    const examItems = items.filter(it => getSheetCategory(it) === 'exam');
-    renderSheetCards(container, examItems, 'exam',
-        'O/L සහ A/L Results Sheets කිසිවක් හමු නොවුණි. Firestore "google-sheet" collection එකට add කරන්න.');
+
+    hideDiagnostic('examSection');
+    const examItems = allItems.filter(it => getSheetCategory(it) === 'exam');
+
+    if (examItems.length === 0 && allItems.length > 0) {
+        showDiagnostic('examSection',
+            `⚠️ Collection "<strong>${_googleSheetSourceCollection}</strong>" එකේ items <strong>${allItems.length}</strong> ක් තියෙනවා, ඒත් <strong>O/L A/L category</strong> එකට ගැලපෙන එකක් නෑ.<br>
+            👉 Firestore doc එකේ <code>category</code> field එක <strong>"exam"</strong> කියලා දාන්න. හෝ name එකේ "O/L" / "A/L" කියලා දාන්න.<br>
+            <br>👀 දැන් **හැම item එකක්ම** පෙන්නනවා 👇`, false);
+        renderSheetCards(container, allItems, 'exam', '');
+        return;
+    }
+
+    renderSheetCards(container, examItems, 'exam', 'No exam sheets.');
 }
 
 // ==========================================
-// 6. DOCUMENTS (Loads from Firestore "google-sheet")
+// 6. DOCUMENTS
 // ==========================================
 async function initDocumentsModule() {
     await refreshDocumentSheets();
 }
 
-// ★ NEW — Refresh function (switch වෙද්දි call වෙනවා)
 async function refreshDocumentSheets() {
-    const container = findSheetsGrid('documentsSection');
-    if (!container) {
-        console.warn('[documentsSection] .sheets-btn-grid container not found in DOM.');
+    const section = document.getElementById('documentsSection');
+    if (!section) return;
+    const container = findOrCreateGrid('documentsSection');
+    if (!container) return;
+    container.innerHTML = `<p style="color:var(--text-muted); padding:20px; text-align:center; grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> Loading sheets...</p>`;
+
+    const allItems = await loadGoogleSheetCollection(true);
+
+    if (allItems.length === 0) {
+        showDiagnostic('documentsSection',
+            `❌ <strong>Google Sheet collection එකේ data නෑ!</strong><br>
+            මේ නම් වලින් try කලා: <br>
+            <span style="color:#fbbf24;">${SHEET_COLLECTION_CANDIDATES.slice(0,8).join(', ')}...</span><br><br>
+            👉 Firebase Console එකේ <strong>Firestore Database</strong> එකේ collection එකේ ඇත්ත නම මොකක්ද කියලා බලන්න.`, true);
+        renderSheetCards(container, [], 'doc', 'No sheets found.');
         return;
     }
-    container.innerHTML = `<p style="color:var(--text-muted); padding:20px; text-align:center; grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> Loading sheets...</p>`;
-    const items = await loadGoogleSheetCollection();
-    const docItems = items.filter(it => getSheetCategory(it) === 'doc');
-    renderSheetCards(container, docItems, 'doc',
-        'Past Papers / Documents Sheets කිසිවක් හමු නොවුණි. Firestore "google-sheet" collection එකට add කරන්න.');
+
+    hideDiagnostic('documentsSection');
+    const docItems = allItems.filter(it => getSheetCategory(it) === 'doc');
+
+    if (docItems.length === 0 && allItems.length > 0) {
+        showDiagnostic('documentsSection',
+            `⚠️ Collection "<strong>${_googleSheetSourceCollection}</strong>" එකේ items <strong>${allItems.length}</strong> ක් තියෙනවා, ඒත් <strong>Documents category</strong> එකට ගැලපෙන එකක් නෑ.<br>
+            👉 Firestore doc එකේ <code>category</code> field එක <strong>"document"</strong> කියලා දාන්න.<br>
+            <br>👀 දැන් **හැම item එකක්ම** පෙන්නනවා 👇`, false);
+        renderSheetCards(container, allItems, 'doc', '');
+        return;
+    }
+
+    renderSheetCards(container, docItems, 'doc', 'No document sheets.');
 }
 
 // ==========================================
