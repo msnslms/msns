@@ -503,8 +503,9 @@ async function loadGoogleSheetCollection(force = false) {
     return _googleSheetPromise;
 }
 
-function getSheetUrl(item) {
-    return item.url || item.link || item.sheetUrl || item.sheet || item.href || '';
+// ★ 'link' field එකට priority දෙනවා
+function getSheetLink(item) {
+    return item.link || item.url || item.sheetUrl || item.sheet || item.href || '';
 }
 
 function getSheetName(item) {
@@ -515,32 +516,47 @@ function getSheetSubtitle(item) {
     return item.subtitle || item.description || item.sub || 'Google Spreadsheet';
 }
 
+// ★ 'category' field එකෙන් decide කරනවා
 function getSheetCategory(item) {
     if (item.category) {
-        const c = String(item.category).toLowerCase();
-        if (c.includes('exam') || c.includes('result')) return 'exam';
-        if (c.includes('doc') || c.includes('paper') || c.includes('book') || c.includes('note')) return 'doc';
+        const c = String(item.category).toLowerCase().trim();
+        if (c === 'exam' || c === 'exams' || c === 'result' || c === 'results'
+            || c.includes('exam') || c.includes('o/l') || c.includes('a/l')) {
+            return 'exam';
+        }
+        if (c === 'document' || c === 'documents' || c === 'doc' || c === 'docs'
+            || c.includes('doc') || c.includes('paper') || c.includes('book')) {
+            return 'doc';
+        }
     }
     const n = getSheetName(item).toLowerCase();
     if (/o\/?l|a\/?l|exam|result/.test(n)) return 'exam';
-    if (/text\s*book|teacher|guide|short\s*note|past\s*paper|application|document/.test(n)) return 'doc';
-    return 'other';
+    return 'doc';
 }
 
+// ★ Category එකට ගැලපෙන icon එක auto-assign
 function getSheetIcon(item, category) {
     if (item.icon) {
-        const ic = String(item.icon);
-        return ic.startsWith('fa-') ? `fa-solid ${ic}` : ic;
+        const ic = String(item.icon).trim();
+        if (ic.startsWith('fa-solid') || ic.startsWith('fa-regular') || ic.startsWith('fa-brands')) return ic;
+        if (ic.startsWith('fa-')) return `fa-solid ${ic}`;
+        return `fa-solid ${ic}`;
     }
     const n = getSheetName(item).toLowerCase();
-    if (n.includes('o/l')) return 'fa-solid fa-graduation-cap';
-    if (n.includes('a/l')) return 'fa-solid fa-user-graduate';
+
+    if (category === 'exam') {
+        if (n.includes('o/l') || n.includes('o.l') || n.includes('ol result')) return 'fa-solid fa-graduation-cap';
+        if (n.includes('a/l') || n.includes('a.l') || n.includes('al result')) return 'fa-solid fa-user-graduate';
+        return 'fa-solid fa-graduation-cap';
+    }
+
     if (n.includes('text book') || n.includes('textbook')) return 'fa-solid fa-book';
     if (n.includes('teacher')) return 'fa-solid fa-chalkboard-user';
     if (n.includes('short note') || n.includes('notes')) return 'fa-solid fa-note-sticky';
     if (n.includes('application')) return 'fa-solid fa-file-signature';
     if (n.includes('past paper')) return 'fa-solid fa-file-lines';
-    return category === 'exam' ? 'fa-solid fa-graduation-cap' : 'fa-solid fa-book';
+    if (n.includes('guide')) return 'fa-solid fa-book-open';
+    return 'fa-solid fa-book';
 }
 
 function renderSheetCards(container, items, category, emptyMsg) {
@@ -551,12 +567,13 @@ function renderSheetCards(container, items, category, emptyMsg) {
     }
     container.innerHTML = items.map(it => {
         const name = getSheetName(it);
-        const url = getSheetUrl(it);
+        const link = getSheetLink(it);
         const icon = getSheetIcon(it, category);
         const subtitle = getSheetSubtitle(it);
         const safeName = String(name).replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        const safeSub = String(subtitle).replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        if (!url) {
+        const safeSub  = String(subtitle).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        if (!link) {
             return `
                 <div class="doc-link-card" style="opacity:0.55; cursor:not-allowed;">
                     <i class="${icon}"></i>
@@ -565,7 +582,7 @@ function renderSheetCards(container, items, category, emptyMsg) {
             `;
         }
         return `
-            <a href="${url}" target="_blank" rel="noopener" class="doc-link-card">
+            <a href="${link}" target="_blank" rel="noopener" class="doc-link-card">
                 <i class="${icon}"></i>
                 <div class="doc-info"><h4>${safeName}</h4><span>${safeSub}</span></div>
             </a>
