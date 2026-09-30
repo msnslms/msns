@@ -516,13 +516,11 @@ function getSheetSubtitle(item) {
 }
 
 function getSheetCategory(item) {
-    // If a category field exists, trust it
     if (item.category) {
         const c = String(item.category).toLowerCase();
         if (c.includes('exam') || c.includes('result')) return 'exam';
         if (c.includes('doc') || c.includes('paper') || c.includes('book') || c.includes('note')) return 'doc';
     }
-    // Otherwise, keyword-match on name
     const n = getSheetName(item).toLowerCase();
     if (/o\/?l|a\/?l|exam|result/.test(n)) return 'exam';
     if (/text\s*book|teacher|guide|short\s*note|past\s*paper|application|document/.test(n)) return 'doc';
@@ -1054,25 +1052,40 @@ function isAlExcludedSubject(name) {
     return false;
 }
 
+// ★ UPDATED — O/L Pass rule:
+//   Passes ≥ 5  +  Credits (A/B/C) ≥ 3  +  (Sinhala හෝ Maths එකක් pass)
 function checkOlPass(subjects) {
     const graded = subjects.map(([name, mark]) => ({ name, mark, grade: calcGrade(mark) }));
     const passes  = graded.filter(g => isPassGrade(g.grade));
     const credits = graded.filter(g => isCreditGrade(g.grade));
     const maths  = graded.find(g => isMathsSubject(g.name));
     const mother = graded.find(g => isMotherTongueSubject(g.name));
-    const mathsOk  = !maths  ? true : isPassGrade(maths.grade);
-    const motherOk = !mother ? true : isPassGrade(mother.grade);
-    const pass = passes.length >= 6 && credits.length >= 3 && mathsOk && motherOk;
+
+    const mathsFound  = !!maths;
+    const motherFound = !!mother;
+    const mathsOk  = mathsFound  ? isPassGrade(maths.grade)  : false;
+    const motherOk = motherFound ? isPassGrade(mother.grade) : false;
+
+    // දෙකම sheet එකේ නැත්නම් ඒ check එක skip; එකක් හෝ දෙකක් තියෙනවනම් අඩුම එකක්වත් pass වෙන්න ඕන
+    const langOrMathsOk = (!mathsFound && !motherFound)
+        ? true
+        : (mathsOk || motherOk);
+
+    const pass = passes.length >= 5 && credits.length >= 3 && langOrMathsOk;
     const aCount = graded.filter(g => g.grade === 'A').length;
+
     let reason = '';
     if (pass) {
         reason = `Passed (${passes.length}P, ${credits.length}C)`;
     } else {
         const fails = [];
-        if (passes.length < 6) fails.push(`P:${passes.length}/6`);
+        if (passes.length < 5) fails.push(`P:${passes.length}/5`);
         if (credits.length < 3) fails.push(`C:${credits.length}/3`);
-        if (maths && !mathsOk) fails.push('Maths✗');
-        if (mother && !motherOk) fails.push('Mother✗');
+        if (!langOrMathsOk) {
+            if (mathsFound && motherFound) fails.push('Maths&Lang✗');
+            else if (mathsFound) fails.push('Maths✗');
+            else if (motherFound) fails.push('Lang✗');
+        }
         reason = `Failed (${fails.join(', ')})`;
     }
     return { pass, aCount, passes: passes.length, credits: credits.length, mathsOk, motherOk, reason };
