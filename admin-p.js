@@ -18,8 +18,8 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let currentAdminRole = null;
-let currentAdminDocId = null;          // ★ NEW
-let currentPermissions = [];           // ★ NEW
+let currentAdminDocId = null;
+let currentPermissions = [];
 let activeUserRoleTab = 'student';
 let loadedUsers = [];
 let loadedAdminUsers = [];
@@ -44,7 +44,6 @@ function getDefaultPermissions(roleOrId) {
     if (r === 'owner') return SECTION_OPTIONS.map(o => o.id);
     if (r === 'media-unit') return ['newsSection'];
     if (r === 'ict-unit') return ['examSection', 'termTestSection', 'newsSection'];
-    // Default for admin/unknown: everything except adminUsers
     return SECTION_OPTIONS.map(o => o.id).filter(id => id !== 'adminUsersSection');
 }
 
@@ -76,8 +75,8 @@ function showToast(msg, type = 'ok') {
 
 function initAuth() {
     const savedRole = sessionStorage.getItem('adminRole');
-    const savedDocId = sessionStorage.getItem('adminDocId');       // ★ NEW
-    const savedPerms = sessionStorage.getItem('adminPermissions'); // ★ NEW
+    const savedDocId = sessionStorage.getItem('adminDocId');
+    const savedPerms = sessionStorage.getItem('adminPermissions');
     if (savedRole) {
         currentAdminRole = savedRole;
         currentAdminDocId = savedDocId || savedRole;
@@ -117,7 +116,6 @@ function initAuth() {
                 currentAdminRole = (detectedRole || 'admin').toLowerCase();
                 currentAdminDocId = detectedDocId;
 
-                // ★ NEW — Determine permissions
                 let perms = userData.permissions;
                 if (!Array.isArray(perms) || perms.length === 0) {
                     perms = getDefaultPermissions(currentAdminRole);
@@ -168,7 +166,6 @@ function applyRolePermissions() {
         adminUsersSection:  $('navAdminUsers')
     };
 
-    // ★ NEW — Resolve permissions
     let perms = currentPermissions;
     if (!Array.isArray(perms) || perms.length === 0) {
         try { perms = JSON.parse(sessionStorage.getItem('adminPermissions') || '[]'); } catch (e) { perms = []; }
@@ -184,16 +181,13 @@ function applyRolePermissions() {
     }
     currentPermissions = perms;
 
-    // Hide everything first
     Object.values(navMap).forEach(el => { if (el) el.style.display = 'none'; });
 
-    // Show only allowed sections
     Object.entries(navMap).forEach(([sectionId, el]) => {
         if (!el) return;
         el.style.display = perms.includes(sectionId) ? 'flex' : 'none';
     });
 
-    // ★ NEW — Smart starting section
     let startSection = 'usersSection';
     if (currentAdminRole === 'owner' && perms.includes('usersSection')) {
         startSection = 'usersSection';
@@ -484,24 +478,131 @@ async function loadNewsList() {
 }
 
 // ==========================================
-// 4. EXAMS
+// 4. GOOGLE SHEET LINKS (Firestore "google-sheet" collection)
 // ==========================================
-function initExamsModule() {
-    const container = $('examButtonsContainer');
+let _googleSheetCache = null;
+let _googleSheetPromise = null;
+
+async function loadGoogleSheetCollection(force = false) {
+    if (_googleSheetCache && !force) return _googleSheetCache;
+    if (_googleSheetPromise && !force) return _googleSheetPromise;
+    _googleSheetPromise = (async () => {
+        try {
+            const snap = await getDocs(collection(db, 'google-sheet'));
+            const items = [];
+            snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+            _googleSheetCache = items;
+            return items;
+        } catch (err) {
+            console.error('google-sheet load error:', err);
+            return [];
+        } finally {
+            _googleSheetPromise = null;
+        }
+    })();
+    return _googleSheetPromise;
+}
+
+function getSheetUrl(item) {
+    return item.url || item.link || item.sheetUrl || item.sheet || item.href || '';
+}
+
+function getSheetName(item) {
+    return item.name || item.title || item.label || item.id || 'Untitled';
+}
+
+function getSheetSubtitle(item) {
+    return item.subtitle || item.description || item.sub || 'Google Spreadsheet';
+}
+
+function getSheetCategory(item) {
+    // If a category field exists, trust it
+    if (item.category) {
+        const c = String(item.category).toLowerCase();
+        if (c.includes('exam') || c.includes('result')) return 'exam';
+        if (c.includes('doc') || c.includes('paper') || c.includes('book') || c.includes('note')) return 'doc';
+    }
+    // Otherwise, keyword-match on name
+    const n = getSheetName(item).toLowerCase();
+    if (/o\/?l|a\/?l|exam|result/.test(n)) return 'exam';
+    if (/text\s*book|teacher|guide|short\s*note|past\s*paper|application|document/.test(n)) return 'doc';
+    return 'other';
+}
+
+function getSheetIcon(item, category) {
+    if (item.icon) {
+        const ic = String(item.icon);
+        return ic.startsWith('fa-') ? `fa-solid ${ic}` : ic;
+    }
+    const n = getSheetName(item).toLowerCase();
+    if (n.includes('o/l')) return 'fa-solid fa-graduation-cap';
+    if (n.includes('a/l')) return 'fa-solid fa-user-graduate';
+    if (n.includes('text book') || n.includes('textbook')) return 'fa-solid fa-book';
+    if (n.includes('teacher')) return 'fa-solid fa-chalkboard-user';
+    if (n.includes('short note') || n.includes('notes')) return 'fa-solid fa-note-sticky';
+    if (n.includes('application')) return 'fa-solid fa-file-signature';
+    if (n.includes('past paper')) return 'fa-solid fa-file-lines';
+    return category === 'exam' ? 'fa-solid fa-graduation-cap' : 'fa-solid fa-book';
+}
+
+function renderSheetCards(container, items, category, emptyMsg) {
     if (!container) return;
-    const links = [
-        { label: 'Edit O/L Results', url: 'https://docs.google.com/spreadsheets/d/15LFm1voMhABzehIGzlrvGgmatgcNE1OKt1ydiyqWpVU/edit?usp=drivesdk', icon: 'fa-graduation-cap' },
-        { label: 'Edit A/L Results', url: 'https://docs.google.com/spreadsheets/d/1n3lZO20WvCZAl58FIVAyDhz3GWTgVN3OwWPAOfQJz6g/edit?usp=drivesdk', icon: 'fa-user-graduate' }
-    ];
-    container.innerHTML = links.map(item => `
-        <a href="${item.url}" target="_blank" class="btn btn-primary" style="display:flex; align-items:center; gap:10px; padding:12px 20px; font-weight:bold; font-size:15px; text-decoration:none; margin-bottom:12px; border-radius:8px;">
-            <i class="fa-solid ${item.icon}"></i> ${item.label}
-        </a>
-    `).join('');
+    if (!items.length) {
+        container.innerHTML = `<p style="color:var(--text-muted); padding:20px; text-align:center; grid-column: 1/-1;">${emptyMsg || 'මෙම කොටසට Sheets කිසිවක් හමු නොවුණි.'}</p>`;
+        return;
+    }
+    container.innerHTML = items.map(it => {
+        const name = getSheetName(it);
+        const url = getSheetUrl(it);
+        const icon = getSheetIcon(it, category);
+        const subtitle = getSheetSubtitle(it);
+        const safeName = String(name).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const safeSub = String(subtitle).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        if (!url) {
+            return `
+                <div class="doc-link-card" style="opacity:0.55; cursor:not-allowed;">
+                    <i class="${icon}"></i>
+                    <div class="doc-info"><h4>${safeName}</h4><span>No link set</span></div>
+                </div>
+            `;
+        }
+        return `
+            <a href="${url}" target="_blank" rel="noopener" class="doc-link-card">
+                <i class="${icon}"></i>
+                <div class="doc-info"><h4>${safeName}</h4><span>${safeSub}</span></div>
+            </a>
+        `;
+    }).join('');
 }
 
 // ==========================================
-// 5. TERM TEST MANAGE
+// 5. EXAMS (Loads from Firestore "google-sheet")
+// ==========================================
+async function initExamsModule() {
+    const container = document.querySelector('#examSection .sheets-btn-grid');
+    if (!container) return;
+    container.innerHTML = `<p style="color:var(--text-muted); padding:20px; text-align:center; grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> Loading sheets...</p>`;
+    const items = await loadGoogleSheetCollection();
+    const examItems = items.filter(it => getSheetCategory(it) === 'exam');
+    renderSheetCards(container, examItems, 'exam',
+        'O/L සහ A/L Results Sheets කිසිවක් හමු නොවුණි. Firestore "google-sheet" collection එකට add කරන්න.');
+}
+
+// ==========================================
+// 6. DOCUMENTS (Loads from Firestore "google-sheet")
+// ==========================================
+async function initDocumentsModule() {
+    const container = document.querySelector('#documentsSection .sheets-btn-grid');
+    if (!container) return;
+    container.innerHTML = `<p style="color:var(--text-muted); padding:20px; text-align:center; grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> Loading sheets...</p>`;
+    const items = await loadGoogleSheetCollection();
+    const docItems = items.filter(it => getSheetCategory(it) === 'doc');
+    renderSheetCards(container, docItems, 'doc',
+        'Past Papers / Documents Sheets කිසිවක් හමු නොවුණි. Firestore "google-sheet" collection එකට add කරන්න.');
+}
+
+// ==========================================
+// 7. TERM TEST MANAGE
 // ==========================================
 let parsedSheetStudents = [];
 let currentMeta = {};
@@ -818,26 +919,7 @@ async function loadTermTestList() {
 }
 
 // ==========================================
-// 6. DOCUMENTS
-// ==========================================
-function initDocumentsModule() {
-    const docButtonsContainer = $('documentsButtonsContainer');
-    if (!docButtonsContainer) return;
-    const links = [
-        { label: 'Edit Text Book', url: 'https://docs.google.com/spreadsheets/d/1WZ13wzcv_Ca7u3ohBZnLgEUrs7h7wgQBo83-A-n4Ne0/edit?usp=drivesdk', icon: 'fa-book' },
-        { label: "Edit Teacher's Guide", url: 'https://docs.google.com/spreadsheets/d/1eOlkqUHWBo_PT9rc9IdwPaQtBWcBQ_pK2Z3g7XTqRXM/edit?usp=drivesdk', icon: 'fa-chalkboard-user' },
-        { label: 'Edit Short Notes', url: 'https://docs.google.com/spreadsheets/d/1FuK5JY1SP33OOrACsoFxC5WyZYqbyj_Q4-K4C54TEv4/edit?usp=drivesdk', icon: 'fa-note-sticky' },
-        { label: 'Edit Application', url: 'https://docs.google.com/spreadsheets/d/19zyl4ZulZc8iTbodIEosWaJlZgFLn3SVqIomV_9tP5o/edit?usp=drivesdk', icon: 'fa-file-lines' }
-    ];
-    docButtonsContainer.innerHTML = links.map(item => `
-        <a href="${item.url}" target="_blank" class="btn btn-primary" style="display:flex; align-items:center; gap:10px; padding:12px 20px; font-weight:bold; font-size:15px; text-decoration:none; margin-bottom:12px; border-radius:8px;">
-            <i class="fa-solid ${item.icon}"></i> ${item.label}
-        </a>
-    `).join('');
-}
-
-// ==========================================
-// 7. GEMINI
+// 8. GEMINI
 // ==========================================
 function initGeminiModule() {
     $('geminiKeyForm')?.addEventListener('submit', async (e) => {
@@ -886,7 +968,7 @@ async function loadGeminiKeys() {
 }
 
 // ==========================================
-// 8. TERM TEST ANALYSIS + PDF
+// 9. TERM TEST ANALYSIS + PDF
 // ==========================================
 let olCharts = { pf: null, grade: null };
 let alCharts = { pf: null, grade: null };
@@ -1601,7 +1683,7 @@ async function exportPdf(mode) {
 }
 
 // ==========================================
-// 9. MAIN TAB LOGIC
+// 10. MAIN TAB LOGIC
 // ==========================================
 function initMainTabs() {
     const tabManageResults = document.getElementById('tabManageResults');
@@ -1625,10 +1707,9 @@ function initMainTabs() {
 }
 
 // ==========================================
-// 10. ADMIN USERS (OWNER ONLY) — ★ UPDATED
+// 11. ADMIN USERS (OWNER ONLY)
 // ==========================================
 function initAdminUsersModule() {
-    // ★ NEW — Inject permission checkboxes into the Add form
     if (!$('newAdminPermissionsBox')) {
         const addBtn = $('btnAddAdminUser');
         if (addBtn && addBtn.parentElement) {
@@ -1661,7 +1742,6 @@ async function loadAdminUsers() {
         const snap = await getDocs(collection(db, 'admin-users'));
         loadedAdminUsers = [];
         snap.forEach(d => loadedAdminUsers.push({ id: d.id, ...d.data() }));
-        // Owner first
         loadedAdminUsers.sort((a, b) => (a.id === 'owner' ? -1 : b.id === 'owner' ? 1 : a.id.localeCompare(b.id)));
         renderAdminUsersList();
     } catch (err) {
@@ -1682,7 +1762,6 @@ function renderAdminUsersList() {
 
     loadedAdminUsers.forEach((u) => {
         const isOwner = u.id === 'owner';
-        // Resolve permissions
         let userPerms = u.permissions;
         if (!Array.isArray(userPerms) || userPerms.length === 0) {
             userPerms = getDefaultPermissions(u.id);
@@ -1769,11 +1848,10 @@ async function saveAdminUser(docId) {
         return;
     }
 
-    // ★ NEW — Collect permissions
     const permCheckboxes = document.querySelectorAll(`.admin-perm-checkbox[data-id="${docId}"]:checked`);
     let perms = Array.from(permCheckboxes).map(c => c.value);
     if (docId === 'owner') {
-        perms = SECTION_OPTIONS.map(o => o.id); // Owner always all
+        perms = SECTION_OPTIONS.map(o => o.id);
     }
 
     if (docId === 'owner' && newUsername.toLowerCase() !== 'owner') {
@@ -1790,7 +1868,6 @@ async function saveAdminUser(docId) {
         });
         showToast(`"${docId}" සාර්ථකව Update විය!`, 'ok');
 
-        // ★ NEW — If current logged-in user updated themselves, refresh session + UI
         if (docId === currentAdminDocId) {
             sessionStorage.setItem('adminPermissions', JSON.stringify(perms));
             currentPermissions = perms;
@@ -1831,7 +1908,6 @@ async function addAdminUser() {
         return;
     }
 
-    // ★ NEW — Collect permissions
     const perms = Array.from(document.querySelectorAll('.new-admin-perm-checkbox:checked')).map(c => c.value);
     if (!perms.length) {
         showToast('අවම වශයෙන් එක Section එකක්වත් select කරන්න!', 'error');
